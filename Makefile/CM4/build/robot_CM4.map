@@ -1067,6 +1067,54 @@ Discarded input sections
  .bss           0x00000000        0x0 build/system_stm32h7xx_dualcore_boot_cm4_cm7.o
  .text.SystemCoreClockUpdate
                 0x00000000      0x214 build/system_stm32h7xx_dualcore_boot_cm4_cm7.o
+ .text          0x00000000        0x0 build/stm32h7xx_hal_uart.o
+ .data          0x00000000        0x0 build/stm32h7xx_hal_uart.o
+ .bss           0x00000000        0x0 build/stm32h7xx_hal_uart.o
+ .debug_info    0x00000000       0x80 build/stm32h7xx_hal_uart.o
+ .debug_abbrev  0x00000000       0x26 build/stm32h7xx_hal_uart.o
+ .debug_aranges
+                0x00000000       0x18 build/stm32h7xx_hal_uart.o
+ .debug_line    0x00000000       0x5c build/stm32h7xx_hal_uart.o
+ .debug_str     0x00000000      0x19f build/stm32h7xx_hal_uart.o
+ .comment       0x00000000       0x1f build/stm32h7xx_hal_uart.o
+ .ARM.attributes
+                0x00000000       0x34 build/stm32h7xx_hal_uart.o
+ .text          0x00000000        0x0 build/stm32h7xx_hal_uart_ex.o
+ .data          0x00000000        0x0 build/stm32h7xx_hal_uart_ex.o
+ .bss           0x00000000        0x0 build/stm32h7xx_hal_uart_ex.o
+ .debug_info    0x00000000       0x80 build/stm32h7xx_hal_uart_ex.o
+ .debug_abbrev  0x00000000       0x26 build/stm32h7xx_hal_uart_ex.o
+ .debug_aranges
+                0x00000000       0x18 build/stm32h7xx_hal_uart_ex.o
+ .debug_line    0x00000000       0x5f build/stm32h7xx_hal_uart_ex.o
+ .debug_str     0x00000000      0x1a2 build/stm32h7xx_hal_uart_ex.o
+ .comment       0x00000000       0x1f build/stm32h7xx_hal_uart_ex.o
+ .ARM.attributes
+                0x00000000       0x34 build/stm32h7xx_hal_uart_ex.o
+ .text          0x00000000        0x0 build/stm32h7xx_hal_spi.o
+ .data          0x00000000        0x0 build/stm32h7xx_hal_spi.o
+ .bss           0x00000000        0x0 build/stm32h7xx_hal_spi.o
+ .debug_info    0x00000000       0x80 build/stm32h7xx_hal_spi.o
+ .debug_abbrev  0x00000000       0x26 build/stm32h7xx_hal_spi.o
+ .debug_aranges
+                0x00000000       0x18 build/stm32h7xx_hal_spi.o
+ .debug_line    0x00000000       0x5b build/stm32h7xx_hal_spi.o
+ .debug_str     0x00000000      0x19e build/stm32h7xx_hal_spi.o
+ .comment       0x00000000       0x1f build/stm32h7xx_hal_spi.o
+ .ARM.attributes
+                0x00000000       0x34 build/stm32h7xx_hal_spi.o
+ .text          0x00000000        0x0 build/stm32h7xx_hal_spi_ex.o
+ .data          0x00000000        0x0 build/stm32h7xx_hal_spi_ex.o
+ .bss           0x00000000        0x0 build/stm32h7xx_hal_spi_ex.o
+ .debug_info    0x00000000       0x80 build/stm32h7xx_hal_spi_ex.o
+ .debug_abbrev  0x00000000       0x26 build/stm32h7xx_hal_spi_ex.o
+ .debug_aranges
+                0x00000000       0x18 build/stm32h7xx_hal_spi_ex.o
+ .debug_line    0x00000000       0x5e build/stm32h7xx_hal_spi_ex.o
+ .debug_str     0x00000000      0x1a1 build/stm32h7xx_hal_spi_ex.o
+ .comment       0x00000000       0x1f build/stm32h7xx_hal_spi_ex.o
+ .ARM.attributes
+                0x00000000       0x34 build/stm32h7xx_hal_spi_ex.o
  .text          0x00000000       0x14 build/startup_stm32h755xx_CM4.o
  .data          0x00000000        0x0 build/startup_stm32h755xx_CM4.o
  .bss           0x00000000        0x0 build/startup_stm32h755xx_CM4.o
@@ -1667,6 +1715,10 @@ LOAD build/stm32h7xx_hal_i2c.o
 LOAD build/stm32h7xx_hal_i2c_ex.o
 LOAD build/stm32h7xx_hal_exti.o
 LOAD build/system_stm32h7xx_dualcore_boot_cm4_cm7.o
+LOAD build/stm32h7xx_hal_uart.o
+LOAD build/stm32h7xx_hal_uart_ex.o
+LOAD build/stm32h7xx_hal_spi.o
+LOAD build/stm32h7xx_hal_spi_ex.o
 LOAD build/startup_stm32h755xx_CM4.o
 LOAD /usr/lib/gcc/arm-none-eabi/13.2.0/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc_nano.a
 LOAD /usr/lib/gcc/arm-none-eabi/13.2.0/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libm.a
