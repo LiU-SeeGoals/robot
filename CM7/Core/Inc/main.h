@@ -66,8 +66,6 @@ void Error_Handler(void);
 #define NRF_SCK_GPIO_Port GPIOA
 #define NRF_MISO_Pin GPIO_PIN_6
 #define NRF_MISO_GPIO_Port GPIOA
-#define LED_GREEN_Pin GPIO_PIN_0
-#define LED_GREEN_GPIO_Port GPIOB
 #define LED_RED_Pin GPIO_PIN_14
 #define LED_RED_GPIO_Port GPIOB
 #define NRF_IRQ_Pin GPIO_PIN_15
