@@ -151,6 +151,9 @@ Error_Handler();
   printf("\r\n\r\n");
   radioSetup();
   printf("Inititalised...\r\n");
+  HAL_TIM_Base_Start(&htim1);
+  HAL_TIM_PWM_Init(&htim1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
