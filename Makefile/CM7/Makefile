@@ -63,8 +63,10 @@ C_SOURCES =  \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c \
 ../../Libraries/nRF24L01P-lib/nrf24l01.c \
-../../Libraries/protobuf-c/protobuf-c/protobuf-c.c \
-../../Libraries/proto-messages/robot_action/robot_action.pb-c.c
+../../Libraries/proto-messages/robot_action/robot_action.pb.c \
+../../Libraries/nanopb/Src/pb_common.c \
+../../Libraries/nanopb/Src/pb_decode.c \
+../../Libraries/nanopb/Src/pb_encode.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -132,7 +134,7 @@ C_INCLUDES =  \
 -I../../Drivers/CMSIS/Include \
 -I../../Libraries/nRF24L01P-lib \
 -I../../Libraries/proto-messages/robot_action \
--I../../Libraries/protobuf-c
+-I../../Libraries/nanopb/Inc
 
 
 # compile gcc flags

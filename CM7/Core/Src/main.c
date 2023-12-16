@@ -22,9 +22,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include <stdarg.h>
-#include <robot_action.pb-c.h>
 #include <nrf24l01.h>
+#include <pb_encode.h>
+#include <pb_decode.h>
+#include <robot_action.pb.h>
 #include "stm32h7xx_hal_gpio.h"
 /* USER CODE END Includes */
 
@@ -522,13 +523,13 @@ void radioReceive(uint8_t pipe) {
 
   printf("Payload of length %i from pipe %i\r\n", length, pipe);
 
-  Action__Command* rf_packet = NULL;
-  rf_packet = action__command__unpack(NULL, length, payload);
-  if (rf_packet != NULL) {
-    printf("robot: %d, cmd: %d\r\n", rf_packet->robot_id, rf_packet->command_id);
-    action__command__free_unpacked(rf_packet, NULL);
+  action_Command message = action_Command_init_zero;
+  pb_istream_t stream = pb_istream_from_buffer(payload, sizeof(payload));
+  bool status = pb_decode(&stream, action_Command_fields, &message);
+  if (!status) {
+    printf("[PB] Decoding failed: %s\r\n", PB_GET_ERROR(&stream));
   } else {
-    printf("Bad packet\r\n");
+    printf("robot: %d, cmd: %d\r\n", message.robot_id, message.command_id);
   }
 
   uint8_t msg = 'W';
