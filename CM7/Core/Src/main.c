@@ -23,7 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <stdarg.h>
-#include "nrf24l01.h"
+#include <robot_action.pb-c.h>
+#include <nrf24l01.h>
 #include "stm32h7xx_hal_gpio.h"
 /* USER CODE END Includes */
 
@@ -55,7 +56,6 @@ TIM_HandleTypeDef htim3;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,7 +65,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-void radioSetup(void);
+void rf_init(void);
 void radioReceive(uint8_t pipe);
 /* USER CODE END PFP */
 
@@ -94,17 +94,11 @@ int main(void)
 
   /* USER CODE END 1 */
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
-  int32_t timeout;
+
 /* USER CODE END Boot_Mode_Sequence_0 */
 
 /* USER CODE BEGIN Boot_Mode_Sequence_1 */
-  /* Wait until CPU2 boots and enters in stop mode or timeout*/
-  timeout = 0xFFFF;
-  while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
-  if ( timeout < 0 )
-  {
-  Error_Handler();
-  }
+
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -127,7 +121,7 @@ HAL_HSEM_FastTake(HSEM_ID_0);
 /*Release HSEM in order to notify the CPU2(CM4)*/
 HAL_HSEM_Release(HSEM_ID_0,0);
 /* wait until CPU2 wakes up from stop mode */
-timeout = 0xFFFF;
+int32_t timeout = 0xFFFF;
 while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET) && (timeout-- > 0));
 if ( timeout < 0 )
 {
@@ -146,11 +140,11 @@ Error_Handler();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   printf("\r\n\r\n");
-  radioSetup();
+  rf_init();
   printf("Inititalised...\r\n");
-  HAL_TIM_Base_Start(&htim3);
-  HAL_TIM_PWM_Init(&htim3);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+  //HAL_TIM_Base_Start(&htim3);
+  //HAL_TIM_PWM_Init(&htim3);
+  //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -443,67 +437,12 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
+
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  switch(GPIO_Pin) {
-    case BTN_USER_Pin:
-      // User button was pressed, just print info.
-      NRF_PrintFIFOStatus();
-      NRF_PrintStatus();
-      break;
-    case NRF_IRQ_Pin:
-      {
-        printf("Received data...\r\n");
-        // NRF_IRQ was pulled, check whether the status
-        // register is saying we've received a package.
-        uint8_t status = NRF_ReadStatus();
-        if (status & 0x40) {
-          // RX_DR is set in register (Data Ready RX FIFO interrupt bit)
-
-          // Read what pipe received this package.
-          uint8_t pipe = (status & 0x0E) >> 1;
-          radioReceive(pipe);
-        }
-      }
-      break;
-    default:
-      printf("Unhandled interrupt...\r\n");
-      break;
-  }
-}
-
-// Handle the package
-void radioReceive(uint8_t pipe) {
-  // Since we have dynamic payload width we'll have to
-  // check what the length of the last received package is (which
-  // we're currently handling).
-  uint8_t length = 0x00;
-  NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &length, 1);
-
-  // Once we have the length we can read the payload.
-  uint8_t payload[length];
-  NRF_ReadPayload(payload, length);
-
-  // Print the payload.
-  printf("Payload of length %i from pipe %i: ", length, pipe);
-  for (int i = 0; i < length; i++) {
-    printf("%c", payload[i]);
-  }
-  printf("\r\n");
-
-  uint8_t msg[13] = "Hello from H7";
-  // Send something back on next receive
-  NRF_WriteAckPayload(pipe, msg, 13);
-
-  // Reset the RX_DR bit so we can receive
-  // new packages.
-  NRF_SetRegisterBit(NRF_REG_STATUS, 6);
-}
-
-void radioSetup(void) {
+void rf_init(void) {
   uint8_t address[5] = {1,2,3,4,5};
   NRF_Init(&hspi1, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
   if(NRF_VerifySPI() != NRF_OK) {
@@ -541,6 +480,66 @@ void radioSetup(void) {
   NRF_EnterMode(NRF_MODE_RX);
   printf("[NRF] Entered RX mode...\r\n");
 }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  switch(GPIO_Pin) {
+    case BTN_USER_Pin:
+      // User button was pressed, just print info.
+      NRF_PrintFIFOStatus();
+      NRF_PrintStatus();
+      break;
+    case NRF_IRQ_Pin:
+      {
+        // NRF_IRQ was pulled, check whether the status
+        // register is saying we've received a package.
+        uint8_t status = NRF_ReadStatus();
+        if (status & 0x40) {
+          // RX_DR is set in register (Data Ready RX FIFO interrupt bit)
+
+          // Read what pipe received this package.
+          uint8_t pipe = (status & 0x0E) >> 1;
+          radioReceive(pipe);
+        }
+      }
+      break;
+    default:
+      printf("Unhandled interrupt...\r\n");
+      break;
+  }
+}
+
+// Handle the package
+void radioReceive(uint8_t pipe) {
+  // Since we have dynamic payload width we'll have to
+  // check what the length of the last received package is (which
+  // we're currently handling).
+  uint8_t length = 0x00;
+  NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &length, 1);
+
+  // Once we have the length we can read the payload.
+  uint8_t payload[length];
+  NRF_ReadPayload(payload, length);
+
+  printf("Payload of length %i from pipe %i\r\n", length, pipe);
+
+  Action__Command* rf_packet = NULL;
+  rf_packet = action__command__unpack(NULL, length, payload);
+  if (rf_packet != NULL) {
+    printf("robot: %d, cmd: %d\r\n", rf_packet->robot_id, rf_packet->command_id);
+    action__command__free_unpacked(rf_packet, NULL);
+  } else {
+    printf("Bad packet\r\n");
+  }
+
+  uint8_t msg = 'W';
+  // Send something back on next receive
+  NRF_WriteAckPayload(pipe, &msg, 1);
+
+  // Reset the RX_DR bit so we can receive
+  // new packages.
+  NRF_SetRegisterBit(NRF_REG_STATUS, 6);
+}
+
 /* USER CODE END 4 */
 
 /**

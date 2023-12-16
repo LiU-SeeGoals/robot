@@ -60,9 +60,11 @@ C_SOURCES =  \
 ../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c \
-../../Libraries/nRF24L01P-lib/nrf24l01.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c \
-../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c
+../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c \
+../../Libraries/nRF24L01P-lib/nrf24l01.c \
+../../Libraries/protobuf-c/protobuf-c/protobuf-c.c \
+../../Libraries/proto-messages/robot_action/robot_action.pb-c.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -128,7 +130,9 @@ C_INCLUDES =  \
 -I../../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy \
 -I../../Drivers/CMSIS/Device/ST/STM32H7xx/Include \
 -I../../Drivers/CMSIS/Include \
--I../../Libraries/nRF24L01P-lib
+-I../../Libraries/nRF24L01P-lib \
+-I../../Libraries/proto-messages/robot_action \
+-I../../Libraries/protobuf-c
 
 
 # compile gcc flags
