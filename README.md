@@ -54,6 +54,12 @@ Connect to board at the top right corner and click start programming
 | -             | PE1     | GPIO_Output    | -       | LED_YELLOW  | -            |
 | -             | PB14    | GPIO_Output    | -       | LED_RED     | -            |
 
+## Creating an `compile_command.json`
+~~~bash
+# from project root
+$ cd Makefile && bear --output ../compile_commands.json -- make
+~~~
+
 ## MX configuration
 If for some reason a new `robot.ioc` has to be created from scratch, these are the changes needed in of STM32CubeMX.
 
