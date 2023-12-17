@@ -1,33 +1,40 @@
 # Robot
+This is the firmware that all robots (NUCLEO-H755ZI-Q) are running. It receives data from the [basestation](https://github.com/LiU-SeeGoals/basestation) and acts upon this.
+
+## Contributing
+Make sure to follow the [firmware standard](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#seegoal---firmware-standard) and the [feature branch](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#feature-branch-integration) concept.
+
+## Building and flashing
 This is a Makefile project generated with STM32CubeMX.
 
-## Sheets
-[NUCLEO-H755ZI-Q](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
+### CLI approach
+You'll need [stlink](https://github.com/stlink-org/stlink#installation), usually available through your package manager.
 
-## Building
-`cd Makefile && make`
+Building the project is done from the `Makefile` directory by running `make`:
+~~~bash
+# from project root
+$ cd Makefile && make
+~~~
 
-## Programming
-There are two option one for command line and one magic gui (that works)
+Flashing can be done when the NUCLEO card is connected through USB (marked `USB PWR`).
+~~~bash
+# from project root
+$ cd Makefile && st-flash --reset write CM7/build/robot_CM7.bin 0x08000000
+~~~
 
-### Terminal based
-```
-sudo apt install stlink-tools
-```
-
-Now from
-```
-cd Makefile && st-flash --reset write CM7/build/robot_CM7.bin 0x08000000
-```
-
-### GUI
-Or install the GUI program stmcube32prog which is easier to use.
+### GUI approach
+Install the GUI program stmcube32prog.
 
 Click Erasing & programming choose the .bin file create from make process as file path.
 
 Enable Run after programming
 
 Connect to board at the top right corner and click start programming
+
+# Documentation
+
+## Sheets
+[NUCLEO-H755ZI-Q](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
 
 ## Pins
 | Zio pin (CN7) | MCU pin | STM32 function | NRF pin | Label       | Cable colour |
@@ -48,6 +55,7 @@ Connect to board at the top right corner and click start programming
 | -             | PB14    | GPIO_Output    | -       | LED_RED     | -            |
 
 ## MX configuration
+If for some reason a new `robot.ioc` has to be created from scratch, these are the changes needed in of STM32CubeMX.
 
 ### General stuff
 ...
