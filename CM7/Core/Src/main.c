@@ -22,8 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include <com.h>
 #include "stm32h7xx_hal_gpio.h"
+#include "com.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,6 +68,8 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/*** This is used to make printf working ***/
 PUTCHAR_PROTOTYPE
 {
   HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
@@ -78,6 +80,22 @@ int _write(int fd, char *ch, int len)
 {
   HAL_UART_Transmit(&huart3, (uint8_t *)ch, len, HAL_MAX_DELAY);
   return len;
+}
+/*** END ***/
+
+// Handle callbacks
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  switch(GPIO_Pin) {
+    case BTN_USER_Pin:
+      COM_RF_PrintInfo();
+      break;
+    case NRF_IRQ_Pin:
+      COM_RF_HandleIRQ();
+      break;
+    default:
+      printf("[MAIN] Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
+      break;
+  }
 }
 /* USER CODE END 0 */
 
@@ -137,8 +155,8 @@ Error_Handler();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   printf("\r\n\r\n");
-  RF_Init(hspi1);
-  printf("Inititalised...\r\n");
+  COM_Init(&hspi1);
+  printf("[MAIN] Inititalised...\r\n");
   //HAL_TIM_Base_Start(&htim3);
   //HAL_TIM_PWM_Init(&htim3);
   //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
@@ -439,20 +457,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  switch(GPIO_Pin) {
-    case BTN_USER_Pin:
-      // User button was pressed, just print info.
-      RF_PrintInfo();
-      break;
-    case NRF_IRQ_Pin:
-      RF_HandleIRQ();
-      break;
-    default:
-      printf("[MAIN] Unhandled interrupt...\r\n");
-      break;
-  }
-}
+
 /* USER CODE END 4 */
 
 /**
