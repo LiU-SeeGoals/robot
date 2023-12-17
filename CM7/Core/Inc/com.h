@@ -8,24 +8,26 @@
 /* Public function declarations */
 
 /**
- * \brief Configures the NRF device according to this robots serial number.
- * \param hspi The handle for the SPI communication.
+ * Configures the NRF device according to this robots serial number.
+ *
+ * @param hspi The handle for the SPI communication.
  */
 void COM_Init(SPI_HandleTypeDef* hspi);
 
 /**
- * \brief Parse the received message and handle it correctly.
- * \param pipe What pipe the message was received on.
+ * Parse the received message and handle it correctly.
+ *
+ * @param pipe What pipe the message was received on.
  */
 void COM_RF_Receive(uint8_t pipe);
 
 /**
- * \brief Handles interrupts sent from the IRQ pin on the NRF.
+ * Handles interrupts sent from the IRQ pin on the NRF.
  */
-void COM_RF_HandleIRQ();
+void COM_RF_HandleIRQ(void);
 
 /**
- * \brief Printf:s status and FIFO status registers from the NRF.
+ * Printf:s status and FIFO status registers from the NRF.
  */
 void COM_RF_PrintInfo(void);
 
