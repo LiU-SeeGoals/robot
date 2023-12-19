@@ -22,11 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include <nrf24l01.h>
-#include <pb_encode.h>
-#include <pb_decode.h>
-#include <robot_action.pb.h>
 #include "stm32h7xx_hal_gpio.h"
+#include "com.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,12 +63,13 @@ static void MX_USART3_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-void rf_init(void);
-void radioReceive(uint8_t pipe);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/*** This is used to make printf working ***/
 PUTCHAR_PROTOTYPE
 {
   HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
@@ -82,6 +80,22 @@ int _write(int fd, char *ch, int len)
 {
   HAL_UART_Transmit(&huart3, (uint8_t *)ch, len, HAL_MAX_DELAY);
   return len;
+}
+/*** END ***/
+
+// Handle callbacks
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  switch(GPIO_Pin) {
+    case BTN_USER_Pin:
+      COM_RF_PrintInfo();
+      break;
+    case NRF_IRQ_Pin:
+      COM_RF_HandleIRQ();
+      break;
+    default:
+      printf("[MAIN] Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
+      break;
+  }
 }
 /* USER CODE END 0 */
 
@@ -141,8 +155,8 @@ Error_Handler();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   printf("\r\n\r\n");
-  rf_init();
-  printf("Inititalised...\r\n");
+  COM_Init(&hspi1);
+  printf("[MAIN] Inititalised...\r\n");
   //HAL_TIM_Base_Start(&htim3);
   //HAL_TIM_PWM_Init(&htim3);
   //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
@@ -443,103 +457,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void rf_init(void) {
-  uint8_t address[5] = {1,2,3,4,5};
-  NRF_Init(&hspi1, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
-  if(NRF_VerifySPI() != NRF_OK) {
-    printf("[NRF] Couldn't verify nRF24...\r\n");
-  }
-
-  // Resets all registers but keeps the device in standby-I mode
-  NRF_Reset();
-
-  // Set the RF channel frequency, it's defined as: 2400 + NRF_REG_RF_CH [MHz]
-  NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x0F);
-
-  // Setup addresses to all pipe 0
-  NRF_WriteRegister(NRF_REG_RX_ADDR_P0, address, 5);
-
-  // Enable all pipes (so we can receive on them all)
-  NRF_WriteRegisterByte(NRF_REG_EN_RXADDR, 0x3F);
-
-  /* To enable ACK payloads we need to setup dynamic payload length. */
-
-  // Enables us to send custom payload with ACKs.
-  NRF_SetRegisterBit(NRF_REG_FEATURE, 1);
-
-  // Enables dynamic payload length generally.
-  NRF_SetRegisterBit(NRF_REG_FEATURE, 2);
-
-  // Enable dynamic payload lengths on all data pipes.
-  // If we didn't do this we'd have to set the payload width
-  // that we were going to use for all pipes.
-  NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x3F);
-
-  // Enter RX mode and wait for packets.
-  // When we get a package NRF_IRQ will be set low,
-  // which we handle in the interrupt callback below.
-  NRF_EnterMode(NRF_MODE_RX);
-  printf("[NRF] Entered RX mode...\r\n");
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  switch(GPIO_Pin) {
-    case BTN_USER_Pin:
-      // User button was pressed, just print info.
-      NRF_PrintFIFOStatus();
-      NRF_PrintStatus();
-      break;
-    case NRF_IRQ_Pin:
-      {
-        // NRF_IRQ was pulled, check whether the status
-        // register is saying we've received a package.
-        uint8_t status = NRF_ReadStatus();
-        if (status & 0x40) {
-          // RX_DR is set in register (Data Ready RX FIFO interrupt bit)
-
-          // Read what pipe received this package.
-          uint8_t pipe = (status & 0x0E) >> 1;
-          radioReceive(pipe);
-        }
-      }
-      break;
-    default:
-      printf("Unhandled interrupt...\r\n");
-      break;
-  }
-}
-
-// Handle the package
-void radioReceive(uint8_t pipe) {
-  // Since we have dynamic payload width we'll have to
-  // check what the length of the last received package is (which
-  // we're currently handling).
-  uint8_t length = 0x00;
-  NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &length, 1);
-
-  // Once we have the length we can read the payload.
-  uint8_t payload[length];
-  NRF_ReadPayload(payload, length);
-
-  printf("Payload of length %i from pipe %i\r\n", length, pipe);
-
-  action_Command message = action_Command_init_zero;
-  pb_istream_t stream = pb_istream_from_buffer(payload, sizeof(payload));
-  bool status = pb_decode(&stream, action_Command_fields, &message);
-  if (!status) {
-    printf("[PB] Decoding failed: %s\r\n", PB_GET_ERROR(&stream));
-  } else {
-    printf("robot: %d, cmd: %d\r\n", message.robot_id, message.command_id);
-  }
-
-  uint8_t msg = 'W';
-  // Send something back on next receive
-  NRF_WriteAckPayload(pipe, &msg, 1);
-
-  // Reset the RX_DR bit so we can receive
-  // new packages.
-  NRF_SetRegisterBit(NRF_REG_STATUS, 6);
-}
 
 /* USER CODE END 4 */
 
