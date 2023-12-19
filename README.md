@@ -37,38 +37,48 @@ Connect to board at the top right corner and click start programming
 [NUCLEO-H755ZI-Q](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
 
 ## Pins
+
+### CN7
 | Zio pin | MCU pin | STM32 function | Label          | Cable colour | NRF Pin |
 |---------|---------|----------------|----------------|--------------|---------|
-| CN7-1   | PC6     | GPIO_Output    | NRF_CE         | Yellow       | CE      |
-| CN7-2   | PB8     | GPIO_Output    | NRF_CSN        | Orange       | CSN     |
-| CN7-3   | PB15    | GPIO_EXTI15    | NRF_IRQ        | Gray         | IRQ     |
-| CN7-6   | VDD     | VDD            | -              | Red          | VDD     |
-| CN7-8   | GND     | GND            | -              | Black        | GND     |
-| CN7-10  | PA5     | SPI1_SCK       | NRF_SCK        | Green        | SCK     |
-| CN7-12  | PA6     | SPI1_MISO      | NRF_MISO       | Purple       | M1      |
-| CN7-14  | PB5     | SPI1_MOSI      | NRF_MOSI       | Blue         | M0      |
-| CN10-4  | PA8     | TIM1_CH1       | MOTOR1_PWM     | -            | -       |
-| CN10-6  | PE11    | TIM1_CH2       | MOTOR2_PWM     | -            | -       |
-| CN10-7  | PF6     | GPIO_Input     | MOTOR1_ENCODER | -            | -       |
-| CN10-8  | PE14    | TIM1_CH4       | MOTOR3_PWM     | -            | -       |
-| CN10-9  | PF10    | GPIO_Input     | MOTOR2_ENCODER | -            | -       |
-| CN10-10 | PE13    | TIM1_CH3       | MOTOR4_PWM     | -            | -       |
-| CN10-11 | PA2     | GPIO_Input     | MOTOR3_ENCODER | -            | -       |
-| CN10-13 | PG6     | GPIO_Input     | MOTOR4_ENCODER | -            | -       |
-| CN10-14 | PB6     | GPIO_Output    | MOTOR1_REVERSE | -            | -       |
-| CN10-15 | PB2     | GPIO_Output    | MOTOR1_BREAK   | -            | -       |
-| CN10-18 | PE8     | GPIO_Output    | MOTOR2_REVERSE | -            | -       |
-| CN10-19 | PD13    | GPIO_Output    | MOTOR2_BREAK   | -            | -       |
-| CN10-20 | PE7     | GPIO_Output    | MOTOR3_REVERSE | -            | -       |
-| CN10-21 | PD12    | GPIO_Output    | MOTOR3_BREAK   | -            | -       |
-| CN10-24 | PE10    | GPIO_Output    | MOTOR4_REVERSE | -            | -       |
-| CN10-25 | PE2     | GPIO_Output    | MOTOR4_BREAK   | -            | -       |
-| -       | PC13    | GPIO_EXTI13    | BTN_USER       | -            | -       |
-| -       | PD8     | USART3_TX      | USART3_TX      | -            | -       |
-| -       | PD9     | USART3_RX      | USART3_RX      | -            | -       |
-| -       | PB0     | GPIO_Output    | LED_GREEN      | -            | -       |
-| -       | PE1     | GPIO_Output    | LED_YELLOW     | -            | -       |
-| -       | PB14    | GPIO_Output    | LED_RED        | -            | -       |
+| 1       | PC6     | GPIO_Output    | NRF_CE         | Yellow       | CE      |
+| 2       | PB8     | GPIO_Output    | NRF_CSN        | Orange       | CSN     |
+| 3       | PB15    | GPIO_EXTI15    | NRF_IRQ        | Gray         | IRQ     |
+| 6       | VDD     | VDD            | -              | Red          | VDD     |
+| 8       | GND     | GND            | -              | Black        | GND     |
+| 10      | PA5     | SPI1_SCK       | NRF_SCK        | Green        | SCK     |
+| 12      | PA6     | SPI1_MISO      | NRF_MISO       | Purple       | M1      |
+| 14      | PB5     | SPI1_MOSI      | NRF_MOSI       | Blue         | M0      |
+
+### CN10
+| Zio pin | MCU pin | STM32 function | Label          | Cable colour |
+|---------|---------|----------------|----------------|--------------|
+| 4       | PA8     | TIM1_CH1       | MOTOR1_PWM     | -            |
+| 6       | PE11    | TIM1_CH2       | MOTOR2_PWM     | -            |
+| 7       | PF6     | GPIO_Input     | MOTOR1_ENCODER | -            |
+| 8       | PE14    | TIM1_CH4       | MOTOR3_PWM     | -            |
+| 9       | PF10    | GPIO_Input     | MOTOR2_ENCODER | -            |
+| 10      | PE13    | TIM1_CH3       | MOTOR4_PWM     | -            |
+| 11      | PA2     | GPIO_Input     | MOTOR3_ENCODER | -            |
+| 13      | PG6     | GPIO_Input     | MOTOR4_ENCODER | -            |
+| 14      | PB6     | GPIO_Output    | MOTOR1_REVERSE | -            |
+| 15      | PB2     | GPIO_Output    | MOTOR1_BREAK   | -            |
+| 18      | PE8     | GPIO_Output    | MOTOR2_REVERSE | -            |
+| 19      | PD13    | GPIO_Output    | MOTOR2_BREAK   | -            |
+| 20      | PE7     | GPIO_Output    | MOTOR3_REVERSE | -            |
+| 21      | PD12    | GPIO_Output    | MOTOR3_BREAK   | -            |
+| 24      | PE10    | GPIO_Output    | MOTOR4_REVERSE | -            |
+| 25      | PE2     | GPIO_Output    | MOTOR4_BREAK   | -            |
+
+### Internal
+| Zio pin | MCU pin | STM32 function | Label          | Cable colour |
+|---------|---------|----------------|----------------|--------------|
+| -       | PC13    | GPIO_EXTI13    | BTN_USER       | -            |
+| -       | PD8     | USART3_TX      | USART3_TX      | -            |
+| -       | PD9     | USART3_RX      | USART3_RX      | -            |
+| -       | PB0     | GPIO_Output    | LED_GREEN      | -            |
+| -       | PE1     | GPIO_Output    | LED_YELLOW     | -            |
+| -       | PB14    | GPIO_Output    | LED_RED        | -            |
 
 ## Creating an `compile_command.json`
 ~~~bash
