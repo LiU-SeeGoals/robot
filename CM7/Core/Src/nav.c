@@ -22,8 +22,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[0].breakPin          = MOTOR1_BREAK_Pin;
   motors[0].reversePinPort    = MOTOR1_REVERSE_GPIO_Port;
   motors[0].reversePin        = MOTOR1_REVERSE_Pin;
-  motors[0].readSpeedPinPort  = MOTOR1_ENCODER_GPIO_Port;
-  motors[0].readSpeedPin      = MOTOR1_ENCODER_Pin;
+  motors[0].encoderPinPort    = MOTOR1_ENCODER_GPIO_Port;
+  motors[0].encoderPin        = MOTOR1_ENCODER_Pin;
   motors[0].reversing         = 0;
 
   motors[1].htim              = htim;
@@ -32,8 +32,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[1].breakPin          = MOTOR2_BREAK_Pin;
   motors[1].reversePinPort    = MOTOR2_REVERSE_GPIO_Port;
   motors[1].reversePin        = MOTOR2_REVERSE_Pin;
-  motors[1].readSpeedPinPort  = MOTOR2_ENCODER_GPIO_Port;
-  motors[1].readSpeedPin      = MOTOR2_ENCODER_Pin;
+  motors[1].encoderPinPort    = MOTOR2_ENCODER_GPIO_Port;
+  motors[1].encoderPin        = MOTOR2_ENCODER_Pin;
   motors[1].reversing         = 0;
 
   motors[2].htim              = htim;
@@ -42,8 +42,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[2].breakPin          = MOTOR3_BREAK_Pin;
   motors[2].reversePinPort    = MOTOR3_REVERSE_GPIO_Port;
   motors[2].reversePin        = MOTOR3_REVERSE_Pin;
-  motors[2].readSpeedPinPort  = MOTOR3_ENCODER_GPIO_Port;
-  motors[2].readSpeedPin      = MOTOR3_ENCODER_Pin;
+  motors[2].encoderPinPort    = MOTOR3_ENCODER_GPIO_Port;
+  motors[2].encoderPin        = MOTOR3_ENCODER_Pin;
   motors[2].reversing         = 0;
 
   motors[3].htim              = htim;
@@ -52,8 +52,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[3].breakPin          = MOTOR4_BREAK_Pin;
   motors[3].reversePinPort    = MOTOR4_REVERSE_GPIO_Port;
   motors[3].reversePin        = MOTOR4_REVERSE_Pin;
-  motors[3].readSpeedPinPort  = MOTOR4_ENCODER_GPIO_Port;
-  motors[3].readSpeedPin      = MOTOR4_ENCODER_Pin;
+  motors[3].encoderPinPort    = MOTOR4_ENCODER_GPIO_Port;
+  motors[3].encoderPin        = MOTOR4_ENCODER_Pin;
   motors[3].reversing         = 0;
 }
 

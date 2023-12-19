@@ -18,7 +18,7 @@ typedef enum {
  * Initialises navigation system by creating motor interfaces.
  *
  * @param htim Timer handle for motors.
-s*/
+ */
 void NAV_Init(TIM_HandleTypeDef* htim);
 
 /**

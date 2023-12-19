@@ -69,10 +69,10 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
   uint16_t count_amount = 100;
   while (count_amount > 0)
   {
-    if (HAL_GPIO_ReadPin(motor->readSpeedPinPort, motor->readSpeedPin))
+    if (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
     {
       count_amount--;
-      while (HAL_GPIO_ReadPin(motor->readSpeedPinPort, motor->readSpeedPin))
+      while (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
       {
         // wait for pin to go low
       }
