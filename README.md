@@ -37,22 +37,38 @@ Connect to board at the top right corner and click start programming
 [NUCLEO-H755ZI-Q](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
 
 ## Pins
-| Zio pin (CN7) | MCU pin | STM32 function | NRF pin | Label       | Cable colour |
-|---------------|---------|----------------|---------|-------------|--------------|
-| 1             | PC6     | GPIO_Output    | CE      | NRF_CE      | Yellow       |
-| 2             | PB8     | GPIO_Output    | CSN     | NRF_CSN     | Orange       |
-| 3             | PB15    | GPIO_EXTI15    | IRQ     | NRF_IRQ     | Gray         |
-| 6             | VDD     | VDD            | VDD     | -           | Red          |
-| 8             | GND     | GND            | GND     | -           | Black        |
-| 10            | PA5     | SPI1_SCK       | SCK     | NRF_SCK     | Green        |
-| 12            | PG9     | SPI1_MISO      | M1      | NRF_MISO    | Purple       |
-| 14            | PB5     | SPI1_MOSI      | M0      | NRF_MOSI    | Blue         |
-| -             | PC13    | GPIO_EXTI13    | -       | BTN_USER    | -            |
-| -             | PD8     | USART3_TX      | -       | USART3_TX   | -            |
-| -             | PD9     | USART3_RX      | -       | USART3_RX   | -            |
-| -             | PB0     | GPIO_Output    | -       | LED_GREEN   | -            |
-| -             | PE1     | GPIO_Output    | -       | LED_YELLOW  | -            |
-| -             | PB14    | GPIO_Output    | -       | LED_RED     | -            |
+| Zio pin | MCU pin | STM32 function | Label          | Cable colour | NRF Pin |
+|---------|---------|----------------|----------------|--------------|---------|
+| CN7-1   | PC6     | GPIO_Output    | NRF_CE         | Yellow       | CE      |
+| CN7-2   | PB8     | GPIO_Output    | NRF_CSN        | Orange       | CSN     |
+| CN7-3   | PB15    | GPIO_EXTI15    | NRF_IRQ        | Gray         | IRQ     |
+| CN7-6   | VDD     | VDD            | -              | Red          | VDD     |
+| CN7-8   | GND     | GND            | -              | Black        | GND     |
+| CN7-10  | PA5     | SPI1_SCK       | NRF_SCK        | Green        | SCK     |
+| CN7-12  | PA6     | SPI1_MISO      | NRF_MISO       | Purple       | M1      |
+| CN7-14  | PB5     | SPI1_MOSI      | NRF_MOSI       | Blue         | M0      |
+| CN10-4  | PA8     | TIM1_CH1       | MOTOR1_PWM     | -            | -       |
+| CN10-6  | PE11    | TIM1_CH2       | MOTOR2_PWM     | -            | -       |
+| CN10-7  | PF6     | GPIO_Input     | MOTOR1_ENCODER | -            | -       |
+| CN10-8  | PE14    | TIM1_CH4       | MOTOR3_PWM     | -            | -       |
+| CN10-9  | PF10    | GPIO_Input     | MOTOR2_ENCODER | -            | -       |
+| CN10-10 | PE13    | TIM1_CH3       | MOTOR4_PWM     | -            | -       |
+| CN10-11 | PA2     | GPIO_Input     | MOTOR3_ENCODER | -            | -       |
+| CN10-13 | PG6     | GPIO_Input     | MOTOR4_ENCODER | -            | -       |
+| CN10-14 | PB6     | GPIO_Output    | MOTOR1_REVERSE | -            | -       |
+| CN10-15 | PB2     | GPIO_Output    | MOTOR1_BREAK   | -            | -       |
+| CN10-18 | PE8     | GPIO_Output    | MOTOR2_REVERSE | -            | -       |
+| CN10-19 | PD13    | GPIO_Output    | MOTOR2_BREAK   | -            | -       |
+| CN10-20 | PE7     | GPIO_Output    | MOTOR3_REVERSE | -            | -       |
+| CN10-21 | PD12    | GPIO_Output    | MOTOR3_BREAK   | -            | -       |
+| CN10-24 | PE10    | GPIO_Output    | MOTOR4_REVERSE | -            | -       |
+| CN10-25 | PE2     | GPIO_Output    | MOTOR4_BREAK   | -            | -       |
+| -       | PC13    | GPIO_EXTI13    | BTN_USER       | -            | -       |
+| -       | PD8     | USART3_TX      | USART3_TX      | -            | -       |
+| -       | PD9     | USART3_RX      | USART3_RX      | -            | -       |
+| -       | PB0     | GPIO_Output    | LED_GREEN      | -            | -       |
+| -       | PE1     | GPIO_Output    | LED_YELLOW     | -            | -       |
+| -       | PB14    | GPIO_Output    | LED_RED        | -            | -       |
 
 ## Creating an `compile_command.json`
 ~~~bash

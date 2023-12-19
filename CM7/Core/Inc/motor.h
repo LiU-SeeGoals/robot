@@ -1,59 +1,46 @@
 #ifndef __MOTOR_H
 #define __MOTOR_H
 
-
-/* Public includes */
-#include "main.h"
+#include "stm32h7xx_hal.h"
 
 
-/* Public structs */
-
-/**
- * Describe this
- */
 typedef struct
 {
   TIM_HandleTypeDef *htim;
   uint32_t channel;
+  GPIO_TypeDef *reversePinPort;
+  GPIO_TypeDef *breakPinPort;
+  GPIO_TypeDef *readSpeedPinPort;
   uint16_t reversePin;
-  GPIO_TypeDef reversePinPort;
   uint16_t breakPin;
-  GPIO_TypeDef breakPinPort;
   uint16_t readSpeedPin;
-  GPIO_TypeDef readSpeedPinPort;
   uint16_t reversing;
 } MotorPWM;
 
-
-/* Public function declarations */
-
 /**
- * Describe this
- *
- * @param motor Describe this
+ * Start motor
  */
-void MOTOR_StartMotor(MotorPWM *motor);
+void MOTOR_Start(MotorPWM *motor);
 
 /**
- * Describe this
- *
- * @param motor Describe this
- * @param percent Describe this
+ * Stop motor
+ */
+void MOTOR_Stop(MotorPWM *motor);
+
+/**
+ * Set speed of motor in percent 0 - 100
+ * Negative values are interpreted as reverse
  */
 void MOTOR_SetSpeed(MotorPWM *motor, float percent);
 
 /**
- * Describe this
- *
- * @param motor Describe this
+ * Sets the breaking pin
  */
-void MOTOR_BreakMotor(MotorPWM *motor);
+void MOTOR_Break(MotorPWM *motor);
 
 /**
- * Describe this
- *
- * @param motor Describe this
+ * ...
  */
-int MOTOR_ReadSpeed(MotorPWM *motor);
+float MOTOR_ReadSpeed(MotorPWM *motor);
 
-#endif /* __MOTOR_H */
+#endif

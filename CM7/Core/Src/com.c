@@ -7,7 +7,7 @@
 #include <pb_encode.h>
 #include <pb_decode.h>
 #include <robot_action.pb.h>
-#include "motor.h"
+#include "nav.h"
 
 /* Private defines */
 
@@ -125,6 +125,7 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   switch(cmd.command_id) {
     case action_ActionType_STOP_ACTION:
       printf("STOP");
+      NAV_Stop();
       break;
     case action_ActionType_KICK_ACTION:
       printf("KICK");
@@ -136,7 +137,30 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
       printf("INIT");
       break;
     case action_ActionType_SET_NAVIGATION_DIRECTION_ACTION:
-      printf("NAV");
+      {
+        printf("NAV ");
+        switch(cmd.direction.x) {
+          case 1: // left
+            printf("left");
+            NAV_Direction(LEFT);
+            break;
+          case -1: // right
+            printf("right");
+            NAV_Direction(RIGHT);
+            break;
+        }
+
+        switch(cmd.direction.y) {
+          case 1: // up
+            printf("up");
+            NAV_Direction(UP);
+            break;
+          case -1: // down
+            printf("down");
+            NAV_Direction(DOWN);
+            break;
+        }
+      }
       break;
     case action_ActionType_ROTATE_ACTION:
       printf("ROTATE");
