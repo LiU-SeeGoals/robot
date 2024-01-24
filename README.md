@@ -45,7 +45,7 @@ Connect to board at the top right corner and click start programming
 | 6             | VDD     | VDD            | VDD     | -           | Red          |
 | 8             | GND     | GND            | GND     | -           | Black        |
 | 10            | PA5     | SPI1_SCK       | SCK     | NRF_SCK     | Green        |
-| 12            | PG9     | SPI1_MISO      | M1      | NRF_MISO    | Purple       |
+| 12            | PA6     | SPI1_MISO      | M1      | NRF_MISO    | Purple       |
 | 14            | PB5     | SPI1_MOSI      | M0      | NRF_MOSI    | Blue         |
 | -             | PC13    | GPIO_EXTI13    | -       | BTN_USER    | -            |
 | -             | PD8     | USART3_TX      | -       | USART3_TX   | -            |
