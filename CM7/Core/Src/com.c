@@ -35,10 +35,24 @@
 #define PIPE_CONTROLLER 0
 #define PIPE_VISION     1
 
+#define CONNECT_MAGIC 0x4d, 0xf8, 0x42, 0x79
 
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
 
+// Maps the 96 bit Unique device identifier into a robot id 0-15.
+// Returns -1 if this device has no mapping.
+static int find_id() {
+  uint32_t w0 = HAL_GetUIDw0();
+  uint32_t w1 = HAL_GetUIDw1();
+  uint32_t w2 = HAL_GetUIDw2();
+  if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
+    return 0;
+  }
+
+  printf("Unmapped id: %lu, %lu, %lu\n", w0, w1, w2);
+  return -1;
+}
 
 /*
  * Public functions implementations
@@ -66,6 +80,19 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_BIT_EN_DPL);
   NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x03);
 
+  // Set TX address to controller address.
+  NRF_WriteRegister(NRF_REG_TX_ADDR, controllerAddress, 5);
+
+  int id = find_id();
+  if (id >= 0) {
+    uint8_t data[] = {CONNECT_MAGIC, id};
+    NRF_Status res = NRF_TransmitAndWait(data, 5);
+    if (res != NRF_OK) {
+      printf("Failed sending id\n");
+    }
+  }
+
+  
   NRF_EnterMode(NRF_MODE_RX);
   printf("[COM] Entered RX mode...\r\n");
 }
@@ -85,7 +112,7 @@ void COM_RF_Receive(uint8_t pipe) {
   uint8_t payload[len];
   NRF_ReadPayload(payload, len);
 
-  //printf("[COM] Payload of length %i from pipe %i\r\n", len, pipe);
+  printf("[COM] Payload of length %i from pipe %i\r\n", len, pipe);
 
   switch (pipe) {
     case PIPE_CONTROLLER:
