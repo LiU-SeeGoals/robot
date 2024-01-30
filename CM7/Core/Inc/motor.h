@@ -23,6 +23,7 @@ void MOTOR_Start(MotorPWM *motor);
 
 /**
  * Stop motor
+ * @param motor Pointer to motor.
  */
 void MOTOR_Stop(MotorPWM *motor);
 

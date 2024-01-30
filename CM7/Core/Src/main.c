@@ -70,7 +70,7 @@ static void MX_SPI1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-/*** This is used to make printf working ***/
+/*** Printf redirect to UART ***/
 PUTCHAR_PROTOTYPE
 {
   HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
@@ -82,7 +82,7 @@ int _write(int fd, char *ch, int len)
   HAL_UART_Transmit(&huart3, (uint8_t *)ch, len, HAL_MAX_DELAY);
   return len;
 }
-/*** END ***/
+/*******************************/
 
 // Handle callbacks
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {

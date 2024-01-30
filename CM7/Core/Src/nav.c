@@ -3,6 +3,7 @@
 /*
  * Private includes
  */
+#include <stdint.h>
 #include "motor.h"
 
 /*

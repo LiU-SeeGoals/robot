@@ -4,34 +4,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <nrf24l01.h>
+#include <nrf_helper_defines.h>
 #include <pb_encode.h>
 #include <pb_decode.h>
 #include <robot_action.pb.h>
 #include "nav.h"
 
 /* Private defines */
-
-/**
- * @name NRF register bit numbers
- *
- * Name of particular bits. Used to make code easier to read.
- */
-//!@{
-#define STATUS_BIT_RX_DR          6
-#define FEATURE_BIT_EN_ACK_PAY    1
-#define FEATURE_BIT_EN_DPL        2
-//!@}
-
-/**
- * @name NRF register masks
- *
- * Are used to mask out wanted bits from registers in the device. Makes code easier to read.
- */
-//!@{
-#define STATUS_MASK_BIT_RX_DR      0x40       /**< Data ready in RX FIFO interrupt. */
-#define STATUS_MASK_BITS_RX_P_NO   0x0E       /**< Data pipe number for payload available for readin from RX_FIFO. */
-//!@}
-
 #define PIPE_CONTROLLER 0
 #define PIPE_VISION     1
 
@@ -39,20 +18,7 @@
 
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
-
-// Maps the 96 bit Unique device identifier into a robot id 0-15.
-// Returns -1 if this device has no mapping.
-static int find_id() {
-  uint32_t w0 = HAL_GetUIDw0();
-  uint32_t w1 = HAL_GetUIDw1();
-  uint32_t w2 = HAL_GetUIDw2();
-  if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
-    return 0;
-  }
-
-  printf("Unmapped id: %lu, %lu, %lu\n", w0, w1, w2);
-  return -1;
-}
+static int find_id();
 
 /*
  * Public functions implementations
@@ -62,7 +28,11 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   uint8_t controllerAddress[5]  = {1,2,3,4,5};
   uint8_t visionAddress[5] = {1,2,3,4,6};
 
+  // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
+  if(NRF_VerifySPI() != NRF_OK) {
+    printf("[RF] Couldn't verify nRF24 SPI...\r\n");
+  }
 
   // Resets all registers but keeps the device in standby-I mode
   NRF_Reset();
@@ -70,37 +40,53 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   // Set the RF channel frequency, it's defined as: 2400 + NRF_REG_RF_CH [MHz]
   NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x0F);
 
-  // Enable pipe 0 (controller packets) and pipe 1 (ssl vision packets)
-  NRF_WriteRegisterByte(NRF_REG_EN_RXADDR, 0x03);
+  // Setup the TX address.
+  // We also have to set pipe 0 to receive on the same address.
+  NRF_WriteRegister(NRF_REG_TX_ADDR, controllerAddress, 5);
   NRF_WriteRegister(NRF_REG_RX_ADDR_P0, controllerAddress, 5);
   //NRF_WriteRegister(NRF_REG_RX_ADDR_P1, visionAddress, 5);
 
   // We enable ACK payloads which needs dynamic payload to function.
-  NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_BIT_EN_ACK_PAY);
-  NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_BIT_EN_DPL);
+  NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_ACK_PAY);
+  NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_DPL);
   NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x03);
 
-  // Set TX address to controller address.
-  NRF_WriteRegister(NRF_REG_TX_ADDR, controllerAddress, 5);
+  // Setup for 3 max retries when sending and 500 us between each retry.
+  // For motivation, see page 60 in datasheet.
+  NRF_WriteRegisterByte(NRF_REG_SETUP_RETR, 0x13);
 
   int id = find_id();
   if (id >= 0) {
     uint8_t data[] = {CONNECT_MAGIC, id};
-    NRF_Status res = NRF_TransmitAndWait(data, 5);
-    if (res != NRF_OK) {
-      printf("Failed sending id\n");
+    if (NRF_Transmit(data, 5) != NRF_OK) {
+      printf("[COM] Failed sending ID...\r\n");
+    } else {
+      printf("[COM] Sent ID...\r\n");
     }
+  } else {
+    printf("[COM] Bad ID...\r\n");
   }
 
-  
   NRF_EnterMode(NRF_MODE_RX);
   printf("[COM] Entered RX mode...\r\n");
 }
 
 void COM_RF_HandleIRQ() {
   uint8_t status = NRF_ReadStatus();
-  if (status & STATUS_MASK_BIT_RX_DR) {
-    uint8_t pipe = (status & STATUS_MASK_BITS_RX_P_NO) >> 1;
+
+  if (status & STATUS_MASK_MAX_RT) {
+    // Max retries while sending.
+    NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_MAX_RT);
+  }
+
+  if (status & STATUS_MASK_TX_DS) {
+    // ACK received
+    NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_TX_DS);
+  }
+
+  if (status & STATUS_MASK_RX_DR) {
+    // Received packet
+    uint8_t pipe = (status & STATUS_MASK_RX_P_NO) >> 1;
     COM_RF_Receive(pipe);
   }
 }
@@ -126,7 +112,7 @@ void COM_RF_Receive(uint8_t pipe) {
   //uint8_t txMsg = 'W';
   //NRF_WriteAckPayload(pipe, &txMsg, 1);
 
-  NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_BIT_RX_DR);
+  NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 }
 
 void COM_RF_PrintInfo() {
@@ -138,6 +124,20 @@ void COM_RF_PrintInfo() {
 /*
  * Private function implementations
  */
+
+// Maps the 96 bit Unique device identifier into a robot id 0-15.
+// Returns -1 if this device has no mapping.
+static int find_id() {
+  uint32_t w0 = HAL_GetUIDw0();
+  uint32_t w1 = HAL_GetUIDw1();
+  uint32_t w2 = HAL_GetUIDw2();
+  if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
+    return 0;
+  }
+
+  printf("Unmapped id: %iu, %iu, %iu\n", w0, w1, w2);
+  return -1;
+}
 
 static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   action_Command cmd = action_Command_init_zero;

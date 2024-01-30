@@ -4,7 +4,6 @@
 /*
  * Public includes
  */
-#include <stdint.h>
 #include "main.h"
 
 typedef enum {
