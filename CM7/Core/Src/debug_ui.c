@@ -104,7 +104,7 @@ void DEBUG_UI_PrintHelp() {
     printf("[UI]: ");
     printf("[H]elp ");
   } else {
-    printf("[UI-%s]: ", states[current_state].name);
+    printf("[UI-%s]:\r\n", states[current_state].name);
     printf("[B]ack ");
   }
 
