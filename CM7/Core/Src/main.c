@@ -25,6 +25,7 @@
 #include "stm32h7xx_hal_gpio.h"
 #include "com.h"
 #include "nav.h"
+#include "kicker.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +56,7 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+uint8_t DBG_Command;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,7 +72,7 @@ static void MX_SPI1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-/*** Printf redirect to UART ***/
+// Printf redirect to UART
 PUTCHAR_PROTOTYPE
 {
   HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
@@ -82,7 +84,7 @@ int _write(int fd, char *ch, int len)
   HAL_UART_Transmit(&huart3, (uint8_t *)ch, len, HAL_MAX_DELAY);
   return len;
 }
-/*******************************/
+// -----------------------
 
 // Handle callbacks
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
@@ -97,6 +99,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       printf("[MAIN] Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
       break;
   }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  printf("Help: [R]F info, [C]harge kicker, [K]ick\r\n");
+  switch(DBG_Command) {
+    case 'R':
+      COM_RF_PrintInfo();
+      break;
+    case 'C':
+      KICKER_Charge();
+      break;
+    case 'K':
+      KICKER_Kick();
+      break;
+    default:
+      printf("No such command: %c\r\n", DBG_Command);
+      break;
+  }
+  HAL_UART_Receive_IT(&huart3, &DBG_Command, 1);
 }
 /* USER CODE END 0 */
 
@@ -158,6 +179,7 @@ Error_Handler();
   printf("\r\n\r\n");
   COM_Init(&hspi1);
   NAV_Init(&htim1);
+  HAL_UART_Receive_IT(&huart3, &DBG_Command, 1);
   printf("[MAIN] Inititalised...\r\n");
   /* USER CODE END 2 */
 
@@ -434,8 +456,8 @@ static void MX_GPIO_Init(void)
                           |LED_YELLOW_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|LED_RED_Pin|MOTOR1_REVERSE_Pin
-                          |NRF_CSN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_DISCHARGE_Pin|KICKER_CHARGE_Pin
+                          |LED_RED_Pin|MOTOR1_REVERSE_Pin|NRF_CSN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, MOTOR3_BREAK_Pin|MOTOR2_BREAK_Pin, GPIO_PIN_RESET);
@@ -470,10 +492,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(MOTOR3_ENCODER_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_GREEN_Pin MOTOR1_BREAK_Pin LED_RED_Pin MOTOR1_REVERSE_Pin
-                           NRF_CSN_Pin */
-  GPIO_InitStruct.Pin = LED_GREEN_Pin|MOTOR1_BREAK_Pin|LED_RED_Pin|MOTOR1_REVERSE_Pin
-                          |NRF_CSN_Pin;
+  /*Configure GPIO pins : LED_GREEN_Pin MOTOR1_BREAK_Pin KICKER_DISCHARGE_Pin KICKER_CHARGE_Pin
+                           LED_RED_Pin MOTOR1_REVERSE_Pin NRF_CSN_Pin */
+  GPIO_InitStruct.Pin = LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_DISCHARGE_Pin|KICKER_CHARGE_Pin
+                          |LED_RED_Pin|MOTOR1_REVERSE_Pin|NRF_CSN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
