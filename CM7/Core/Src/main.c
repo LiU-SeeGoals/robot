@@ -26,6 +26,7 @@
 #include "com.h"
 #include "nav.h"
 #include "kicker.h"
+#include "debug_ui.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +57,7 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-uint8_t DBG_Command;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,22 +103,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  printf("Help: [R]F info, [C]harge kicker, [K]ick\r\n");
-  switch(DBG_Command) {
-    case 'R':
-      COM_RF_PrintInfo();
-      break;
-    case 'C':
-      KICKER_Charge();
-      break;
-    case 'K':
-      KICKER_Kick();
-      break;
-    default:
-      printf("No such command: %c\r\n", DBG_Command);
-      break;
-  }
-  HAL_UART_Receive_IT(&huart3, &DBG_Command, 1);
+  DEBUG_UI_RxCallback();
 }
 /* USER CODE END 0 */
 
@@ -179,8 +165,9 @@ Error_Handler();
   printf("\r\n\r\n");
   COM_Init(&hspi1);
   NAV_Init(&htim1);
-  HAL_UART_Receive_IT(&huart3, &DBG_Command, 1);
+  DEBUG_UI_Init(&huart3);
   printf("[MAIN] Inititalised...\r\n");
+  DEBUG_UI_PrintHelp();
   /* USER CODE END 2 */
 
   /* Infinite loop */
