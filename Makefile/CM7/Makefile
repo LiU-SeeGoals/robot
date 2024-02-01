@@ -40,6 +40,7 @@ C_SOURCES =  \
 ../../CM7/Core/Src/com.c \
 ../../CM7/Core/Src/motor.c \
 ../../CM7/Core/Src/nav.c \
+../../CM7/Core/Src/log.c \
 ../../CM7/Core/Src/stm32h7xx_it.c \
 ../../CM7/Core/Src/stm32h7xx_hal_msp.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c \

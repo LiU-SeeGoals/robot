@@ -9,6 +9,7 @@
 #include <pb_decode.h>
 #include <robot_action.pb.h>
 #include "nav.h"
+#include "log.h"
 
 /* Private defines */
 #define PIPE_CONTROLLER 0
@@ -20,6 +21,9 @@
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
 static int find_id();
 
+/* Private variables */
+static LOG_Module *mod;
+
 /*
  * Public functions implementations
  */
@@ -28,10 +32,12 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   uint8_t controllerAddress[5]  = {1,2,3,4,5};
   uint8_t visionAddress[5] = {1,2,3,4,6};
 
+  LOG_InitModule(mod, "COM");
+
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
   if(NRF_VerifySPI() != NRF_OK) {
-    printf("[RF] Couldn't verify nRF24 SPI...\r\n");
+    LOG_Printf(mod, LOG_LEVEL_ERROR, "Couldn't verify nRF24 SPI communication...\r\n");
   }
 
   // Resets all registers but keeps the device in standby-I mode
@@ -59,16 +65,12 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   if (id >= 0) {
     uint8_t data[] = {CONNECT_MAGIC, id};
     if (NRF_Transmit(data, 5) != NRF_OK) {
-      printf("[COM] Failed sending ID...\r\n");
-    } else {
-      printf("[COM] Sent ID...\r\n");
+      LOG_Printf(mod, LOG_LEVEL_WARNING, "Failed sending ID...\r\n");
     }
-  } else {
-    printf("[COM] Bad ID...\r\n");
   }
 
   NRF_EnterMode(NRF_MODE_RX);
-  printf("[COM] Entered RX mode...\r\n");
+  LOG_Printf(mod, LOG_LEVEL_INFO, "Initialised...\r\n");
 }
 
 void COM_RF_HandleIRQ() {
@@ -98,7 +100,7 @@ void COM_RF_Receive(uint8_t pipe) {
   uint8_t payload[len];
   NRF_ReadPayload(payload, len);
 
-  printf("[COM] Payload of length %i from pipe %i\r\n", len, pipe);
+  LOG_Printf(mod, LOG_LEVEL_DEBUG, "Payload of length %i from pipe %i\r\n", len, pipe);
 
   switch (pipe) {
     case PIPE_CONTROLLER:
@@ -135,7 +137,8 @@ static int find_id() {
     return 0;
   }
 
-  printf("Unmapped id: %iu, %iu, %iu\n", w0, w1, w2);
+  LOG_Printf(mod, LOG_LEVEL_DEBUG, "Unmapped id: %iu, %iu, %iu\r\n", w0, w1, w2);
+
   return -1;
 }
 
@@ -144,54 +147,55 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   pb_istream_t stream = pb_istream_from_buffer(payload, len);
   bool status = pb_decode(&stream, action_Command_fields, &cmd);
   if (!status) {
-    printf("[COM] Decoding PB failed: %s\r\n", PB_GET_ERROR(&stream));
+    LOG_Printf(mod, LOG_LEVEL_WARNING, "Decoding PB failed: %s\r\n", PB_GET_ERROR(&stream));
     return;
   }
 
-  printf("[COM] robot %d should ", cmd.robot_id);
+  LOG_Printf(mod, LOG_LEVEL_DEBUG, "Robot %d should", cmd.robot_id);
   switch(cmd.command_id) {
     case action_ActionType_STOP_ACTION:
-      printf("STOP");
+      LOG_Printf(mod, LOG_LEVEL_DEBUG, "STOP");
       NAV_Stop();
       break;
     case action_ActionType_KICK_ACTION:
-      printf("KICK");
+      LOG_Printf(mod, LOG_LEVEL_DEBUG, "KICK");
       break;
     case action_ActionType_MOVE_ACTION:
-      printf("MOVE");
+      LOG_Printf(mod, LOG_LEVEL_DEBUG, "MOVE");
       break;
     case action_ActionType_INIT_ACTION:
-      printf("INIT");
+      LOG_Printf(mod, LOG_LEVEL_DEBUG, "INIT");
       break;
     case action_ActionType_SET_NAVIGATION_DIRECTION_ACTION:
       {
-        printf("NAV ");
+        LOG_Printf(mod, LOG_LEVEL_DEBUG, "NAV");
         switch(cmd.direction.x) {
           case 1: // left
-            printf("left");
+            LOG_Printf(mod, LOG_LEVEL_DEBUG, "left");
             NAV_Direction(LEFT);
             break;
           case -1: // right
-            printf("right");
+            LOG_Printf(mod, LOG_LEVEL_DEBUG, "right");
             NAV_Direction(RIGHT);
             break;
         }
 
         switch(cmd.direction.y) {
           case 1: // up
-            printf("up");
+            LOG_Printf(mod, LOG_LEVEL_DEBUG, "up");
             NAV_Direction(UP);
             break;
           case -1: // down
-            printf("down");
+            LOG_Printf(mod, LOG_LEVEL_DEBUG, "down");
             NAV_Direction(DOWN);
             break;
         }
       }
       break;
     case action_ActionType_ROTATE_ACTION:
-      printf("ROTATE");
+      LOG_Printf(mod, LOG_LEVEL_DEBUG, "rotate");
       break;
   }
-  printf("\r\n");
+
+  LOG_Printf(mod, LOG_LEVEL_DEBUG, "\r\n");
 }

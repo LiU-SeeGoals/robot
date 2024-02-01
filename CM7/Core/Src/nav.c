@@ -5,18 +5,21 @@
  */
 #include <stdint.h>
 #include "motor.h"
+#include "log.h"
 
 /*
  * Private variables
  */
-MotorPWM motors[4];
+static LOG_Module *mod;
+static MotorPWM motors[4];
 
 
 /*
  * Public function implementations
  */
-
 void NAV_Init(TIM_HandleTypeDef* htim) {
+  LOG_InitModule(mod, "NAV");
+
   motors[0].htim              = htim;
   motors[0].channel           = MOTOR1_TIM_CHANNEL;
   motors[0].breakPinPort      = MOTOR1_BREAK_GPIO_Port;
