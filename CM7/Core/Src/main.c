@@ -26,7 +26,7 @@
 #include "com.h"
 #include "nav.h"
 #include "kicker.h"
-#include "debug_ui.h"
+#include "ui.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -103,7 +103,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  DEBUG_UI_RxCallback();
+  UI_RxCallback();
 }
 /* USER CODE END 0 */
 
@@ -165,9 +165,9 @@ Error_Handler();
   printf("\r\n\r\n");
   COM_Init(&hspi1);
   NAV_Init(&htim1);
-  DEBUG_UI_Init(&huart3);
+  UI_Init(&huart3);
   printf("[MAIN] Inititalised...\r\n");
-  DEBUG_UI_PrintHelp();
+  UI_PrintHelp();
   /* USER CODE END 2 */
 
   /* Infinite loop */
