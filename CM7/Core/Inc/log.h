@@ -4,6 +4,18 @@
 /* Public includes */
 #include "main.h"
 
+/* Public defines */
+#define LOG_PRINTF(level, fmt, ...) LOG_Printf(&internal_log_mod, level, fmt, ##__VA_ARGS__)
+#define LOG_TRACE(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_TRACE, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...)          LOG_Printf(&internal_log_mod, LOG_LEVEL_INFO, fmt, ##__VA_ARGS__)
+#define LOG_NOTICE(fmt, ...)        LOG_Printf(&internal_log_mod, LOG_LEVEL_NOTICE, fmt, ##__VA_ARGS__)
+#define LOG_WARNING(fmt, ...)       LOG_Printf(&internal_log_mod, LOG_LEVEL_WARNING, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_ERROR, fmt, ##__VA_ARGS__)
+#define LOG_CRITICAL(fmt, ...)      LOG_Printf(&internal_log_mod, LOG_LEVEL_CRITICAL, fmt, ##__VA_ARGS__)
+#define LOG_ALERT(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_ALERT, fmt, ##__VA_ARGS__)
+#define LOG_EMERGENCY(fmt, ...)     LOG_Printf(&internal_log_mod, LOG_LEVEL_EMERGENCY, fmt, ##__VA_ARGS__)
+
 /* Public enums */
 
 /**
@@ -94,15 +106,23 @@ typedef enum {
 } LOG_Level;
 
 /* Public structs */
+
+/**
+ * Every submodule of the project should have a LOG_Module which give us finer
+ * logging controls.
+ */
 typedef struct {
-  LOG_Level level;
+  int index;
+  LOG_Level minimum_output_level;
   const char* name;
+  uint8_t muted;
 } LOG_Module;
 
 /* Public function declarations */
 void LOG_Init(UART_HandleTypeDef *handle);
 void LOG_InitModule(LOG_Module *mod, const char* name);
 void LOG_Printf(LOG_Module *mod, LOG_Level level, const char* format, ...);
-
+void LOG_PrintModules();
+void LOG_Module_ToggleMuted(int index);
 
 #endif /* LOG_H */

@@ -10,7 +10,7 @@
 /*
  * Private variables
  */
-static LOG_Module *mod;
+static LOG_Module *internal_log_mod;
 static MotorPWM motors[4];
 
 
@@ -18,7 +18,7 @@ static MotorPWM motors[4];
  * Public function implementations
  */
 void NAV_Init(TIM_HandleTypeDef* htim) {
-  LOG_InitModule(mod, "NAV");
+  LOG_InitModule(internal_log_mod, "NAV");
 
   motors[0].htim              = htim;
   motors[0].channel           = MOTOR1_TIM_CHANNEL;

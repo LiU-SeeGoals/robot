@@ -54,7 +54,7 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-static LOG_Module *mod;
+static LOG_Module internal_log_mod;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,7 +79,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       COM_RF_HandleIRQ();
       break;
     default:
-      LOG_Printf(mod, LOG_LEVEL_WARNING, "Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
+      //LOG_WARNING("Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
       break;
   }
 }
@@ -143,8 +143,14 @@ Error_Handler();
   LOG_Init(&huart3);
   COM_Init(&hspi1);
   NAV_Init(&htim1);
-  LOG_InitModule(mod, "MAIN");
-  LOG_Printf(mod, LOG_LEVEL_INFO, "Startup finished...\r\n");
+  LOG_InitModule(&internal_log_mod, "MAIN");
+  LOG_INFO("Startup finished...\r\n");
+  LOG_PrintModules();
+  LOG_INFO("Muting module...\r\n");
+  LOG_Module_ToggleMuted(3);
+  LOG_DEBUG("Test\r\n");
+  LOG_Module_ToggleMuted(3);
+  LOG_DEBUG("Test\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -22,7 +22,7 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len);
 static int find_id();
 
 /* Private variables */
-static LOG_Module *mod;
+static LOG_Module internal_log_mod;
 
 /*
  * Public functions implementations
@@ -32,12 +32,12 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   uint8_t controllerAddress[5]  = {1,2,3,4,5};
   uint8_t visionAddress[5] = {1,2,3,4,6};
 
-  LOG_InitModule(mod, "COM");
+  LOG_InitModule(&internal_log_mod, "COM");
 
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
   if(NRF_VerifySPI() != NRF_OK) {
-    LOG_Printf(mod, LOG_LEVEL_ERROR, "Couldn't verify nRF24 SPI communication...\r\n");
+    LOG_ERROR("Couldn't verify nRF24 SPI communication...\r\n");
   }
 
   // Resets all registers but keeps the device in standby-I mode
@@ -65,12 +65,12 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   if (id >= 0) {
     uint8_t data[] = {CONNECT_MAGIC, id};
     if (NRF_Transmit(data, 5) != NRF_OK) {
-      LOG_Printf(mod, LOG_LEVEL_WARNING, "Failed sending ID...\r\n");
+      LOG_WARNING("Failed sending ID...\r\n");
     }
   }
 
   NRF_EnterMode(NRF_MODE_RX);
-  LOG_Printf(mod, LOG_LEVEL_INFO, "Initialised...\r\n");
+  LOG_INFO("Inititalised...\r\n");
 }
 
 void COM_RF_HandleIRQ() {
@@ -100,7 +100,7 @@ void COM_RF_Receive(uint8_t pipe) {
   uint8_t payload[len];
   NRF_ReadPayload(payload, len);
 
-  LOG_Printf(mod, LOG_LEVEL_DEBUG, "Payload of length %i from pipe %i\r\n", len, pipe);
+  LOG_DEBUG("Payload of length %i from pipe %i\r\n", len, pipe);
 
   switch (pipe) {
     case PIPE_CONTROLLER:
@@ -137,7 +137,7 @@ static int find_id() {
     return 0;
   }
 
-  LOG_Printf(mod, LOG_LEVEL_DEBUG, "Unmapped id: %iu, %iu, %iu\r\n", w0, w1, w2);
+  LOG_DEBUG("Unmapped id: %iu, %iu, %iu\r\n", w0, w1, w2);
 
   return -1;
 }
@@ -147,55 +147,55 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   pb_istream_t stream = pb_istream_from_buffer(payload, len);
   bool status = pb_decode(&stream, action_Command_fields, &cmd);
   if (!status) {
-    LOG_Printf(mod, LOG_LEVEL_WARNING, "Decoding PB failed: %s\r\n", PB_GET_ERROR(&stream));
+    LOG_WARNING("Decoding PB failed: %s\r\n", PB_GET_ERROR(&stream));
     return;
   }
 
-  LOG_Printf(mod, LOG_LEVEL_DEBUG, "Robot %d should", cmd.robot_id);
+  LOG_DEBUG("Robot %d should", cmd.robot_id);
   switch(cmd.command_id) {
     case action_ActionType_STOP_ACTION:
-      LOG_Printf(mod, LOG_LEVEL_DEBUG, "STOP");
+      LOG_DEBUG("STOP");
       NAV_Stop();
       break;
     case action_ActionType_KICK_ACTION:
-      LOG_Printf(mod, LOG_LEVEL_DEBUG, "KICK");
+      LOG_DEBUG("KICK");
       break;
     case action_ActionType_MOVE_ACTION:
-      LOG_Printf(mod, LOG_LEVEL_DEBUG, "MOVE");
+      LOG_DEBUG("MOVE");
       break;
     case action_ActionType_INIT_ACTION:
-      LOG_Printf(mod, LOG_LEVEL_DEBUG, "INIT");
+      LOG_DEBUG("INIT");
       break;
     case action_ActionType_SET_NAVIGATION_DIRECTION_ACTION:
       {
-        LOG_Printf(mod, LOG_LEVEL_DEBUG, "NAV");
+        LOG_DEBUG("NAV");
         switch(cmd.direction.x) {
           case 1: // left
-            LOG_Printf(mod, LOG_LEVEL_DEBUG, "left");
+            LOG_DEBUG("LEFT");
             NAV_Direction(LEFT);
             break;
           case -1: // right
-            LOG_Printf(mod, LOG_LEVEL_DEBUG, "right");
+            LOG_DEBUG("RIGHT");
             NAV_Direction(RIGHT);
             break;
         }
 
         switch(cmd.direction.y) {
           case 1: // up
-            LOG_Printf(mod, LOG_LEVEL_DEBUG, "up");
+            LOG_DEBUG("UP");
             NAV_Direction(UP);
             break;
           case -1: // down
-            LOG_Printf(mod, LOG_LEVEL_DEBUG, "down");
+            LOG_DEBUG("DOWN");
             NAV_Direction(DOWN);
             break;
         }
       }
       break;
     case action_ActionType_ROTATE_ACTION:
-      LOG_Printf(mod, LOG_LEVEL_DEBUG, "rotate");
+      LOG_DEBUG("ROTATE");
       break;
   }
 
-  LOG_Printf(mod, LOG_LEVEL_DEBUG, "\r\n");
+  LOG_DEBUG("\r\n");
 }
