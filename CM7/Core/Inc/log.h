@@ -8,6 +8,7 @@
 #define LOG_PRINTF(level, fmt, ...) LOG_Printf(&internal_log_mod, level, fmt, ##__VA_ARGS__)
 #define LOG_TRACE(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_TRACE, fmt, ##__VA_ARGS__)
 #define LOG_DEBUG(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
+#define LOG_UI(fmt, ...)            LOG_Printf(&internal_log_mod, LOG_LEVEL_UI, fmt, ##__VA_ARGS__)
 #define LOG_INFO(fmt, ...)          LOG_Printf(&internal_log_mod, LOG_LEVEL_INFO, fmt, ##__VA_ARGS__)
 #define LOG_NOTICE(fmt, ...)        LOG_Printf(&internal_log_mod, LOG_LEVEL_NOTICE, fmt, ##__VA_ARGS__)
 #define LOG_WARNING(fmt, ...)       LOG_Printf(&internal_log_mod, LOG_LEVEL_WARNING, fmt, ##__VA_ARGS__)
@@ -42,6 +43,11 @@ typedef enum {
    * setup, algorithmic steps.
    */
   LOG_LEVEL_DEBUG,
+
+  /*
+   * Output from the CLI UI which is reachable through UART.
+   */
+  LOG_LEVEL_UI,
 
   /*
    * General operational information about the system's state. It

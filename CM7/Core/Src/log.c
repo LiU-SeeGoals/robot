@@ -43,7 +43,9 @@ void LOG_Printf(LOG_Module *mod, LOG_Level level, const char* format, ...) {
     char buffer[LOG_BUFFER_SIZE];
     int offset = 0;
 
-    offset += snprintf(buffer, LOG_BUFFER_SIZE, "[%s-%c] ", mod->name, level_readable[level]);
+    if (level != LOG_LEVEL_UI) {
+      offset += snprintf(buffer, LOG_BUFFER_SIZE, "[%s-%c] ", mod->name, level_readable[level]);
+    }
 
     if (offset < LOG_BUFFER_SIZE - 1) {
       va_list args;
