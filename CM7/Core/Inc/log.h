@@ -45,11 +45,6 @@ typedef enum {
   LOG_LEVEL_DEBUG,
 
   /*
-   * Output from the CLI UI which is reachable through UART.
-   */
-  LOG_LEVEL_UI,
-
-  /*
    * General operational information about the system's state. It
    * should not be overly verbose and provide a clear overview of the
    * application's status.
@@ -67,6 +62,11 @@ typedef enum {
    * or readiness of critical components.
    */
   LOG_LEVEL_NOTICE,
+
+  /*
+   * Output from the CLI UI which is reachable through UART.
+   */
+  LOG_LEVEL_UI,
 
   /**
    * Indications of potential issues that are not immediate problems
@@ -112,6 +112,65 @@ typedef enum {
 } LOG_Level;
 
 /* Public structs */
+typedef struct {
+  LOG_Level level;
+  const char* name;
+  const char* short_name;
+} LOG_Level_Info;
+
+/* Public variables */
+static LOG_Level_Info LOG_LEVEL[LOG_LEVEL_EMERGENCY + 1] = {
+  {
+    .level = LOG_LEVEL_TRACE,
+    .name = "Trace",
+    .short_name = "T",
+  },
+  {
+    .level = LOG_LEVEL_DEBUG,
+    .name = "Debug",
+    .short_name = "D",
+  },
+  {
+    .level = LOG_LEVEL_INFO,
+    .name = "Info",
+    .short_name = "I",
+  },
+  {
+    .level = LOG_LEVEL_NOTICE,
+    .name = "Notice",
+    .short_name = "N",
+  },
+  {
+    .level = LOG_LEVEL_UI,
+    .name = "User Interface",
+    .short_name = "-",
+  },
+  {
+    .level = LOG_LEVEL_WARNING,
+    .name = "Warning",
+    .short_name = "W",
+  },
+  {
+    .level = LOG_LEVEL_ERROR,
+    .name = "Error",
+    .short_name = "E",
+  },
+  {
+    .level = LOG_LEVEL_CRITICAL,
+    .name = "Critical",
+    .short_name = "C",
+  },
+  {
+    .level = LOG_LEVEL_ALERT,
+    .name = "Alert",
+    .short_name = "A",
+  },
+  {
+    .level = LOG_LEVEL_EMERGENCY,
+    .name = "Emergency",
+    .short_name = "E!",
+  }
+};
 
 /**
  * Every submodule of the project should have a LOG_Module which give us finer
@@ -119,16 +178,16 @@ typedef enum {
  */
 typedef struct {
   int index;
-  LOG_Level minimum_output_level;
+  LOG_Level min_output_level;
   const char* name;
   uint8_t muted;
 } LOG_Module;
 
 /* Public function declarations */
 void LOG_Init(UART_HandleTypeDef *handle);
-void LOG_InitModule(LOG_Module *mod, const char* name);
+void LOG_InitModule(LOG_Module *mod, const char* name, LOG_Level min_output_level);
 void LOG_Printf(LOG_Module *mod, LOG_Level level, const char* format, ...);
-void LOG_PrintModules();
-void LOG_Module_ToggleMuted(int index);
+LOG_Module** LOG_GetModules(int *len);
+LOG_Module* LOG_GetModule(int index);
 
 #endif /* LOG_H */

@@ -23,6 +23,7 @@ static int find_id();
 
 /* Private variables */
 static LOG_Module internal_log_mod;
+static int nRFon = 0;
 
 /*
  * Public functions implementations
@@ -32,7 +33,7 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   uint8_t controllerAddress[5]  = {1,2,3,4,5};
   uint8_t visionAddress[5] = {1,2,3,4,6};
 
-  LOG_InitModule(&internal_log_mod, "COM");
+  LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
 
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
@@ -40,6 +41,8 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
     LOG_ERROR("Couldn't verify nRF24 SPI communication...\r\n");
     return;
   }
+
+  nRFon = 1;
 
   // Resets all registers but keeps the device in standby-I mode
   NRF_Reset();
@@ -118,9 +121,41 @@ void COM_RF_Receive(uint8_t pipe) {
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 }
 
-void COM_RF_PrintInfo() {
-  NRF_PrintFIFOStatus();
-  NRF_PrintStatus();
+void COM_RF_PrintInfo(void) {
+  uint8_t ret = NRF_ReadStatus();
+
+  if (!nRFon) {
+    LOG_INFO("nRF24 not running...\r\n");
+    return;
+  }
+
+  LOG_INFO("Status register: %02X\r\n", ret);
+  LOG_INFO("TX_FULL:  %1X\r\n", ret & (1<<0));
+  LOG_INFO("RX_P_NO:  %1X\r\n", (ret & (0x3<<1)) >> 1);
+  LOG_INFO("MAX_RT:   %1X\r\n", (ret & (1<<4))    >> 4);
+  LOG_INFO("TX_DS:    %1X\r\n", (ret & (1<<5))     >> 5);
+  LOG_INFO("RX_DR:    %1X\r\n", (ret & (1<<6))     >> 6);
+  LOG_INFO("\r\n");
+
+  ret = NRF_ReadRegisterByte(NRF_REG_FIFO_STATUS);
+  LOG_INFO("FIFO status register: %02X\r\n", ret);
+  LOG_INFO("RX_EMPTY:   %2X\r\n", ret &  (1<<0));
+  LOG_INFO("RX_FULL:    %2X\r\n", (ret & (1<<1)) >> 1);
+  LOG_INFO("TX_EMPTY:   %2X\r\n", (ret & (1<<4)) >> 4);
+  LOG_INFO("TX_FULL:    %2X\r\n", (ret & (1<<5)) >> 5);
+  LOG_INFO("TX_REUSE:   %2X\r\n", (ret & (1<<6)) >> 6);
+  LOG_INFO("\r\n");
+
+  ret = NRF_ReadRegisterByte(NRF_REG_CONFIG);
+  LOG_INFO("Config register: %02X\r\n", ret);
+  LOG_INFO("PRIM_RX:      %1X\r\n", ret & (1<<0));
+  LOG_INFO("PWR_UP:       %1X\r\n", ret & (1<<1));
+  LOG_INFO("CRCO:         %1X\r\n", ret & (1<<2));
+  LOG_INFO("EN_CRC:       %1X\r\n", ret & (1<<3));
+  LOG_INFO("MASK_MAX_RT:  %1X\r\n", ret & (1<<4));
+  LOG_INFO("MASK_TX_DS:   %1X\r\n", ret & (1<<5));
+  LOG_INFO("MASK_RX_DR:   %1X\r\n", ret & (1<<6));
+  LOG_INFO("\r\n");
 }
 
 
@@ -200,3 +235,6 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
 
   LOG_DEBUG("\r\n");
 }
+
+
+

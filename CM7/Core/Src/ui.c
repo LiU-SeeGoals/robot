@@ -25,19 +25,32 @@ typedef struct {
   int parent;
 } StructInfo;
 
-// Available states
+/**
+ * @brief Available states.
+ *
+ * A state has a set of commands that can be executed in
+ * the state.
+ */
 typedef enum {
   state_default = 0,
   state_kicker,
   state_kicker_edit,
+  state_logs,
+  state_logs_configure,
 } state;
 
-// Every state has a set of commands.
-// [H]elp and [B]ack keys can't be used as they are
-// global commands.
-CommandInfo default_commands[2] = {
+/**
+ * Every state has a set of commands. The commands are
+ * then interpreted in the parse_key() function.
+ *
+ * [H]elp and [B]ack keys can't be used as they are
+ * global commands.
+ */
+//!@{
+CommandInfo default_commands[3] = {
   {'R', "F"},
-  {'K', "icker"}
+  {'K', "icker"},
+  {'L', "ogs"}
 };
 
 CommandInfo kicker_commands[4] = {
@@ -53,8 +66,28 @@ CommandInfo kicker_edit_commands[3] = {
   {'D', "ischarge wait (us)"},
 };
 
-// Initializiation of all available states
-StructInfo states[3] = {
+CommandInfo log_commands[1] = {
+  {'C', "onfigure"},
+};
+
+CommandInfo log_conf_commands[2] = {
+  {'M', "ute"},
+  {'S', "et minimum output level"},
+};
+//!@}
+
+/**
+ * @brief All the available states that the UI can be in.
+ *
+ * Each state should have a set of commands that can be
+ * executed in the state. These will be printed from
+ * the print_help() function.
+ *
+ * The parent is the state which we'll go back to if
+ * the user presses B. The name will be printed
+ * from the print_help() function.
+ */
+StructInfo states[5] = {
   {
     .name     = "", 
     .cmds     = default_commands,
@@ -73,20 +106,34 @@ StructInfo states[3] = {
     .len_cmds = sizeof(kicker_edit_commands)/sizeof(CommandInfo),
     .parent   = state_kicker,
   },
+  {
+    .name     = "Log",
+    .cmds     = log_commands,
+    .len_cmds = sizeof(log_commands)/sizeof(CommandInfo),
+    .parent   = state_default,
+  },
+  {
+    .name     = "Log->Conf",
+    .cmds     = log_conf_commands,
+    .len_cmds = sizeof(log_conf_commands)/sizeof(CommandInfo),
+    .parent   = state_logs,
+  },
 };
 
-
 /* Private variables */
-UART_HandleTypeDef *huart;
-state current_state = state_default;
-int current_command = -1;
-uint8_t key;
-uint8_t reading_to_buffer = 0;
-uint8_t rx_buffer[RX_BUFFER_LEN];
-size_t rx_buffer_loc = 0;
-LOG_Module internal_log_mod;
+static UART_HandleTypeDef *huart;
+static state current_state = state_default;
+static int current_command = -1;
+static uint8_t key;
+static uint8_t reading_to_buffer = 0;
+static uint8_t memory; // remember things between states
+static uint8_t rx_buffer[RX_BUFFER_LEN];
+static char* input_text;
+static size_t rx_buffer_loc = 0;
+static LOG_Module internal_log_mod;
 
 /* Private functions declarations */
+void print_help();
 void read_to_buffer();
 void finished_reading_to_buffer();
 void stop_reading_to_buffer();
@@ -99,20 +146,8 @@ void parse_key();
 void UI_Init(UART_HandleTypeDef *handle) {
   huart = handle;
   HAL_UART_Receive_IT(huart, &key, 1);
-  LOG_InitModule(&internal_log_mod, "UI");
-}
-
-void UI_PrintHelp() {
-  if (current_state == state_default) {
-    LOG_UI("[UI]: [H]elp ");
-  } else {
-    LOG_UI("[UI->%s]: [B]ack [H]elp\r\n", states[current_state].name);
-  }
-
-  for (int i = 0; i < states[current_state].len_cmds; i++) {
-    LOG_UI("[%c]%s ", states[current_state].cmds[i].key, states[current_state].cmds[i].description);
-  }
-  LOG_UI("\r\n");
+  LOG_InitModule(&internal_log_mod, "UI", LOG_LEVEL_INFO);
+  print_help();
 }
 
 void UI_RxCallback() {
@@ -121,11 +156,11 @@ void UI_RxCallback() {
   } else if ((key == 'B' || key == KEY_BACKSPACE) && current_state != state_default) {
     current_state = states[current_state].parent;
     current_command = key;
-    UI_PrintHelp();
+    print_help();
   } else {
     current_command = key;
     if (key == 'H') {
-      UI_PrintHelp();
+      print_help();
     } else {
       parse_key();
     }
@@ -138,6 +173,23 @@ void UI_RxCallback() {
  * Private functions implementations
  */
 
+void print_help() {
+  if (current_state == state_default) {
+    LOG_UI("[UI]: [H]elp ");
+  } else {
+    LOG_UI("[UI->%s]: [B]ack [H]elp\r\n", states[current_state].name);
+  }
+
+  for (int i = 0; i < states[current_state].len_cmds; i++) {
+    LOG_UI("[%c]%s ", states[current_state].cmds[i].key, states[current_state].cmds[i].description);
+  }
+  LOG_UI("\r\n");
+}
+
+/**
+ * We end up here if we've asked for a value by setting
+ * reading_to_buffer high.
+ */
 void read_to_buffer() {
   if (key == KEY_NEWLINE || rx_buffer_loc == RX_BUFFER_LEN) {
     finished_reading_to_buffer();
@@ -148,46 +200,42 @@ void read_to_buffer() {
   } else if (key == KEY_BACKSPACE) {
     if (rx_buffer_loc > 0) {
       rx_buffer_loc--;
-      rx_buffer[rx_buffer_loc] = ' ';
+      rx_buffer[rx_buffer_loc] = 0;
     }
-    LOG_UI("%s\r\n", rx_buffer);
+    LOG_UI("\r\nInput: %s", rx_buffer);
   } else {
     rx_buffer[rx_buffer_loc] = key;
+    LOG_UI("%c", rx_buffer[rx_buffer_loc]);
     rx_buffer_loc++;
-    LOG_UI("%s\r\n", rx_buffer);
   }
 }
 
-void finished_reading_to_buffer() {
-  switch(current_state) {
-    case state_kicker_edit:
-      switch(current_command) {
-        case 'M':
-          KICKER_EditValue(KICKER_VAL_MAX_CHARGES_PER_KICK, atoi(rx_buffer));
-          break;
-        case 'C':
-          KICKER_EditValue(KICKER_VAL_CHARGE_WAIT_US, atoi(rx_buffer));
-          break;
-        case 'D':
-          KICKER_EditValue(KICKER_VAL_DISCHARGE_WAIT_US, atoi(rx_buffer));
-          break;
-      }
-      LOG_UI("---\r\n");
-      KICKER_PrintValues();
-      break;
-    default:
-      LOG_UI("[UI] Bad state for setting value\r\n");
-      break;
-  }
+void start_reading_to_buffer() {
+  reading_to_buffer = 1;
+  LOG_UI("\r\n" \
+         "(ctrl-c / esc to exit)\r\n" \
+         "Input: ");
 }
 
+/**
+ * Just quits from the user entering a value end clears the buffer.
+ */
 void stop_reading_to_buffer() {
   reading_to_buffer = 0;
   rx_buffer_loc = 0;
   memset(rx_buffer, 0, RX_BUFFER_LEN);
-  UI_PrintHelp();
+  print_help();
 }
 
+/**
+ * Whenever the user presses a key into the terminal while
+ * having an active UART connection we should end up here.
+ *
+ * Depending on the current_state we'll interpret the keys
+ * differently. Each key should correspond to one of the
+ * commands of the state and either should put the user
+ * into a new state or perform an action.
+ */
 void parse_key() {
   if (current_state == state_default) {
     switch (key) {
@@ -196,11 +244,25 @@ void parse_key() {
         break;
       case 'K':
         current_state = state_kicker;
-        UI_PrintHelp();
+        print_help();
+        break;
+      case 'L':
+        current_state = state_logs;
+        int len;
+        LOG_Module **modules = LOG_GetModules(&len);
+        for (int i = 0; i < len; i++) {
+            LOG_UI("%s\r\n" \
+                   "   Muted: %i\r\n" \
+                   "   Min level: %s (%i)\r\n", modules[i]->name,
+                                                modules[i]->muted,
+                                                LOG_LEVEL[modules[i]->min_output_level].name,
+                                                modules[i]->min_output_level);
+        }
+        print_help();
         break;
       default:
         LOG_UI("Unknown command: %c (%x)\r\n", key, key);
-        UI_PrintHelp();
+        print_help();
         break;
     }
   } else if (current_state == state_kicker) {
@@ -212,33 +274,127 @@ void parse_key() {
         KICKER_Kick();
         break;
       case 'P':
-        KICKER_PrintValues();
+        {
+          KICKER_Settings* set = KICKER_GetSettings();
+          LOG_UI("Max charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
+                 set->max_charges_per_kick, set->charge_wait_us, set->discharge_wait_us);
+        }
         break;
       case 'E':
         current_state = state_kicker_edit;
-        UI_PrintHelp();
-        break;
-      default:
-        UI_PrintHelp();
+        print_help();
         break;
     }
   } else if (current_state == state_kicker_edit) {
     switch (key) {
       case 'M':
-        reading_to_buffer = 1;
-        LOG_UI("New value: \r\n");
-        break;
       case 'C':
-        reading_to_buffer = 1;
-        LOG_UI("New value: \r\n");
-        break;
       case 'D':
-        reading_to_buffer = 1;
-        LOG_UI("New value: \r\n");
+        {
+          KICKER_Settings* set = KICKER_GetSettings();
+          LOG_UI("---\r\nMax charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
+                 set->max_charges_per_kick, set->charge_wait_us, set->discharge_wait_us);
+          start_reading_to_buffer();
+        }
         break;
-      default:
-        UI_PrintHelp();
+    } 
+  } else if (current_state == state_logs) {
+    switch (key) {
+      case 'C':
+        {
+          int len;
+          LOG_Module **modules = LOG_GetModules(&len);
+          for (int i = 0; i < len; i++) {
+            LOG_UI("[%i] %s\r\n" \
+                   "   Muted: %i\r\n" \
+                   "   Min level: %s (%i)\r\n", i,
+                                                modules[i]->name,
+                                                modules[i]->muted,
+                                                LOG_LEVEL[modules[i]->min_output_level].name,
+                                                modules[i]->min_output_level);
+          }
+          start_reading_to_buffer();
+        }
+        break;
+    }
+  } else if (current_state == state_logs_configure) {
+    switch (key) {
+      case 'M':
+        {
+          LOG_Module *mod = LOG_GetModule(memory);
+          if (mod == NULL) {
+            LOG_WARNING("No log module with index %i\r\n", memory);
+            return;
+          }
+
+          mod->muted = !mod->muted;
+          LOG_UI("[%s] Mute toggled (%i)\r\n", mod->name, mod->muted);
+        }
+        break;
+      case 'S':
+        {
+          LOG_UI("Levels:\r\n");
+          for (int i = LOG_LEVEL_TRACE; i < LOG_LEVEL_EMERGENCY; i++) {
+            LOG_UI("   [%i] %s\r\n", i, LOG_LEVEL[i].name);
+          }
+          start_reading_to_buffer();
+        }
         break;
     }
   }
 }
+
+/**
+ * After having set reading_to_buffer high and the user then
+ * pressed either enter or filled the whole buffer, we'll
+ * end up here.
+ *
+ * Neither current_state or current_command changes, so the
+ * newly input value can be used for whatever we wish.
+ *
+ * See this as a callback for the user having entered a value.
+ */
+void finished_reading_to_buffer() {
+  if (current_state == state_kicker_edit) {
+    KICKER_Settings* set = KICKER_GetSettings();
+    switch(current_command) {
+      case 'M':
+        set->max_charges_per_kick = atoi(rx_buffer);
+        break;
+      case 'C':
+        set->charge_wait_us = atoi(rx_buffer);
+        break;
+      case 'D':
+        set->discharge_wait_us = atoi(rx_buffer);
+        break;
+    }
+    LOG_UI("---\r\nMax charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
+           set->max_charges_per_kick, set->charge_wait_us, set->discharge_wait_us);
+  } else if (current_state == state_logs) {
+    switch (current_command) {
+      case 'C':
+        current_state = state_logs_configure;
+        memory = atoi(rx_buffer);
+        LOG_UI("\r\nEditing: %i\r\n", memory);
+        break;
+    }
+  }  else if (current_state == state_logs_configure) {
+    switch (current_command) {
+      case 'S':
+        {
+          LOG_Module *mod = LOG_GetModule(memory);
+          int level = atoi(rx_buffer);
+          if (mod == NULL || level < 0 || level > LOG_LEVEL_EMERGENCY) {
+            LOG_WARNING("No log module with index %i or level %i\r\n", memory, level);
+            return;
+          }
+          mod->min_output_level = level;
+          LOG_UI("\r\nSetting to: %i\r\n", level);
+        }
+        break;
+    }
+  } else {
+    LOG_UI("[UI] State not configured to set values.\r\n");
+  }
+}
+

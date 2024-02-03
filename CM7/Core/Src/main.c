@@ -149,10 +149,10 @@ Error_Handler();
   LOG_Init(&huart3);
   COM_Init(&hspi1);
   NAV_Init(&htim1);
-  UI_Init(&huart3);
-  LOG_InitModule(&internal_log_mod, "MAIN");
+  KICKER_Init();
+  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
   LOG_INFO("Startup finished...\r\n");
-  UI_PrintHelp();
+  UI_Init(&huart3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
