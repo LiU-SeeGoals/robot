@@ -81,7 +81,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       COM_RF_HandleIRQ();
       break;
     default:
-      //LOG_WARNING("Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
+      LOG_WARNING("Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
       break;
   }
 }
