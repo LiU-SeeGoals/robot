@@ -36,7 +36,8 @@ typedef enum {
   state_kicker,
   state_kicker_edit,
   state_logs,
-  state_logs_configure,
+  state_logs_mod_configure,
+  state_logs_back_configure,
 } state;
 
 /**
@@ -66,11 +67,13 @@ CommandInfo kicker_edit_commands[3] = {
   {'D', "ischarge wait (us)"},
 };
 
-CommandInfo log_commands[1] = {
-  {'C', "onfigure"},
+CommandInfo log_commands[3] = {
+  {'P', "rint buffer"},
+  {'M', "odules"},
+  {'S', "how backends"},
 };
 
-CommandInfo log_conf_commands[2] = {
+CommandInfo log_mod_conf_commands[2] = {
   {'M', "ute"},
   {'S', "et minimum output level"},
 };
@@ -87,7 +90,7 @@ CommandInfo log_conf_commands[2] = {
  * the user presses B. The name will be printed
  * from the print_help() function.
  */
-StructInfo states[5] = {
+StructInfo states[6] = {
   {
     .name     = "", 
     .cmds     = default_commands,
@@ -113,9 +116,9 @@ StructInfo states[5] = {
     .parent   = state_default,
   },
   {
-    .name     = "Log->Conf",
-    .cmds     = log_conf_commands,
-    .len_cmds = sizeof(log_conf_commands)/sizeof(CommandInfo),
+    .name     = "Log->Module",
+    .cmds     = log_mod_conf_commands,
+    .len_cmds = sizeof(log_mod_conf_commands)/sizeof(CommandInfo),
     .parent   = state_logs,
   },
 };
@@ -146,7 +149,7 @@ void parse_key();
 void UI_Init(UART_HandleTypeDef *handle) {
   huart = handle;
   HAL_UART_Receive_IT(huart, &key, 1);
-  LOG_InitModule(&internal_log_mod, "UI", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "UI", LOG_LEVEL_UI);
   print_help();
 }
 
@@ -239,14 +242,14 @@ void stop_reading_to_buffer() {
 void parse_key() {
   if (current_state == state_default) {
     switch (key) {
-      case 'R':
+      case 'R': // RF
         COM_RF_PrintInfo();
         break;
-      case 'K':
+      case 'K': // Kicker
         current_state = state_kicker;
         print_help();
         break;
-      case 'L':
+      case 'L': // Logs
         current_state = state_logs;
         int len;
         LOG_Module **modules = LOG_GetModules(&len);
@@ -267,32 +270,32 @@ void parse_key() {
     }
   } else if (current_state == state_kicker) {
     switch (key) {
-      case 'C':
+      case 'C': // Charge
         KICKER_Charge();
         break;
-      case 'K':
+      case 'K': // Kick
         KICKER_Kick();
         break;
-      case 'P':
+      case 'P': // Print vars
         {
           KICKER_Settings* set = KICKER_GetSettings();
           LOG_UI("Max charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
                  set->max_charges_per_kick, set->charge_wait_us, set->discharge_wait_us);
         }
         break;
-      case 'E':
+      case 'E': // Edit vars
         current_state = state_kicker_edit;
         print_help();
         break;
     }
   } else if (current_state == state_kicker_edit) {
     switch (key) {
-      case 'M':
-      case 'C':
-      case 'D':
+      case 'M': // Max charges per kick
+      case 'C': // Charge wait
+      case 'D': // Discharge wait
         {
           KICKER_Settings* set = KICKER_GetSettings();
-          LOG_UI("---\r\nMax charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
+          LOG_UI("\r\n---\r\nMax charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
                  set->max_charges_per_kick, set->charge_wait_us, set->discharge_wait_us);
           start_reading_to_buffer();
         }
@@ -300,7 +303,19 @@ void parse_key() {
     } 
   } else if (current_state == state_logs) {
     switch (key) {
-      case 'C':
+      case 'P': // Print buffer
+        {
+          char (*buffer)[LOG_MSG_SIZE] = LOG_GetBuffer();
+          LOG_UI("\r\nLog buffer...\r\n");
+          for(int i = 0; i < LOG_BUFFER_SIZE; i++) {
+            if (buffer[i] == NULL) {
+              return;
+            }
+            LOG_UI("%s", buffer[i]);
+          }
+        }
+        break;
+      case 'M': // Modules
         {
           int len;
           LOG_Module **modules = LOG_GetModules(&len);
@@ -316,10 +331,24 @@ void parse_key() {
           start_reading_to_buffer();
         }
         break;
+      case 'S': // Show backends
+        {
+          int len;
+          LOG_Backend *backends = LOG_GetBackends(&len);
+          for (int i = 0; i < len; i++) {
+            LOG_UI(" %s\r\n" \
+                   "   Muted: %i\r\n" \
+                   "   Min level: %s (%i)\r\n", backends[i].name,
+                                                backends[i].muted,
+                                                LOG_LEVEL[backends[i].min_output_level].name,
+                                                backends[i].min_output_level);
+          }
+        }
+        break;
     }
-  } else if (current_state == state_logs_configure) {
+  } else if (current_state == state_logs_mod_configure) {
     switch (key) {
-      case 'M':
+      case 'M': // Mute
         {
           LOG_Module *mod = LOG_GetModule(memory);
           if (mod == NULL) {
@@ -331,7 +360,7 @@ void parse_key() {
           LOG_UI("[%s] Mute toggled (%i)\r\n", mod->name, mod->muted);
         }
         break;
-      case 'S':
+      case 'S': // Set minimum output level
         {
           LOG_UI("Levels:\r\n");
           for (int i = LOG_LEVEL_TRACE; i < LOG_LEVEL_EMERGENCY; i++) {
@@ -368,17 +397,19 @@ void finished_reading_to_buffer() {
         set->discharge_wait_us = atoi(rx_buffer);
         break;
     }
-    LOG_UI("---\r\nMax charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
+    LOG_UI("\r\n---\r\nMax charges per kick: %i\r\nCharge wait (us): %i\r\nDischarge wait (us): %i\r\n",
            set->max_charges_per_kick, set->charge_wait_us, set->discharge_wait_us);
   } else if (current_state == state_logs) {
     switch (current_command) {
-      case 'C':
-        current_state = state_logs_configure;
+      case 'M':
+        current_state = state_logs_mod_configure;
         memory = atoi(rx_buffer);
         LOG_UI("\r\nEditing: %i\r\n", memory);
         break;
+      case 'C':
+        break;
     }
-  }  else if (current_state == state_logs_configure) {
+  }  else if (current_state == state_logs_mod_configure) {
     switch (current_command) {
       case 'S':
         {

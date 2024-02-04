@@ -5,10 +5,15 @@
 #include "main.h"
 
 /* Public defines */
+#define LOG_BUFFER_SIZE 5
+#define LOG_MSG_SIZE    100
+
 #define LOG_PRINTF(level, fmt, ...) LOG_Printf(&internal_log_mod, level, fmt, ##__VA_ARGS__)
-#define LOG_TRACE(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_TRACE, fmt, ##__VA_ARGS__)
-#define LOG_DEBUG(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #define LOG_UI(fmt, ...)            LOG_Printf(&internal_log_mod, LOG_LEVEL_UI, fmt, ##__VA_ARGS__)
+#define LOG_TRACE(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_TRACE, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG2(fmt, ...)        LOG_Printf(&internal_log_mod, LOG_LEVEL_DEBUG2, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG1(fmt, ...)        LOG_Printf(&internal_log_mod, LOG_LEVEL_DEBUG1, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...)         LOG_Printf(&internal_log_mod, LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #define LOG_INFO(fmt, ...)          LOG_Printf(&internal_log_mod, LOG_LEVEL_INFO, fmt, ##__VA_ARGS__)
 #define LOG_NOTICE(fmt, ...)        LOG_Printf(&internal_log_mod, LOG_LEVEL_NOTICE, fmt, ##__VA_ARGS__)
 #define LOG_WARNING(fmt, ...)       LOG_Printf(&internal_log_mod, LOG_LEVEL_WARNING, fmt, ##__VA_ARGS__)
@@ -25,6 +30,11 @@
  * Descriptions from ChatGPT, thanks!
  */
 typedef enum {
+  /*
+   * Output from the CLI UI which is reachable through UART.
+   */
+  LOG_LEVEL_UI,
+
   /**
    * Very detailed information, useful for developers to trace program 
    * execution in a granular way. Typically disabled in production due
@@ -42,6 +52,8 @@ typedef enum {
    * Use case: Initialization routines, status of hardware peripherals after
    * setup, algorithmic steps.
    */
+  LOG_LEVEL_DEBUG2,
+  LOG_LEVEL_DEBUG1,
   LOG_LEVEL_DEBUG,
 
   /*
@@ -62,11 +74,6 @@ typedef enum {
    * or readiness of critical components.
    */
   LOG_LEVEL_NOTICE,
-
-  /*
-   * Output from the CLI UI which is reachable through UART.
-   */
-  LOG_LEVEL_UI,
 
   /**
    * Indications of potential issues that are not immediate problems
@@ -121,9 +128,24 @@ typedef struct {
 /* Public variables */
 static LOG_Level_Info LOG_LEVEL[LOG_LEVEL_EMERGENCY + 1] = {
   {
+    .level = LOG_LEVEL_UI,
+    .name = "User Interface",
+    .short_name = "UI",
+  },
+  {
     .level = LOG_LEVEL_TRACE,
     .name = "Trace",
     .short_name = "T",
+  },
+  {
+    .level = LOG_LEVEL_DEBUG2,
+    .name = "Debug2",
+    .short_name = "D2",
+  },
+  {
+    .level = LOG_LEVEL_DEBUG1,
+    .name = "Debug1",
+    .short_name = "D1",
   },
   {
     .level = LOG_LEVEL_DEBUG,
@@ -139,11 +161,6 @@ static LOG_Level_Info LOG_LEVEL[LOG_LEVEL_EMERGENCY + 1] = {
     .level = LOG_LEVEL_NOTICE,
     .name = "Notice",
     .short_name = "N",
-  },
-  {
-    .level = LOG_LEVEL_UI,
-    .name = "User Interface",
-    .short_name = "-",
   },
   {
     .level = LOG_LEVEL_WARNING,
@@ -177,17 +194,30 @@ static LOG_Level_Info LOG_LEVEL[LOG_LEVEL_EMERGENCY + 1] = {
  * logging controls.
  */
 typedef struct {
-  int index;
   LOG_Level min_output_level;
   const char* name;
   uint8_t muted;
 } LOG_Module;
 
+/**
+ * A backend is someting outputting log messages to somewhere. Examples are
+ * through UART or to a local log buffer.
+ */
+typedef struct {
+  LOG_Level min_output_level;
+  const char* name;
+  uint8_t muted;
+} LOG_Backend;
+
 /* Public function declarations */
 void LOG_Init(UART_HandleTypeDef *handle);
 void LOG_InitModule(LOG_Module *mod, const char* name, LOG_Level min_output_level);
 void LOG_Printf(LOG_Module *mod, LOG_Level level, const char* format, ...);
+void LOG_PrintLogBuffer(int start, int end);
 LOG_Module** LOG_GetModules(int *len);
 LOG_Module* LOG_GetModule(int index);
+LOG_Backend* LOG_GetBackends(int *len);
+LOG_Backend* LOG_GetBackend(int index);
+char (*LOG_GetBuffer())[LOG_MSG_SIZE];
 
 #endif /* LOG_H */
