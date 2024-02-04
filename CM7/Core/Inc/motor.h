@@ -46,4 +46,9 @@ void MOTOR_Break(MotorPWM *motor);
  */
 float MOTOR_ReadSpeed(MotorPWM *motor);
 
+/**
+ * Configures which motor drivers to communicate with when using SPI.
+ */
+void MOTOR_ConfigSPI(uint8_t select_drivers[5]);
+
 #endif

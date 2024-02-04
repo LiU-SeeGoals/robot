@@ -7,8 +7,31 @@
 /* Private variables */
 static LOG_Module *internal_log_mod;
 
-void MOTOR_Init() {
+void MOTOR_Init()
+{
   LOG_InitModule(internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
+}
+
+#define CSLogic_Port 0x0
+#define SER_Pin 0x0
+#define SRCLK_Pin 0x0
+#define RCLK_Pin 0x0
+#define OE_Pin 0x0
+
+void MOTOR_ConfigSPI(uint8_t *select_drivers)
+{
+  for (int i = 0; i < 5; i++)
+  {
+    HAL_GPIO_WritePin(CSLogic_Port, SER_Pin, select_drivers[i] > 0);
+    HAL_GPIO_WritePin(CSLogic_Port, SRCLK_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(CSLogic_Port, SRCLK_Pin, GPIO_PIN_RESET);
+  }
+
+  HAL_GPIO_WritePin(CSLogic_Port, RCLK_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(CSLogic_Port, RCLK_Pin, GPIO_PIN_RESET);
+  // Perhaps set OE on SPI begin?
+  HAL_GPIO_WritePin(CSLogic_Port, OE_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(CSLogic_Port, OE_Pin, GPIO_PIN_RESET);
 }
 
 void MOTOR_Start(MotorPWM *motor)
@@ -39,7 +62,8 @@ void changeDirection(MotorPWM *motor, int percent)
   return; // will not work without all pins connected
   if ((motor->reversing && percent >= 0) || (!motor->reversing && percent <= 0))
   {
-    while(MOTOR_ReadSpeed(motor) >= 0){
+    while (MOTOR_ReadSpeed(motor) >= 0)
+    {
       MOTOR_Break(motor);
     }
     if (percent < 0)
@@ -68,8 +92,8 @@ void MOTOR_SetSpeed(MotorPWM *motor, float percent)
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
   // each pulse is one rotation of the motor
-  float radius = 0.1; // meters
-  float PI = 3.1415; // meters
+  float radius = 0.1;                         // meters
+  float PI = 3.1415;                          // meters
   float wheelCircumference = 2 * PI * radius; // meters
 
   extern Timer timer3;
@@ -89,7 +113,7 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
   }
   uint32_t time = timer_GetElapsedTimeMicro(&timer3);
   timer_stop(&timer3);
-  float speed = wheelCircumference / (float) time;
+  float speed = wheelCircumference / (float)time;
 
   return speed;
 }
