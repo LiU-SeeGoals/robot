@@ -5,11 +5,11 @@
 #include "main.h"
 
 /* Public constants */
-uint8_t COM_CS_MOTOR_DRIVER_1 = 1 << 0;
-uint8_t COM_CS_MOTOR_DRIVER_2 = 1 << 1;
-uint8_t COM_CS_MOTOR_DRIVER_3 = 1 << 2;
-uint8_t COM_CS_MOTOR_DRIVER_4 = 1 << 3;
-uint8_t COM_CS_MOTOR_DRIVER_5 = 1 << 4;
+#define COM_CS_MOTOR_DRIVER_1 1 << 0
+#define COM_CS_MOTOR_DRIVER_2 1 << 1
+#define COM_CS_MOTOR_DRIVER_3 1 << 2
+#define COM_CS_MOTOR_DRIVER_4 1 << 3
+#define COM_CS_MOTOR_DRIVER_5 1 << 4
 
 /* Public function declarations */
 

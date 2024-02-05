@@ -108,8 +108,8 @@ void Error_Handler(void);
 #define NRF_CE_GPIO_Port GPIOC
 #define MOTOR1_PWM_Pin GPIO_PIN_8
 #define MOTOR1_PWM_GPIO_Port GPIOA
-#define SPI_CS_OE_Pin GPIO_PIN_3
-#define SPI_CS_OE_GPIO_Port GPIOD
+#define SPI_CS_OUTPUT_Pin GPIO_PIN_3
+#define SPI_CS_OUTPUT_GPIO_Port GPIOD
 #define SPI_CS_RESET_Pin GPIO_PIN_4
 #define SPI_CS_RESET_GPIO_Port GPIOD
 #define SPI_CS_STORE_Pin GPIO_PIN_5

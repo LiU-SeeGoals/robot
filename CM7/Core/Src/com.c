@@ -160,9 +160,6 @@ void COM_RF_PrintInfo(void) {
 
 void COM_SPI_Config(uint8_t devices)
 {
-  // Ensure SRCLR and OE is high. Move to init?
-  HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(SPI_CS_OE_GPIO_Port, SPI_CS_OE_Pin, GPIO_PIN_SET);
   for (int i = 0; i < 8; i++)
   {
     // Shift each CS.
@@ -176,12 +173,12 @@ void COM_SPI_Config(uint8_t devices)
   HAL_GPIO_WritePin(SPI_CS_STORE_GPIO_Port, SPI_CS_STORE_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SPI_CS_STORE_GPIO_Port, SPI_CS_STORE_Pin, GPIO_PIN_RESET);
   // Output.
-  HAL_GPIO_WritePin(SPI_CS_OE_GPIO_Port, SPI_CS_OE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_RESET);
 }
 
 void COM_SPI_Reset()
 {
-  HAL_GPIO_WritePin(SPI_CS_OE_GPIO_Port, SPI_CS_OE_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_SET);
   // Clear shift register.
   HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_SET);
