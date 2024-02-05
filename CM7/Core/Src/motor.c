@@ -12,29 +12,6 @@ void MOTOR_Init()
   LOG_InitModule(internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
 }
 
-#define CSLogic_Port 0x0
-#define SER_Pin 0x0
-#define SRCLK_Pin 0x0
-#define RCLK_Pin 0x0
-#define OE_Pin 0x0
-
-void MOTOR_ConfigSPI(uint8_t drivers)
-{
-  for (int i = 0; i < 8; i++)
-  {
-    int cs = ((1 << i) & drivers) >> i;
-    HAL_GPIO_WritePin(CSLogic_Port, SER_Pin, cs);
-    HAL_GPIO_WritePin(CSLogic_Port, SRCLK_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(CSLogic_Port, SRCLK_Pin, GPIO_PIN_RESET);
-  }
-
-  HAL_GPIO_WritePin(CSLogic_Port, RCLK_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(CSLogic_Port, RCLK_Pin, GPIO_PIN_RESET);
-  // Perhaps set OE on SPI begin?
-  HAL_GPIO_WritePin(CSLogic_Port, OE_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(CSLogic_Port, OE_Pin, GPIO_PIN_RESET);
-}
-
 void MOTOR_Start(MotorPWM *motor)
 {
   HAL_TIM_PWM_Start(motor->htim, motor->channel);
