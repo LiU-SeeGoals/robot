@@ -4,6 +4,12 @@
 /* Public includes */
 #include "main.h"
 
+/* Public constants */
+uint8_t SPI_CS_MOTOR_DRIVER_1 = 1 << 0;
+uint8_t SPI_CS_MOTOR_DRIVER_2 = 1 << 1;
+uint8_t SPI_CS_MOTOR_DRIVER_3 = 1 << 2;
+uint8_t SPI_CS_MOTOR_DRIVER_4 = 1 << 3;
+uint8_t SPI_CS_MOTOR_DRIVER_5 = 1 << 4;
 
 /* Public function declarations */
 
@@ -30,5 +36,13 @@ void COM_RF_HandleIRQ(void);
  * Printf:s status and FIFO status registers from the NRF.
  */
 void COM_RF_PrintInfo(void);
+
+/**
+ * Transmit data through SPI to the specified devices.
+ *
+ * @param drivers Which devices to communicate with, encoded in an
+ * 8 bit integer.
+ */
+void COM_SPI_Transmit(uint8_t devices);
 
 #endif /* COM_H */
