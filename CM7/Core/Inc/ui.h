@@ -11,7 +11,6 @@
  */
 
 void UI_Init(UART_HandleTypeDef *huart);
-void UI_PrintHelp();
 void UI_RxCallback();
 
 #endif /* UI_H */

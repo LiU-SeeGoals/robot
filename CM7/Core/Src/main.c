@@ -25,6 +25,7 @@
 #include "stm32h7xx_hal_gpio.h"
 #include "com.h"
 #include "nav.h"
+#include "log.h"
 #include "kicker.h"
 #include "ui.h"
 /* USER CODE END Includes */
@@ -39,8 +40,6 @@
 #ifndef HSEM_ID_0
 #define HSEM_ID_0 (0U) /* HW semaphore 0*/
 #endif
-
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -57,7 +56,7 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-
+static LOG_Module internal_log_mod;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,21 +71,6 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-// Printf redirect to UART
-PUTCHAR_PROTOTYPE
-{
-  HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-  return ch;
-}
-
-int _write(int fd, char *ch, int len)
-{
-  HAL_UART_Transmit(&huart3, (uint8_t *)ch, len, HAL_MAX_DELAY);
-  return len;
-}
-// -----------------------
-
 // Handle callbacks
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   switch(GPIO_Pin) {
@@ -97,7 +81,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       COM_RF_HandleIRQ();
       break;
     default:
-      printf("[MAIN] Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
+      LOG_WARNING("Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
       break;
   }
 }
@@ -162,12 +146,13 @@ Error_Handler();
   MX_TIM1_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  printf("\r\n\r\n");
+  LOG_Init(&huart3);
   COM_Init(&hspi1);
   NAV_Init(&htim1);
+  KICKER_Init();
+  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
+  LOG_INFO("Startup finished...\r\n");
   UI_Init(&huart3);
-  printf("[MAIN] Inititalised...\r\n");
-  UI_PrintHelp();
   /* USER CODE END 2 */
 
   /* Infinite loop */
