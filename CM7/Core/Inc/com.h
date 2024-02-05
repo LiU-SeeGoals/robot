@@ -45,6 +45,9 @@ void COM_RF_PrintInfo(void);
  */
 void COM_SPI_Config(uint8_t devices);
 
+/**
+ * Reset chip selects for communication through SPI.
+ */
 void COM_SPI_Reset();
 
 #endif /* COM_H */
