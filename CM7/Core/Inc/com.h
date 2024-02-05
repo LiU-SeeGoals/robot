@@ -43,6 +43,6 @@ void COM_RF_PrintInfo(void);
  * @param drivers Which devices to communicate with, encoded in an
  * 8 bit integer.
  */
-void COM_SPI_Transmit(uint8_t devices);
+void COM_SPI_Transmit(uint8_t devices, SPI_HandleTypeDef *hspi, uint8_t *data, uint16_t size, uint32_t timeout);
 
 #endif /* COM_H */
