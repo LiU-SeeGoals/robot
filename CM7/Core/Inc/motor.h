@@ -16,6 +16,9 @@ typedef struct
   uint16_t reversing;
 } MotorPWM;
 
+
+void MOTOR_Init();
+
 /**
  * Start motor
  */

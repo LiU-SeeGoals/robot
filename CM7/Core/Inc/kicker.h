@@ -3,15 +3,16 @@
 
 #include "main.h"
 
-typedef enum {
-  KICKER_VAL_MAX_CHARGES_PER_KICK,
-  KICKER_VAL_CHARGE_WAIT_US,
-  KICKER_VAL_DISCHARGE_WAIT_US,
-} KICKER_Value;
+typedef struct {
+  int max_charges_per_kick;
+  int charge_wait_us;
+  int discharge_wait_us;
+  int charges_since_last_kick;
+} KICKER_Settings;
 
+void KICKER_Init();
 void KICKER_Charge();
 void KICKER_Kick();
-void KICKER_PrintValues();
-void KICKER_EditValue(KICKER_Value what, int val);
+KICKER_Settings* KICKER_GetSettings();
 
 #endif /* KICKER_H */

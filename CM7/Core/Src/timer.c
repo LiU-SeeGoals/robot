@@ -54,7 +54,4 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         printf_uart("ERR: Timer overflow!\r\n");
     }
     overflowCounts[timerIndex]++; // Increment overflow count for this timer
-
-    
-
 }

@@ -1,6 +1,15 @@
 #include "motor.h"
 
+/* Private includes */
+#include "log.h"
 #include "timer.h"
+
+/* Private variables */
+static LOG_Module *internal_log_mod;
+
+void MOTOR_Init() {
+  LOG_InitModule(internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
+}
 
 void MOTOR_Start(MotorPWM *motor)
 {
@@ -52,7 +61,7 @@ void MOTOR_SetSpeed(MotorPWM *motor, float percent)
 
   // TODO: How to handle rounding errors, do they even matter?
   uint32_t pwm_speed = motor->htim->Init.Period * percent;
-  printf("[MOTOR] pwm_speed: %d\n", pwm_speed);
+  LOG_DEBUG("pwm_speed: %d\r\n", pwm_speed);
   __HAL_TIM_SET_COMPARE(motor->htim, motor->channel, pwm_speed);
 }
 

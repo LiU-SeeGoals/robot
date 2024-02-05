@@ -40,6 +40,7 @@ C_SOURCES =  \
 ../../CM7/Core/Src/com.c \
 ../../CM7/Core/Src/motor.c \
 ../../CM7/Core/Src/nav.c \
+../../CM7/Core/Src/log.c \
 ../../CM7/Core/Src/kicker.c \
 ../../CM7/Core/Src/ui.c \
 ../../CM7/Core/Src/stm32h7xx_it.c \
