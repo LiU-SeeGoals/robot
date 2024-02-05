@@ -18,11 +18,12 @@ void MOTOR_Init()
 #define RCLK_Pin 0x0
 #define OE_Pin 0x0
 
-void MOTOR_ConfigSPI(uint8_t *select_drivers)
+void MOTOR_ConfigSPI(uint8_t drivers)
 {
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 8; i++)
   {
-    HAL_GPIO_WritePin(CSLogic_Port, SER_Pin, select_drivers[i] > 0);
+    int cs = ((1 << i) & drivers) >> i;
+    HAL_GPIO_WritePin(CSLogic_Port, SER_Pin, cs);
     HAL_GPIO_WritePin(CSLogic_Port, SRCLK_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(CSLogic_Port, SRCLK_Pin, GPIO_PIN_RESET);
   }
