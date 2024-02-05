@@ -5,11 +5,11 @@
 #include "main.h"
 
 /* Public constants */
-uint8_t SPI_CS_MOTOR_DRIVER_1 = 1 << 0;
-uint8_t SPI_CS_MOTOR_DRIVER_2 = 1 << 1;
-uint8_t SPI_CS_MOTOR_DRIVER_3 = 1 << 2;
-uint8_t SPI_CS_MOTOR_DRIVER_4 = 1 << 3;
-uint8_t SPI_CS_MOTOR_DRIVER_5 = 1 << 4;
+uint8_t COM_CS_MOTOR_DRIVER_1 = 1 << 0;
+uint8_t COM_CS_MOTOR_DRIVER_2 = 1 << 1;
+uint8_t COM_CS_MOTOR_DRIVER_3 = 1 << 2;
+uint8_t COM_CS_MOTOR_DRIVER_4 = 1 << 3;
+uint8_t COM_CS_MOTOR_DRIVER_5 = 1 << 4;
 
 /* Public function declarations */
 
@@ -38,11 +38,13 @@ void COM_RF_HandleIRQ(void);
 void COM_RF_PrintInfo(void);
 
 /**
- * Transmit data through SPI to the specified devices.
+ * Configure chip selects for communication through SPI.
  *
  * @param drivers Which devices to communicate with, encoded in an
  * 8 bit integer.
  */
-void COM_SPI_Transmit(uint8_t devices, SPI_HandleTypeDef *hspi, uint8_t *data, uint16_t size, uint32_t timeout);
+void COM_SPI_Config(uint8_t devices);
+
+void COM_SPI_Reset();
 
 #endif /* COM_H */

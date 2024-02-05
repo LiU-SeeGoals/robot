@@ -158,7 +158,7 @@ void COM_RF_PrintInfo(void) {
   LOG_INFO("\r\n");
 }
 
-void COM_SPI_Transmit(uint8_t devices, SPI_HandleTypeDef *hspi, uint8_t *data, uint16_t size, uint32_t timeout)
+void COM_SPI_Config(uint8_t devices)
 {
   // Ensure SRCLR and OE is high. Move to init?
   HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_SET);
@@ -177,9 +177,10 @@ void COM_SPI_Transmit(uint8_t devices, SPI_HandleTypeDef *hspi, uint8_t *data, u
   HAL_GPIO_WritePin(SPI_CS_STORE_GPIO_Port, SPI_CS_STORE_Pin, GPIO_PIN_RESET);
   // Output.
   HAL_GPIO_WritePin(SPI_CS_OE_GPIO_Port, SPI_CS_OE_Pin, GPIO_PIN_RESET);
+}
 
-  HAL_SPI_Transmit(hspi, data, size, timeout);
-
+void COM_SPI_Reset()
+{
   HAL_GPIO_WritePin(SPI_CS_OE_GPIO_Port, SPI_CS_OE_Pin, GPIO_PIN_SET);
   // Clear shift register.
   HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_RESET);
