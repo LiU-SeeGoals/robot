@@ -40,7 +40,7 @@ void COM_RF_PrintInfo(void);
 /**
  * Configure chip selects for communication through SPI.
  *
- * @param drivers Which devices to communicate with, encoded in an
+ * @param devices Which devices to communicate with, encoded in an
  * 8 bit integer.
  */
 void COM_SPI_Config(uint8_t devices);

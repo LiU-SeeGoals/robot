@@ -39,16 +39,27 @@ Connect to board at the top right corner and click start programming
 ## Pins
 
 ### CN7
-| Zio pin | MCU pin | STM32 function | Label          | Cable colour | NRF Pin |
-|---------|---------|----------------|----------------|--------------|---------|
-| 1       | PC6     | GPIO_Output    | NRF_CE         | Yellow       | CE      |
-| 2       | PB8     | GPIO_Output    | NRF_CSN        | Orange       | CSN     |
-| 3       | PB15    | GPIO_EXTI15    | NRF_IRQ        | Gray         | IRQ     |
-| 6       | VDD     | VDD            | -              | Red          | VDD     |
-| 8       | GND     | GND            | -              | Black        | GND     |
-| 10      | PA5     | SPI1_SCK       | NRF_SCK        | Green        | SCK     |
-| 12      | PA6     | SPI1_MISO      | NRF_MISO       | Purple       | M1      |
-| 14      | PB5     | SPI1_MOSI      | NRF_MOSI       | Blue         | M0      |
+
+| Zio pin | MCU pin | STM32 function | Label    | Cable colour | NRF Pin |
+| ------- | ------- | -------------- | -------- | ------------ | ------- |
+| 1       | PC6     | GPIO_Output    | NRF_CE   | Yellow       | CE      |
+| 2       | PB8     | GPIO_Output    | NRF_CSN  | Orange       | CSN     |
+| 3       | PB15    | GPIO_EXTI15    | NRF_IRQ  | Gray         | IRQ     |
+| 6       | VDD     | VDD            | -        | Red          | VDD     |
+| 8       | GND     | GND            | -        | Black        | GND     |
+| 10      | PA5     | SPI1_SCK       | NRF_SCK  | Green        | SCK     |
+| 12      | PA6     | SPI1_MISO      | NRF_MISO | Purple       | M1      |
+| 14      | PB5     | SPI1_MOSI      | NRF_MOSI | Blue         | M0      |
+
+### CN9
+
+| Zio pin | MCU pin | STM32 function | Label         | Cable colour |
+| ------- | ------- | -------------- | ------------- | ------------ |
+| 10      | PD3     | GPIO_Output    | SPI_CS_OUTPUT | -            |
+| 8       | PD4     | GPIO_Output    | SPI_CS_RESET  | -            |
+| 6       | PD5     | GPIO_Output    | SPI_CS_STORE  | -            |
+| 4       | PD6     | GPIO_Output    | SPI_CS_SHIFT  | -            |
+| 2       | PD7     | GPIO_Output    | SPI_CS_CONF   | -            |
 
 ### CN10
 | Zio pin | MCU pin | STM32 function | Label            | Cable colour |
