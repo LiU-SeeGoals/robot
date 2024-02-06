@@ -7,7 +7,8 @@
 /* Private variables */
 static LOG_Module *internal_log_mod;
 
-void MOTOR_Init() {
+void MOTOR_Init()
+{
   LOG_InitModule(internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
 }
 
@@ -39,7 +40,8 @@ void changeDirection(MotorPWM *motor, int percent)
   return; // will not work without all pins connected
   if ((motor->reversing && percent >= 0) || (!motor->reversing && percent <= 0))
   {
-    while(MOTOR_ReadSpeed(motor) >= 0){
+    while (MOTOR_ReadSpeed(motor) >= 0)
+    {
       MOTOR_Break(motor);
     }
     if (percent < 0)
@@ -68,8 +70,8 @@ void MOTOR_SetSpeed(MotorPWM *motor, float percent)
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
   // each pulse is one rotation of the motor
-  float radius = 0.1; // meters
-  float PI = 3.1415; // meters
+  float radius = 0.1;                         // meters
+  float PI = 3.1415;                          // meters
   float wheelCircumference = 2 * PI * radius; // meters
 
   extern Timer timer3;
@@ -89,7 +91,7 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
   }
   uint32_t time = timer_GetElapsedTimeMicro(&timer3);
   timer_stop(&timer3);
-  float speed = wheelCircumference / (float) time;
+  float speed = wheelCircumference / (float)time;
 
   return speed;
 }

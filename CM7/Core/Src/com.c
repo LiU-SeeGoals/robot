@@ -170,6 +170,31 @@ void COM_RF_PrintInfo(void) {
   LOG_INFO("\r\n");
 }
 
+void COM_SPI_Config(uint8_t devices)
+{
+  for (int i = 0; i < 8; i++)
+  {
+    // Shift each CS.
+    int cs = ((1 << i) & devices) >> i;
+    HAL_GPIO_WritePin(SPI_CS_CONF_GPIO_Port, SPI_CS_CONF_Pin, cs);
+    HAL_GPIO_WritePin(SPI_CS_SHIFT_GPIO_Port, SPI_CS_SHIFT_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(SPI_CS_SHIFT_GPIO_Port, SPI_CS_SHIFT_Pin, GPIO_PIN_RESET);
+  }
+
+  // Store.
+  HAL_GPIO_WritePin(SPI_CS_STORE_GPIO_Port, SPI_CS_STORE_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(SPI_CS_STORE_GPIO_Port, SPI_CS_STORE_Pin, GPIO_PIN_RESET);
+  // Output.
+  HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_RESET);
+}
+
+void COM_SPI_Reset()
+{
+  HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_SET);
+  // Clear shift register.
+  HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_SET);
+}
 
 /*
  * Private function implementations
