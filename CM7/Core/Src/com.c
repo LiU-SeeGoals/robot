@@ -11,10 +11,16 @@
 #include "nav.h"
 
 /* Private defines */
-#define PIPE_CONTROLLER 0
-#define PIPE_VISION     1
+#define PIPE_ACTION     0
+#define PIPE_DATA       1
+#define PIPE_PING       2
 
 #define CONNECT_MAGIC 0x4d, 0xf8, 0x42, 0x79
+
+#define CONTROLLER_ADDR {2, 255, 255, 255, 255}
+#define ROBOT_DATA_ADDR(id) {1, 255, 255, 255, id}
+#define ROBOT_ACTION_ADDR(id) {1, 255, 255, id, 255}
+#define ROBOT_PING_ADDR(id) {1, 255, id, 255, 255}
 
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
@@ -25,9 +31,11 @@ static int find_id();
  */
 
 void COM_Init(SPI_HandleTypeDef* hspi) {
-  uint8_t controllerAddress[5]  = {1,2,3,4,5};
-  uint8_t visionAddress[5] = {1,2,3,4,6};
-
+  int id = find_id();
+  uint8_t controllerAddress[5] = CONTROLLER_ADDR;
+  uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
+  uint8_t dataAddress[5] = ROBOT_DATA_ADDR(id);
+  uint8_t pingAdress[5] = ROBOT_PING_ADDR(id);
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
   if(NRF_VerifySPI() != NRF_OK) {
@@ -44,8 +52,9 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   // Setup the TX address.
   // We also have to set pipe 0 to receive on the same address.
   NRF_WriteRegister(NRF_REG_TX_ADDR, controllerAddress, 5);
-  NRF_WriteRegister(NRF_REG_RX_ADDR_P0, controllerAddress, 5);
-  //NRF_WriteRegister(NRF_REG_RX_ADDR_P1, visionAddress, 5);
+  NRF_WriteRegister(NRF_REG_RX_ADDR_P0, actionAdress, 5);
+  NRF_WriteRegister(NRF_REG_RX_ADDR_P1, actionAdress, 5);
+  NRF_WriteRegister(NRF_REG_RX_ADDR_P2, actionAdress, 5);
 
   // We enable ACK payloads which needs dynamic payload to function.
   NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_ACK_PAY);
@@ -56,7 +65,7 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   // For motivation, see page 60 in datasheet.
   NRF_WriteRegisterByte(NRF_REG_SETUP_RETR, 0x13);
 
-  int id = find_id();
+  
   if (id >= 0) {
     uint8_t data[] = {CONNECT_MAGIC, id};
     if (NRF_Transmit(data, 5) != NRF_OK) {
@@ -100,12 +109,19 @@ void COM_RF_Receive(uint8_t pipe) {
   NRF_ReadPayload(payload, len);
 
   printf("[COM] Payload of length %i from pipe %i\r\n", len, pipe);
+  /*for (int i = 0; i < len; ++i) {
+      printf("%u,", payload[i]);
+  }
+  printf("\n");*/
 
   switch (pipe) {
-    case PIPE_CONTROLLER:
+    case PIPE_ACTION:
       parse_controller_packet(payload, len);
       break;
-    case PIPE_VISION:
+    case PIPE_DATA:
+      break;
+    case PIPE_PING:
+        printf("Got ping!\n");
       break;
   }
 
