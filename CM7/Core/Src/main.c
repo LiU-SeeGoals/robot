@@ -151,6 +151,8 @@ Error_Handler();
   NAV_Init(&htim1);
   KICKER_Init();
   LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
+  HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
   LOG_INFO("Startup finished...\r\n");
   UI_Init(&huart3);
   /* USER CODE END 2 */
@@ -425,8 +427,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, MOTOR4_BREAK_Pin|MOTOR3_REVERSE_Pin|MOTOR2_REVERSE_Pin|MOTOR4_REVERSE_Pin
-                          |LED_YELLOW_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, MOTOR4_BREAK_Pin | MOTOR3_REVERSE_Pin | MOTOR2_REVERSE_Pin | MOTOR4_REVERSE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_DISCHARGE_Pin|KICKER_CHARGE_Pin
@@ -437,6 +438,9 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(NRF_CE_GPIO_Port, NRF_CE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : MOTOR4_BREAK_Pin MOTOR3_REVERSE_Pin MOTOR2_REVERSE_Pin MOTOR4_REVERSE_Pin
                            LED_YELLOW_Pin */
