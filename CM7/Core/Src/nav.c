@@ -84,3 +84,24 @@ void NAV_Stop() {
   MOTOR_Stop(&motors[2]);
   MOTOR_Stop(&motors[3]);
 }
+
+void NAV_Steer(float vx, float vy, float w);
+
+_action_Vector3D NAV_CalculateSpeed();
+
+void NAV_Move(_action_Vector3D pos, _action_Vector3D dest)
+{
+  while (pos.w != dest.w && pos.x != dest.x && pos.y != dest.y)
+  {
+    // NOTE: pos and dest may be global, NAV_Steer&CalculateSpeed local.
+    // TODO: Implement conversion from global to local, etc.
+    float rotate_diff = dest.w - pos.w;
+    int32_t x_diff = dest.x - pos.x;
+    int32_t y_diff = dest.y - pos.y;
+    NAV_Steer(x_diff / abs(x_diff), y_diff / abs(y_diff), to_rotate / abs(to_rotate));
+    _action_Vector3D vel = NAV_CalculateSpeed();
+    pos.w += vel.w;
+    pos.x += vel.x;
+    pos.y += vel.y;
+  }
+}

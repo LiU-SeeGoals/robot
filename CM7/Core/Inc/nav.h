@@ -4,6 +4,7 @@
 /*
  * Public includes
  */
+#include <robot_action.pb.h>
 #include "main.h"
 
 typedef enum {
@@ -27,5 +28,6 @@ void NAV_Direction(DIRECTION dir);
 
 void NAV_Stop();
 
+void NAV_Move(_action_Vector3D pos, _action_Vector3D dest);
 
 #endif /* NAV_H */

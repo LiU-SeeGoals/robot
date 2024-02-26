@@ -220,9 +220,14 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
       break;
     case action_ActionType_KICK_ACTION:
       LOG_DEBUG("KICK");
+      for (int i = 0; i < cmd.kick_speed; i++)
+        KICKER_Charge();
+
+      KICKER_Kick();
       break;
     case action_ActionType_MOVE_ACTION:
       LOG_DEBUG("MOVE");
+      NAV_Move(cmd.pos, cmd.dest);
       break;
     case action_ActionType_INIT_ACTION:
       LOG_DEBUG("INIT");
