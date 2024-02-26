@@ -4,3 +4,6 @@
 [submodule "Libraries/proto-messages"]
 	path = Libraries/proto-messages
 	url = git@github.com:LiU-SeeGoals/proto-messages.git
+[submodule "Libraries/fw-shared-modules"]
+	path = Libraries/fw-shared-modules
+	url = git@github.com:LiU-SeeGoals/fw-shared-modules.git

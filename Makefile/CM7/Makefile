@@ -40,9 +40,14 @@ C_SOURCES =  \
 ../../CM7/Core/Src/com.c \
 ../../CM7/Core/Src/motor.c \
 ../../CM7/Core/Src/nav.c \
-../../CM7/Core/Src/log.c \
 ../../CM7/Core/Src/kicker.c \
 ../../CM7/Core/Src/ui.c \
+../../Libraries/fw-shared-modules/Src/log.c \
+../../Libraries/nRF24L01P-lib/nrf24l01.c \
+../../Libraries/proto-messages/robot_action/robot_action.pb.c \
+../../Libraries/nanopb/Src/pb_common.c \
+../../Libraries/nanopb/Src/pb_decode.c \
+../../Libraries/nanopb/Src/pb_encode.c \
 ../../CM7/Core/Src/stm32h7xx_it.c \
 ../../CM7/Core/Src/stm32h7xx_hal_msp.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c \
@@ -67,12 +72,7 @@ C_SOURCES =  \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c \
-../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c \
-../../Libraries/nRF24L01P-lib/nrf24l01.c \
-../../Libraries/proto-messages/robot_action/robot_action.pb.c \
-../../Libraries/nanopb/Src/pb_common.c \
-../../Libraries/nanopb/Src/pb_decode.c \
-../../Libraries/nanopb/Src/pb_encode.c
+../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -134,6 +134,7 @@ AS_INCLUDES =
 # C includes
 C_INCLUDES =  \
 -I../../CM7/Core/Inc \
+-I../../Libraries/fw-shared-modules/Inc \
 -I../../Drivers/STM32H7xx_HAL_Driver/Inc \
 -I../../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy \
 -I../../Drivers/CMSIS/Device/ST/STM32H7xx/Include \
@@ -141,7 +142,6 @@ C_INCLUDES =  \
 -I../../Libraries/nRF24L01P-lib \
 -I../../Libraries/proto-messages/robot_action \
 -I../../Libraries/nanopb/Inc
-
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
