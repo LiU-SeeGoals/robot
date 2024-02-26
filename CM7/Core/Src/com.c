@@ -113,8 +113,8 @@ void COM_RF_Receive(uint8_t pipe) {
   uint8_t payload[len];
   NRF_ReadPayload(payload, len);
 
-  LOG_DEBUG("Payload of length %i from pipe %i\r\n", len, pipe);
 
+  LOG_DEBUG("Payload of length %i from pipe %i\r\n", len, pipe);
   switch (pipe) {
     case PIPE_ACTION:
       parse_controller_packet(payload, len);
