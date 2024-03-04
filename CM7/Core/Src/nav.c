@@ -6,13 +6,14 @@
 #include <stdint.h>
 #include "motor.h"
 #include "log.h"
+#include "timer.h"
 
 /*
  * Private variables
  */
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
-
+static Timer timer;
 
 /*
  * Public function implementations
@@ -59,6 +60,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[3].encoderPinPort    = MOTOR4_ENCODER_GPIO_Port;
   motors[3].encoderPin        = MOTOR4_ENCODER_Pin;
   motors[3].reversing         = 0;
+
+  timer = (Timer){.htim = htim, .index = 0};
 }
 
 void NAV_Direction(DIRECTION dir) {
@@ -85,23 +88,40 @@ void NAV_Stop() {
   MOTOR_Stop(&motors[3]);
 }
 
-void NAV_Steer(float vx, float vy, float w);
+static Vector3D vel = {0};
 
-_action_Vector3D NAV_CalculateSpeed();
-
-void NAV_Move(_action_Vector3D pos, _action_Vector3D dest)
+void NAV_Steer(float vx, float vy, float w)
 {
-  while (pos.w != dest.w && pos.x != dest.x && pos.y != dest.y)
+  vel = (Vector3D){.x = vx, .y = vy, .w = w};
+}
+
+Vector3D NAV_CalculateSpeed()
+{
+  return vel;
+}
+
+void NAV_Move(Vector3D pos, Vector3D dest)
+{
+  float elapsed_seconds = 0;
+  float pos_x = pos.x, pos_y = pos.y, pos_w = pos.w;
+  timer_start(&timer);
+  while (fabsf(pos_w - dest.w) > 0.1 || fabsf(pos_x - dest.x) > 0.1 || fabsf(pos_y - dest.y) > 0.1)
   {
+    elapsed_seconds = timer_GetElapsedTimeMicro(&timer) / MICROS_IN_SEC;
+    timer_start(&timer);
     // NOTE: pos and dest may be global, NAV_Steer&CalculateSpeed local.
-    // TODO: Implement conversion from global to local, etc.
-    float rotate_diff = dest.w - pos.w;
-    int32_t x_diff = dest.x - pos.x;
-    int32_t y_diff = dest.y - pos.y;
-    NAV_Steer(x_diff / abs(x_diff), y_diff / abs(y_diff), to_rotate / abs(to_rotate));
-    _action_Vector3D vel = NAV_CalculateSpeed();
-    pos.w += vel.w;
-    pos.x += vel.x;
-    pos.y += vel.y;
+    // TODO: Implement conversion from global to local, nicer reg. etc.
+    LOG_INFO("pos.x=%f pos.y=%f pos.w=%f\r\n", pos_x, pos_y, pos_w); //, (int)((pos.w - (int)pos.w) * 1000000));
+    LOG_INFO("elapsed_seconds=%f\r\n", elapsed_seconds);
+    float rotate_diff = dest.w - pos_w;
+    float x_diff = dest.x - pos_x;
+    float y_diff = dest.y - pos_y;
+    Vector3D vel = NAV_CalculateSpeed();
+    NAV_Steer(x_diff / 3.0, y_diff / 2.0, rotate_diff);
+    pos_w += vel.w * elapsed_seconds;
+    pos_x += vel.x * elapsed_seconds;
+    pos_y += vel.y * elapsed_seconds;
   }
+
+  timer_stop(&timer);
 }

@@ -41,6 +41,7 @@ C_SOURCES =  \
 ../../CM7/Core/Src/motor.c \
 ../../CM7/Core/Src/nav.c \
 ../../CM7/Core/Src/log.c \
+../../CM7/Core/Src/timer.c \
 ../../CM7/Core/Src/kicker.c \
 ../../CM7/Core/Src/ui.c \
 ../../CM7/Core/Src/stm32h7xx_it.c \
@@ -166,7 +167,7 @@ LDSCRIPT = stm32h755xx_flash_CM7.ld
 # libraries
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
-LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin

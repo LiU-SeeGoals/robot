@@ -227,7 +227,7 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
       break;
     case action_ActionType_MOVE_ACTION:
       LOG_DEBUG("MOVE");
-      NAV_Move(cmd.pos, cmd.dest);
+      NAV_Move((Vector3D){.x = cmd.pos.x, .y = cmd.pos.y, .w = cmd.pos.w}, (Vector3D){.x = cmd.dest.x, .y = cmd.dest.y, .w = cmd.dest.w});
       break;
     case action_ActionType_INIT_ACTION:
       LOG_DEBUG("INIT");
