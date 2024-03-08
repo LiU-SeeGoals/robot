@@ -5,11 +5,11 @@
 #include "timer.h"
 
 /* Private variables */
-static LOG_Module *internal_log_mod;
+static LOG_Module internal_log_mod;
 
 void MOTOR_LogInit()
 {
-  LOG_InitModule(internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
 }
 
 void MOTOR_Init(MotorPWM *motor)
