@@ -59,28 +59,40 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[3].encoderPinPort    = MOTOR4_ENCODER_GPIO_Port;
   motors[3].encoderPin        = MOTOR4_ENCODER_Pin;
   motors[3].reversing         = 0;
+
+  MOTOR_Init(&motors[0]);
+  MOTOR_Init(&motors[1]);
+  MOTOR_Init(&motors[2]);
+  MOTOR_Init(&motors[3]);
+}
+
+void test_motor(){
+
+  float percent = 0.1;
+  MOTOR_SetSpeed(&motors[0], percent);
+
 }
 
 void NAV_Direction(DIRECTION dir) {
   switch (dir) {
     case UP:
-      MOTOR_Start(&motors[0]);
+      MOTOR_PWMStart(&motors[0]);
       break;
     case DOWN:
-      MOTOR_Start(&motors[1]);
+      MOTOR_PWMStart(&motors[1]);
       break;
     case LEFT:
-      MOTOR_Start(&motors[2]);
+      MOTOR_PWMStart(&motors[2]);
       break;
     case RIGHT:
-      MOTOR_Start(&motors[3]);
+      MOTOR_PWMStart(&motors[3]);
       break;
   }
 }
 
 void NAV_Stop() {
-  MOTOR_Stop(&motors[0]);
-  MOTOR_Stop(&motors[1]);
-  MOTOR_Stop(&motors[2]);
-  MOTOR_Stop(&motors[3]);
+  MOTOR_PWMStop(&motors[0]);
+  MOTOR_PWMStop(&motors[1]);
+  MOTOR_PWMStop(&motors[2]);
+  MOTOR_PWMStop(&motors[3]);
 }

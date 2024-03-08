@@ -7,22 +7,31 @@
 /* Private variables */
 static LOG_Module *internal_log_mod;
 
-void MOTOR_Init()
+void MOTOR_LogInit()
 {
   LOG_InitModule(internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
 }
 
-void MOTOR_Start(MotorPWM *motor)
+void MOTOR_Init(MotorPWM *motor)
+{  
+  HAL_TIM_Base_Start(motor->htim);
+  HAL_TIM_PWM_Init(motor->htim);
+  HAL_TIM_PWM_Start(motor->htim, motor->channel);
+  // HAL_TIM_PWM_Start(motor->htim, motor->channel);
+}
+
+void MOTOR_PWMStop(MotorPWM *motor)
+{
+  // TODO: This might disable the timer for all channels, not sure.
+  HAL_TIM_PWM_Stop(motor->htim, motor->channel);
+}
+
+void MOTOR_PWMStart(MotorPWM *motor)
 {
   HAL_TIM_PWM_Start(motor->htim, motor->channel);
 }
 
-void MOTOR_Stop(MotorPWM *motor)
-{
-  HAL_TIM_PWM_Stop(motor->htim, motor->channel);
-}
-
-void runMotor(MotorPWM *motor)
+void MOTOR_Stopbreak(MotorPWM *motor)
 {
   HAL_GPIO_WritePin(motor->breakPinPort, motor->breakPin, GPIO_PIN_RESET);
 }
@@ -58,8 +67,7 @@ void changeDirection(MotorPWM *motor, int percent)
 
 void MOTOR_SetSpeed(MotorPWM *motor, float percent)
 {
-  changeDirection(motor, percent);
-  runMotor(motor);
+  // changeDirection(motor, percent);
 
   // TODO: How to handle rounding errors, do they even matter?
   uint32_t pwm_speed = motor->htim->Init.Period * percent;
@@ -77,7 +85,7 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
   extern Timer timer3;
   timer_start(&timer3);
   // calcuate 100 up and downs
-  uint16_t count_amount = 100;
+  uint16_t count_amount = 3;
   while (count_amount > 0)
   {
     if (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))

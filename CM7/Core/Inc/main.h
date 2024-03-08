@@ -81,6 +81,8 @@ void Error_Handler(void);
 #define MOTOR3_REVERSE_GPIO_Port GPIOE
 #define MOTOR2_REVERSE_Pin GPIO_PIN_8
 #define MOTOR2_REVERSE_GPIO_Port GPIOE
+#define MOTOR1_PWM_Pin GPIO_PIN_9
+#define MOTOR1_PWM_GPIO_Port GPIOE
 #define MOTOR4_REVERSE_Pin GPIO_PIN_10
 #define MOTOR4_REVERSE_GPIO_Port GPIOE
 #define MOTOR2_PWM_Pin GPIO_PIN_11
@@ -106,8 +108,6 @@ void Error_Handler(void);
 #define MOTOR4_ENCODER_GPIO_Port GPIOG
 #define NRF_CE_Pin GPIO_PIN_6
 #define NRF_CE_GPIO_Port GPIOC
-#define MOTOR1_PWM_Pin GPIO_PIN_8
-#define MOTOR1_PWM_GPIO_Port GPIOA
 #define SPI_CS_OUTPUT_Pin GPIO_PIN_3
 #define SPI_CS_OUTPUT_GPIO_Port GPIOD
 #define SPI_CS_RESET_Pin GPIO_PIN_4

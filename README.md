@@ -10,11 +10,19 @@ This is a Makefile project generated with STM32CubeMX.
 ### CLI approach
 You'll need [stlink](https://github.com/stlink-org/stlink#installation), usually available through your package manager.
 
+You need a arm cross compiler, sometimes this comes by default
+
+~~~bash
+# Install arm cross compiler
+$ sudo apt install gcc-arm-none-eabi
+~~~
+
 Building the project is done from the `Makefile` directory by running `make`:
 ~~~bash
 # from project root
 $ cd Makefile && make
 ~~~
+
 
 Flashing can be done when the NUCLEO card is connected through USB (marked `USB PWR`).
 ~~~bash

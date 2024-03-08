@@ -17,18 +17,26 @@ typedef struct
 } MotorPWM;
 
 
-void MOTOR_Init();
-
 /**
- * Start motor
+ * Initialize logging for motor
  */
-void MOTOR_Start(MotorPWM *motor);
+void MOTOR_log_Init();
 
 /**
- * Stop motor
+ * Initilaize motor
+ */
+void MOTOR_Init(MotorPWM *motor);
+
+/**
+ * Sets the break pin LOW
+ */
+void MOTOR_Stopbreak(MotorPWM *motor);
+
+/**
+ * Disables the PWM signal
  * @param motor Pointer to motor.
  */
-void MOTOR_Stop(MotorPWM *motor);
+void MOTOR_PWMStop(MotorPWM *motor);
 
 /**
  * Set speed of motor in percent 0 - 100
