@@ -149,6 +149,7 @@ Error_Handler();
   LOG_Init(&huart3);
   COM_Init(&hspi1);
   NAV_Init(&htim1);
+  MOTOR_LogInit();
   KICKER_Init();
   LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);

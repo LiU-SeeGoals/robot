@@ -68,7 +68,7 @@ void changeDirection(MotorPWM *motor, int percent)
 void MOTOR_SetSpeed(MotorPWM *motor, float percent)
 {
   // changeDirection(motor, percent);
-
+  printf("Wrong parameters value: file on line \r\n");
   // TODO: How to handle rounding errors, do they even matter?
   uint32_t pwm_speed = motor->htim->Init.Period * percent;
   LOG_DEBUG("pwm_speed: %d\r\n", pwm_speed);

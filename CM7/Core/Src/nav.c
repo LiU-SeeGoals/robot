@@ -18,7 +18,7 @@ static MotorPWM motors[4];
  * Public function implementations
  */
 void NAV_Init(TIM_HandleTypeDef* htim) {
-  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_DEBUG);
 
   motors[0].htim              = htim;
   motors[0].channel           = MOTOR1_TIM_CHANNEL;
