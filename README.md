@@ -75,9 +75,9 @@ Connect to board at the top right corner and click start programming
 | 4       | PA8     | TIM1_CH1       | MOTOR1_PWM       | -            |
 | 6       | PE11    | TIM1_CH2       | MOTOR2_PWM       | -            |
 | 7       | PF6     | GPIO_Input     | MOTOR1_ENCODER   | -            |
-| 8       | PE14    | TIM1_CH4       | MOTOR3_PWM       | -            |
+| 8       | PE14    | TIM1_CH4       | MOTOR4_PWM       | -            |
 | 9       | PF10    | GPIO_Input     | MOTOR2_ENCODER   | -            |
-| 10      | PE13    | TIM1_CH3       | MOTOR4_PWM       | -            |
+| 10      | PE13    | TIM1_CH3       | MOTOR3_PWM       | -            |
 | 11      | PA2     | GPIO_Input     | MOTOR3_ENCODER   | -            |
 | 13      | PG6     | GPIO_Input     | MOTOR4_ENCODER   | -            |
 | 14      | PB6     | GPIO_Output    | MOTOR1_REVERSE   | -            |
@@ -86,7 +86,8 @@ Connect to board at the top right corner and click start programming
 | 19      | PD13    | GPIO_Output    | MOTOR2_BREAK     | -            |
 | 20      | PE7     | GPIO_Output    | MOTOR3_REVERSE   | -            |
 | 21      | PD12    | GPIO_Output    | MOTOR3_BREAK     | -            |
-| 24      | PE10    | GPIO_Output    | MOTOR4_REVERSE   | -            |
+| 24      | PE10    | -              |-                 | -            |
+| 30      | PE15    | GPIO_Output    | MOTOR4_REVERSE   | -            |
 | 25      | PE2     | GPIO_Output    | MOTOR4_BREAK     | -            |
 | 32      | PB10    | GPIO_Output    | KICKER_DISCHARGE | -            |
 | 34      | PB11    | GPIO_Output    | KICKER_CHARGE    | -            |

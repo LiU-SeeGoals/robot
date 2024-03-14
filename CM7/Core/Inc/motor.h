@@ -18,19 +18,16 @@ typedef struct
 
 
 /**
- * Initialize logging for motor
- */
-void MOTOR_log_Init();
-
-/**
  * Initilaize motor
  */
-void MOTOR_Init(MotorPWM *motor);
+void MOTOR_Init(TIM_HandleTypeDef* htim);
 
 /**
  * Sets the break pin LOW
  */
 void MOTOR_Stopbreak(MotorPWM *motor);
+
+void MOTOR_PWMStart(MotorPWM *motor);
 
 /**
  * Disables the PWM signal

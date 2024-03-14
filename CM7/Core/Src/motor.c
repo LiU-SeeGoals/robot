@@ -7,17 +7,11 @@
 /* Private variables */
 static LOG_Module internal_log_mod;
 
-void MOTOR_LogInit()
-{
-  LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
-}
 
-void MOTOR_Init(MotorPWM *motor)
+void MOTOR_Init(TIM_HandleTypeDef* htim)
 {  
-  HAL_TIM_Base_Start(motor->htim);
-  HAL_TIM_PWM_Init(motor->htim);
-  HAL_TIM_PWM_Start(motor->htim, motor->channel);
-  // HAL_TIM_PWM_Start(motor->htim, motor->channel);
+  LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
+  HAL_TIM_Base_Start(htim);
 }
 
 void MOTOR_PWMStop(MotorPWM *motor)
@@ -67,11 +61,25 @@ void changeDirection(MotorPWM *motor, int percent)
 
 void MOTOR_SetSpeed(MotorPWM *motor, float percent)
 {
-  // changeDirection(motor, percent);
-  printf("Wrong parameters value: file on line \r\n");
+  // TODO: How to handle changing directions?
+
+  // Make sure we dont explode the timer limit
+  if (percent > 1){
+    percent = 1;
+  }
+  if (percent < 0){
+    percent = 0;
+  }
+
+  float max_scale = 0.5;
+  float scale = max_scale * percent; // make max_scale largest
+
   // TODO: How to handle rounding errors, do they even matter?
-  uint32_t pwm_speed = motor->htim->Init.Period * percent;
-  LOG_DEBUG("pwm_speed: %d\r\n", pwm_speed);
+  int pwm_speed = motor->htim->Init.Period * scale;
+  LOG_INFO("pwm %d\r\n", pwm_speed);
+
+  // pwm_speed = motor->htim->Init.Period * 0.2;
+
   __HAL_TIM_SET_COMPARE(motor->htim, motor->channel, pwm_speed);
 }
 

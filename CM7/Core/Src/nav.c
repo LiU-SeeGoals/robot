@@ -60,16 +60,27 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[3].encoderPin        = MOTOR4_ENCODER_Pin;
   motors[3].reversing         = 0;
 
-  MOTOR_Init(&motors[0]);
-  MOTOR_Init(&motors[1]);
-  MOTOR_Init(&motors[2]);
-  MOTOR_Init(&motors[3]);
+  MOTOR_PWMStart(&motors[0]);
+  MOTOR_PWMStart(&motors[1]);
+  MOTOR_PWMStart(&motors[2]);
+  MOTOR_PWMStart(&motors[3]);
+
 }
 
 void test_motor(){
 
   float percent = 0.1;
-  MOTOR_SetSpeed(&motors[0], percent);
+  // MOTOR_PWMStart(&motors[3]);
+  // MOTOR_SetSpeed(&motors[3], 1);
+  int max_speed = 100;
+  for (float i = 0; i < max_speed; i++){
+    MOTOR_SetSpeed(&motors[3], i/100);
+    HAL_Delay(20);
+  }
+  for (float i = max_speed; i > 0; i--){
+    MOTOR_SetSpeed(&motors[3], i/100);
+    HAL_Delay(20);
+  }
 
 }
 

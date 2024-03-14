@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "stm32h7xx_hal_gpio.h"
 #include "com.h"
+#include "motor.h"
 #include "nav.h"
 #include "log.h"
 #include "kicker.h"
@@ -149,7 +150,7 @@ Error_Handler();
   LOG_Init(&huart3);
   COM_Init(&hspi1);
   NAV_Init(&htim1);
-  MOTOR_LogInit();
+  MOTOR_Init(&htim1);
   KICKER_Init();
   LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
@@ -160,6 +161,7 @@ Error_Handler();
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_TIM_Base_Start(&htim1);
   while (1)
   {
 
@@ -301,7 +303,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 319;
+  htim1.Init.Period = 1999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -327,7 +329,6 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 2000;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
