@@ -17,10 +17,22 @@ static MotorPWM motors[4];
 /*
  * Public function implementations
  */
-void NAV_Init(TIM_HandleTypeDef* htim) {
-  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_DEBUG);
 
-  motors[0].htim              = htim;
+void NAV_Init(TIM_HandleTypeDef* pwm_htim, 
+              TIM_HandleTypeDef* encoder1_htim,
+              TIM_HandleTypeDef* encoder2_htim,
+              TIM_HandleTypeDef* encoder3_htim,
+              TIM_HandleTypeDef* encoder4_htim) {
+
+  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE);
+  HAL_TIM_Base_Start(pwm_htim);
+  HAL_TIM_Base_Start(encoder1_htim);
+  HAL_TIM_Base_Start(encoder2_htim);
+  HAL_TIM_Base_Start(encoder3_htim);
+  HAL_TIM_Base_Start(encoder4_htim);
+
+  motors[0].pwm_htim          = pwm_htim;
+  motors[0].encoder_htim      = encoder1_htim;
   motors[0].channel           = MOTOR1_TIM_CHANNEL;
   motors[0].breakPinPort      = MOTOR1_BREAK_GPIO_Port;
   motors[0].breakPin          = MOTOR1_BREAK_Pin;
@@ -30,7 +42,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[0].encoderPin        = MOTOR1_ENCODER_Pin;
   motors[0].reversing         = 0;
 
-  motors[1].htim              = htim;
+  motors[1].pwm_htim          = pwm_htim;
+  motors[1].encoder_htim      = encoder2_htim;
   motors[1].channel           = MOTOR2_TIM_CHANNEL;
   motors[1].breakPinPort      = MOTOR2_BREAK_GPIO_Port;
   motors[1].breakPin          = MOTOR2_BREAK_Pin;
@@ -40,7 +53,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[1].encoderPin        = MOTOR2_ENCODER_Pin;
   motors[1].reversing         = 0;
 
-  motors[2].htim              = htim;
+  motors[2].pwm_htim          = pwm_htim;
+  motors[2].encoder_htim      = encoder3_htim;
   motors[2].channel           = MOTOR3_TIM_CHANNEL;
   motors[2].breakPinPort      = MOTOR3_BREAK_GPIO_Port;
   motors[2].breakPin          = MOTOR3_BREAK_Pin;
@@ -50,7 +64,8 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[2].encoderPin        = MOTOR3_ENCODER_Pin;
   motors[2].reversing         = 0;
 
-  motors[3].htim              = htim;
+  motors[3].pwm_htim          = pwm_htim;
+  motors[3].encoder_htim      = encoder4_htim;
   motors[3].channel           = MOTOR4_TIM_CHANNEL;
   motors[3].breakPinPort      = MOTOR4_BREAK_GPIO_Port;
   motors[3].breakPin          = MOTOR4_BREAK_Pin;
@@ -64,9 +79,7 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   MOTOR_PWMStart(&motors[1]);
   MOTOR_PWMStart(&motors[2]);
   MOTOR_PWMStart(&motors[3]);
-
 }
-
 void test_motor(){
 
   float percent = 0.1;
@@ -74,15 +87,17 @@ void test_motor(){
   // MOTOR_SetSpeed(&motors[3], 1);
   int max_speed = 100;
   for (float i = 0; i < max_speed; i++){
+    MOTOR_ReadSpeed(&motors[3]);
     MOTOR_SetSpeed(&motors[3], i/100);
     HAL_Delay(20);
   }
   for (float i = max_speed; i > 0; i--){
+    MOTOR_ReadSpeed(&motors[3]);
     MOTOR_SetSpeed(&motors[3], i/100);
     HAL_Delay(20);
   }
-
 }
+
 
 void NAV_Direction(DIRECTION dir) {
   switch (dir) {

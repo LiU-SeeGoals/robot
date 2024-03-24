@@ -8,21 +8,22 @@
 static LOG_Module internal_log_mod;
 
 
-void MOTOR_Init(TIM_HandleTypeDef* htim)
-{  
-  LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_INFO);
-  HAL_TIM_Base_Start(htim);
+void MOTOR_Init(TIM_HandleTypeDef* pwm_htim) {
+
+  LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_TRACE);
+  HAL_TIM_Base_Start(pwm_htim);
+
 }
 
 void MOTOR_PWMStop(MotorPWM *motor)
 {
   // TODO: This might disable the timer for all channels, not sure.
-  HAL_TIM_PWM_Stop(motor->htim, motor->channel);
+  HAL_TIM_PWM_Stop(motor->pwm_htim, motor->channel);
 }
 
 void MOTOR_PWMStart(MotorPWM *motor)
 {
-  HAL_TIM_PWM_Start(motor->htim, motor->channel);
+  HAL_TIM_PWM_Start(motor->pwm_htim, motor->channel);
 }
 
 void MOTOR_Stopbreak(MotorPWM *motor)
@@ -71,43 +72,67 @@ void MOTOR_SetSpeed(MotorPWM *motor, float percent)
     percent = 0;
   }
 
-  float max_scale = 0.5;
-  float scale = max_scale * percent; // make max_scale largest
+  float max_scale = 0.5; // Use max 50% och the motor speed
+  float scale = max_scale * percent; // make max_scale largest scaling
 
   // TODO: How to handle rounding errors, do they even matter?
-  int pwm_speed = motor->htim->Init.Period * scale;
-  LOG_INFO("pwm %d\r\n", pwm_speed);
+  int pwm_speed = motor->pwm_htim->Init.Period * scale;
+  // LOG_INFO("pwm %d\r\n", pwm_speed);
 
-  // pwm_speed = motor->htim->Init.Period * 0.2;
+  // pwm_speed = motor->pwm_htim->Init.Period * 0.2;
 
-  __HAL_TIM_SET_COMPARE(motor->htim, motor->channel, pwm_speed);
+  __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
 }
 
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
-  // each pulse is one rotation of the motor
-  float radius = 0.1;                         // meters
-  float PI = 3.1415;                          // meters
-  float wheelCircumference = 2 * PI * radius; // meters
+  uint16_t delay = 100;
 
-  extern Timer timer3;
-  timer_start(&timer3);
-  // calcuate 100 up and downs
-  uint16_t count_amount = 3;
-  while (count_amount > 0)
-  {
-    if (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
-    {
-      count_amount--;
-      while (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
-      {
-        // wait for pin to go low
-      }
-    }
+  float ticks_before = motor->encoder_htim->Instance->CNT;
+  // LOG_DEBUG("b: %f\r\n", ticks_before);
+  HAL_Delay(delay);
+  float ticks_after = motor->encoder_htim->Instance->CNT;
+  // LOG_DEBUG("a: %f\r\n", ticks_after);
+  float speed = (ticks_after - ticks_before) / delay;
+  // timer overflowed, so calculate again
+  if (speed < 0) {
+    ticks_before = motor->encoder_htim->Instance->CNT;
+    HAL_Delay(delay);
+    ticks_after = motor->encoder_htim->Instance->CNT;
+    speed = (ticks_after - ticks_before) / delay;
   }
-  uint32_t time = timer_GetElapsedTimeMicro(&timer3);
-  timer_stop(&timer3);
-  float speed = wheelCircumference / (float)time;
-
+  LOG_DEBUG("ticks per milli: %f\r\n", speed);
   return speed;
+
 }
+
+
+
+// float MOTOR_ReadSpeed(MotorPWM *motor)
+// {
+//   // each pulse is one rotation of the motor
+//   float radius = 0.1;                         // meters
+//   float PI = 3.1415;                          // meters
+//   float wheelCircumference = 2 * PI * radius; // meters
+
+//   extern Timer timer3;
+//   timer_start(&timer3);
+//   // calcuate 100 up and downs
+//   uint16_t count_amount = 3;
+//   while (count_amount > 0)
+//   {
+//     if (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
+//     {
+//       count_amount--;
+//       while (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
+//       {
+//         // wait for pin to go low
+//       }
+//     }
+//   }
+//   uint32_t time = timer_GetElapsedTimeMicro(&timer3);
+//   timer_stop(&timer3);
+//   float speed = wheelCircumference / (float)time;
+
+//   return speed;
+// }

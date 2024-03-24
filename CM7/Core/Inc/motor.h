@@ -5,7 +5,8 @@
 
 typedef struct
 {
-  TIM_HandleTypeDef *htim;
+  TIM_HandleTypeDef *encoder_htim;
+  TIM_HandleTypeDef *pwm_htim;
   uint32_t channel;
   GPIO_TypeDef *breakPinPort;
   uint16_t breakPin;
