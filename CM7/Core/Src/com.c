@@ -33,7 +33,7 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   uint8_t controllerAddress[5]  = {1,2,3,4,5};
   uint8_t visionAddress[5] = {1,2,3,4,6};
 
-  LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_EMERGENCY);
 
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);

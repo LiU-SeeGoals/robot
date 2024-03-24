@@ -37,6 +37,7 @@ void MOTOR_Break(MotorPWM *motor)
 }
 
 /*
+  DEPRECATED
   Reverses motor direction and makes sure that the motor is stopped before reversing
 */
 void changeDirection(MotorPWM *motor, int percent)
@@ -60,20 +61,59 @@ void changeDirection(MotorPWM *motor, int percent)
   }
 }
 
-void MOTOR_SetSpeed(MotorPWM *motor, float percent)
+// int printf_uart(const char *format, ...){
+//   va_list argp;
+//   va_start(argp, format);
+//   uint8_t buf[256] = {};
+//   int length = vsnprintf(buf, 256, format, argp);
+//   va_end(argp);
+
+//   if (length >= 256 || length < 0) {
+//     HAL_UART_Transmit(&huart3, "Err: Message cutoff or bad\n", 27, HAL_MAX_DELAY);
+//     return -1;
+//   }
+//   HAL_UART_Transmit(&huart3, buf, length, HAL_MAX_DELAY);
+//   return 0;
+
+// }
+
+float prev_error = 0;
+float I_prev = 0;
+
+void MOTOR_SetSpeed(MotorPWM *motor, float speed){
+
+  float Ts = 0.1;
+  float current_speed = MOTOR_ReadSpeed(motor);
+  float error = speed - current_speed;
+  float Ti = 1;
+  float I = I_prev + Ts / Ti * error;
+  float K = 0.001;
+  float Td = 1;
+//  + Td / Ts * (error - prev_error)
+  float u = K * (error + I);
+  LOG_INFO("DATAu:%f;\r\n", u);
+  // uint8_t newline[1024] = {'\r', '\n', '\r', '\n'};
+  // HAL_UART_Transmit(huart, newline, 4, HAL_MAX_DELAY);
+
+  MOTOR_SendPWM(motor, u);
+  prev_error = error;
+  I_prev = I;
+}
+
+void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 {
   // TODO: How to handle changing directions?
 
   // Make sure we dont explode the timer limit
-  if (percent > 1){
-    percent = 1;
+  if (pulse_width > 1){
+    pulse_width = 1;
   }
-  if (percent < 0){
-    percent = 0;
+  if (pulse_width < 0){
+    pulse_width = 0;
   }
 
   float max_scale = 0.5; // Use max 50% och the motor speed
-  float scale = max_scale * percent; // make max_scale largest scaling
+  float scale = max_scale * pulse_width; // make max_scale largest scaling
 
   // TODO: How to handle rounding errors, do they even matter?
   int pwm_speed = motor->pwm_htim->Init.Period * scale;
@@ -84,25 +124,41 @@ void MOTOR_SetSpeed(MotorPWM *motor, float percent)
   __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
 }
 
+
+void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick)
+{
+  uint16_t ticks = 0;
+  uint16_t ticks_before = motor->encoder_htim->Instance->CNT;
+  while(ticks < tick)
+  {
+    uint16_t ticks_after = motor->encoder_htim->Instance->CNT;
+
+    if (ticks_after != ticks_before){
+      ticks += ticks_after - ticks_before;
+      // LOG_DEBUG("tick: %d\r\n", ticks);
+      ticks_before = ticks_after;
+    }
+  }
+}
+
+
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
-  uint16_t delay = 100;
+  LOG_DEBUG("ticks: %d\r\n", motor->ticks);
 
-  float ticks_before = motor->encoder_htim->Instance->CNT;
-  // LOG_DEBUG("b: %f\r\n", ticks_before);
-  HAL_Delay(delay);
-  float ticks_after = motor->encoder_htim->Instance->CNT;
-  // LOG_DEBUG("a: %f\r\n", ticks_after);
-  float speed = (ticks_after - ticks_before) / delay;
+  float delay_ms = 100; // 100hz update -> 100ms update
+
+  float speed_s = (motor->ticks) * 10;// 100ms update * 10 gives tick/second
+  LOG_DEBUG("speed: %f\r\n", speed_s);
+
   // timer overflowed, so calculate again
-  if (speed < 0) {
-    ticks_before = motor->encoder_htim->Instance->CNT;
-    HAL_Delay(delay);
-    ticks_after = motor->encoder_htim->Instance->CNT;
-    speed = (ticks_after - ticks_before) / delay;
+  // could prob do some smart reverse calculations 
+  // since we know it overflowed
+  if (speed_s < 0) {
+    speed_s = ( motor->ticks + 65536 - motor->prev_tick) * 10;// 10 gives tick/second
   }
-  LOG_DEBUG("ticks per milli: %f\r\n", speed);
-  return speed;
+
+  return speed_s;
 
 }
 

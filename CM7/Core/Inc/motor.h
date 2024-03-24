@@ -8,6 +8,8 @@ typedef struct
   TIM_HandleTypeDef *encoder_htim;
   TIM_HandleTypeDef *pwm_htim;
   uint32_t channel;
+  int ticks; // negative if overflow
+  int prev_tick; // negative if overflow
   GPIO_TypeDef *breakPinPort;
   uint16_t breakPin;
   GPIO_TypeDef *reversePinPort;
@@ -37,10 +39,17 @@ void MOTOR_PWMStart(MotorPWM *motor);
 void MOTOR_PWMStop(MotorPWM *motor);
 
 /**
- * Set speed of motor in percent 0 - 100
- * Negative values are interpreted as reverse
+ * Set speed of motor in percent 0 - 1
+ * TODO: Negative values are interpreted as reverse
  */
-void MOTOR_SetSpeed(MotorPWM *motor, float percent);
+void MOTOR_SendPWM(MotorPWM *motor, float pulse_width);
+
+void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick);
+
+
+int printf_uart(const char *format, ...);
+
+void MOTOR_SetSpeed(MotorPWM *motor, float speed);
 
 /**
  * Sets the breaking pin

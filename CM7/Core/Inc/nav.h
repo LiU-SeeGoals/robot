@@ -19,11 +19,14 @@ typedef enum {
  * @param htim Timer handle for motors.
  */
 
-void NAV_Init(TIM_HandleTypeDef* pwm_htim, 
+void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
+              TIM_HandleTypeDef* pwm_htim, 
               TIM_HandleTypeDef* encoder1_htim,
               TIM_HandleTypeDef* encoder2_htim,
               TIM_HandleTypeDef* encoder3_htim,
               TIM_HandleTypeDef* encoder4_htim);
+
+void NAV_set_motor_ticks();
 
 /**
  *
