@@ -87,8 +87,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 }
 
 
-void NAV_set_motor_ticks()
-{
+void NAV_set_motor_ticks(){
   for (int i = 0; i < 4; i++){
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;
@@ -97,28 +96,8 @@ void NAV_set_motor_ticks()
   }
 }
 
-void test_motor(){
-
-
-  // MOTOR_PWMStart(&motors[3]);
-  MOTOR_SetSpeed(&motors[3], 70);
-  // MOTOR_SendPWM(&motors[3], 0);
-  // MOTOR_ReadSpeed(&motors[3]);
-  // MOTOR_SetToTick(&motors[3], 16);
-  // MOTOR_SendPWM(&motors[3], 0);
-  // while(1){}
-
-  int max_speed = 100;
-  // for (float i = 0; i < max_speed; i++){
-  //   MOTOR_ReadSpeed(&motors[3]);
-  //   MOTOR_SetSpeed(&motors[3], i/100);
-  //   HAL_Delay(20);
-  // }
-  // for (float i = max_speed; i > 0; i--){
-  //   MOTOR_ReadSpeed(&motors[3]);
-  //   MOTOR_SetSpeed(&motors[3], i/100);
-  //   HAL_Delay(20);
-  // }
+void test_motor() {
+  MOTOR_SetSpeed(&motors[3], 100);
 }
 
 

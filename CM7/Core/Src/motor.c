@@ -61,39 +61,20 @@ void changeDirection(MotorPWM *motor, int percent)
   }
 }
 
-// int printf_uart(const char *format, ...){
-//   va_list argp;
-//   va_start(argp, format);
-//   uint8_t buf[256] = {};
-//   int length = vsnprintf(buf, 256, format, argp);
-//   va_end(argp);
-
-//   if (length >= 256 || length < 0) {
-//     HAL_UART_Transmit(&huart3, "Err: Message cutoff or bad\n", 27, HAL_MAX_DELAY);
-//     return -1;
-//   }
-//   HAL_UART_Transmit(&huart3, buf, length, HAL_MAX_DELAY);
-//   return 0;
-
-// }
-
 float prev_error = 0;
 float I_prev = 0;
 
 void MOTOR_SetSpeed(MotorPWM *motor, float speed){
 
-  float Ts = 0.1;
+  float Ts = 0.01;
   float current_speed = MOTOR_ReadSpeed(motor);
   float error = speed - current_speed;
-  float Ti = 1;
+  float Ti = 0.05;
   float I = I_prev + Ts / Ti * error;
   float K = 0.001;
   float Td = 1;
-//  + Td / Ts * (error - prev_error)
   float u = K * (error + I);
   LOG_INFO("DATAu:%f;\r\n", u);
-  // uint8_t newline[1024] = {'\r', '\n', '\r', '\n'};
-  // HAL_UART_Transmit(huart, newline, 4, HAL_MAX_DELAY);
 
   MOTOR_SendPWM(motor, u);
   prev_error = error;
