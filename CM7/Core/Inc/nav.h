@@ -5,6 +5,7 @@
  * Public includes
  */
 #include "main.h"
+#include "robot_action.pb.h"
 
 typedef enum {
   UP,
@@ -12,13 +13,6 @@ typedef enum {
   LEFT,
   RIGHT
 } DIRECTION;
-
-typedef struct Vector3D
-{
-  float x;
-  float y;
-  float w;
-} Vector3D;
 
 /**
  * Initialises navigation system by creating motor interfaces.

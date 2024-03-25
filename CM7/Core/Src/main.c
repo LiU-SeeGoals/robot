@@ -157,6 +157,11 @@ Error_Handler();
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  LOG_INFO("before move");
+  Vector3D pos = {.x = 0, .y = 0, .w = 0};
+  Vector3D dest = {.x = 10, .y = 50, .w = 100.0};
+  NAV_Move(pos, dest);
+  LOG_INFO("after move");
   while (1)
   {
     /* USER CODE END WHILE */

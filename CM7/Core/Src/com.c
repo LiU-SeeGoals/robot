@@ -204,9 +204,9 @@ static int find_id() {
 }
 
 static void parse_controller_packet(uint8_t* payload, uint8_t len) {
-  action_Command cmd = action_Command_init_zero;
+  Command cmd = Command_init_zero;
   pb_istream_t stream = pb_istream_from_buffer(payload, len);
-  bool status = pb_decode(&stream, action_Command_fields, &cmd);
+  bool status = pb_decode(&stream, Command_fields, &cmd);
   if (!status) {
     LOG_WARNING("Decoding PB failed: %s\r\n", PB_GET_ERROR(&stream));
     return;
@@ -214,53 +214,27 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
 
   LOG_DEBUG("Robot %d should", cmd.robot_id);
   switch(cmd.command_id) {
-    case action_ActionType_STOP_ACTION:
-      LOG_DEBUG("STOP");
-      NAV_Stop();
-      break;
-    case action_ActionType_KICK_ACTION:
-      LOG_DEBUG("KICK");
-      for (int i = 0; i < cmd.kick_speed; i++)
-        KICKER_Charge();
+  case ActionType_STOP_ACTION:
+    LOG_DEBUG("STOP");
+    NAV_Stop();
+    break;
+  case ActionType_KICK_ACTION:
+    LOG_DEBUG("KICK");
+    for (int i = 0; i < cmd.kick_speed; i++)
+      KICKER_Charge();
 
-      KICKER_Kick();
-      break;
-    case action_ActionType_MOVE_ACTION:
-      LOG_DEBUG("MOVE");
-      NAV_Move((Vector3D){.x = cmd.pos.x, .y = cmd.pos.y, .w = cmd.pos.w}, (Vector3D){.x = cmd.dest.x, .y = cmd.dest.y, .w = cmd.dest.w});
-      break;
-    case action_ActionType_INIT_ACTION:
-      LOG_DEBUG("INIT");
-      break;
-    case action_ActionType_SET_NAVIGATION_DIRECTION_ACTION:
-      {
-        LOG_DEBUG("NAV");
-        switch(cmd.direction.x) {
-          case 1: // left
-            LOG_DEBUG("LEFT");
-            NAV_Direction(LEFT);
-            break;
-          case -1: // right
-            LOG_DEBUG("RIGHT");
-            NAV_Direction(RIGHT);
-            break;
-        }
-
-        switch(cmd.direction.y) {
-          case 1: // up
-            LOG_DEBUG("UP");
-            NAV_Direction(UP);
-            break;
-          case -1: // down
-            LOG_DEBUG("DOWN");
-            NAV_Direction(DOWN);
-            break;
-        }
-      }
-      break;
-    case action_ActionType_ROTATE_ACTION:
-      LOG_DEBUG("ROTATE");
-      break;
+    KICKER_Kick();
+    break;
+  case ActionType_MOVE_ACTION:
+    LOG_DEBUG("MOVE");
+    NAV_Move((Vector3D){.x = cmd.pos.x, .y = cmd.pos.y, .w = cmd.pos.w}, (Vector3D){.x = cmd.dest.x, .y = cmd.dest.y, .w = cmd.dest.w});
+    break;
+  case ActionType_INIT_ACTION:
+    LOG_DEBUG("INIT");
+    break;
+  case ActionType_ROTATE_ACTION:
+    LOG_DEBUG("ROTATE");
+    break;
   }
 
   LOG_DEBUG("\r\n");
