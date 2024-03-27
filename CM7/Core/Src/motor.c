@@ -61,25 +61,53 @@ void changeDirection(MotorPWM *motor, int percent)
   }
 }
 
-float prev_error = 0;
-float I_prev = 0;
+  // TODO: How to not have globals? Will cause issues if function is not called
+  // for some time
+/*
+  PI controls the motor to the given speed value in hall ticks / second
+  Updates I_prev with the previous integrator value
 
-void MOTOR_SetSpeed(MotorPWM *motor, float speed){
+*/
 
+void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
+  // TODO: IMPORTANT add integrator windup protection since u is limimted 0 - 1
+
+  // PI control loop with integrator windup protection
+  float umin = 0;
+  float umax = 1;
   float Ts = 0.01;
+  float Ti = 0.05;
+  float K = 0.001;
   float current_speed = MOTOR_ReadSpeed(motor);
   float error = speed - current_speed;
-  float Ti = 0.05;
-  float I = I_prev + Ts / Ti * error;
-  float K = 0.001;
-  float Td = 1;
-  float u = K * (error + I);
+  float I = *I_prev + Ts / Ti * error;
+  float v = K * (error + I);
+  float u = 0;
+  // integrator windup fix
+  if (v < umin || v > umax){
+    I = *I_prev;
+    v = K * (error + I);
+  }
+  if (v > umax){
+    u = umax;
+  }
+  else if (v < umin){
+    u = umin;
+  }
+  else{
+    u = v;
+  }
   LOG_INFO("DATAu:%f;\r\n", u);
-
   MOTOR_SendPWM(motor, u);
-  prev_error = error;
-  I_prev = I;
+  *I_prev = I;
+  // TODO: How to not have globals? Will cause issues if function is not called
+  // for some time
 }
+
+/*
+  Send pwm with with pulse width of pulse_width * timer_period
+  meaning pulse width is a float between 0 - 1.
+*/
 
 void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 {
@@ -93,7 +121,7 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
     pulse_width = 0;
   }
 
-  float max_scale = 0.5; // Use max 50% och the motor speed
+  float max_scale = 0.2; // Use a max scaling for the motor speed
   float scale = max_scale * pulse_width; // make max_scale largest scaling
 
   // TODO: How to handle rounding errors, do they even matter?

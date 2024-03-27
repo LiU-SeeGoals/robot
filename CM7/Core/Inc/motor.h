@@ -49,7 +49,7 @@ void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick);
 
 int printf_uart(const char *format, ...);
 
-void MOTOR_SetSpeed(MotorPWM *motor, float speed);
+void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev);
 
 /**
  * Sets the breaking pin

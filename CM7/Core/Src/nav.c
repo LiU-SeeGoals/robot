@@ -96,8 +96,9 @@ void NAV_set_motor_ticks(){
   }
 }
 
+float I_prev;
 void test_motor() {
-  MOTOR_SetSpeed(&motors[3], 100);
+  MOTOR_SetSpeed(&motors[3], 70, &I_prev);
 }
 
 
