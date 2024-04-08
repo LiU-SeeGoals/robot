@@ -213,7 +213,6 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
@@ -427,17 +426,24 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, MOTOR4_BREAK_Pin | MOTOR3_REVERSE_Pin | MOTOR2_REVERSE_Pin | MOTOR4_REVERSE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, MOTOR4_BREAK_Pin|MOTOR3_REVERSE_Pin|MOTOR2_REVERSE_Pin|MOTOR4_REVERSE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_DISCHARGE_Pin|KICKER_CHARGE_Pin
-                          |LED_RED_Pin|MOTOR1_REVERSE_Pin|NRF_CSN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_CHARGE_Pin|LED_RED_Pin
+                          |MOTOR1_REVERSE_Pin|NRF_CSN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, MOTOR3_BREAK_Pin|MOTOR2_BREAK_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(KICKER_DISCHARGE_GPIO_Port, KICKER_DISCHARGE_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, MOTOR3_BREAK_Pin|MOTOR2_BREAK_Pin|SPI_CS_STORE_Pin|SPI_CS_SHIFT_Pin
+                          |SPI_CS_CONF_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(NRF_CE_GPIO_Port, NRF_CE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, SPI_CS_OUTPUT_Pin|SPI_CS_RESET_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
@@ -484,8 +490,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(NRF_IRQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOTOR3_BREAK_Pin MOTOR2_BREAK_Pin */
-  GPIO_InitStruct.Pin = MOTOR3_BREAK_Pin|MOTOR2_BREAK_Pin;
+  /*Configure GPIO pins : MOTOR3_BREAK_Pin MOTOR2_BREAK_Pin SPI_CS_OUTPUT_Pin SPI_CS_RESET_Pin
+                           SPI_CS_STORE_Pin SPI_CS_SHIFT_Pin SPI_CS_CONF_Pin */
+  GPIO_InitStruct.Pin = MOTOR3_BREAK_Pin|MOTOR2_BREAK_Pin|SPI_CS_OUTPUT_Pin|SPI_CS_RESET_Pin
+                          |SPI_CS_STORE_Pin|SPI_CS_SHIFT_Pin|SPI_CS_CONF_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
