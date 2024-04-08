@@ -6,7 +6,7 @@
 
 /* Private variables */
 static LOG_Module internal_log_mod;
-
+extern float CONTROL_FREQ;
 
 void MOTOR_Init(TIM_HandleTypeDef* pwm_htim) {
 
@@ -37,28 +37,37 @@ void MOTOR_Break(MotorPWM *motor)
 }
 
 /*
-  DEPRECATED
   Reverses motor direction and makes sure that the motor is stopped before reversing
 */
-void changeDirection(MotorPWM *motor, int percent)
+int setDirection(MotorPWM *motor, float speed)
 {
-  return; // will not work without all pins connected
-  if ((motor->reversing && percent >= 0) || (!motor->reversing && percent <= 0))
+
+  // If going backward and speed is positive, change direction
+  if (motor->dir == 0 && speed > 0)
   {
-    while (MOTOR_ReadSpeed(motor) >= 0)
+    // if we are to change direction but motor is not stopped, return;
+    if (!(MOTOR_ReadSpeed(motor) == 0))
     {
-      MOTOR_Break(motor);
+      return HAL_BUSY;
     }
-    if (percent < 0)
-    {
-      motor->reversing = 1;
-    }
-    else
-    {
-      motor->reversing = 0;
-    }
-    HAL_GPIO_WritePin(motor->breakPinPort, motor->reversePin, motor->reversing);
+    motor->dir = 1;
+    LOG_DEBUG("going backchinging dir: %d\r\n", motor->dir);
+    HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_RESET);
   }
+  // If going forward and speed is negative, change direction
+  if (motor->dir == 1 && speed < 0)
+  {
+    // if we are to change direction but motor is not stopped, return;
+    if (!(MOTOR_ReadSpeed(motor) == 0))
+    {
+      return HAL_BUSY;
+    }
+    motor->dir = 0;
+    LOG_DEBUG("going for dir: %d\r\n", motor->dir);
+    HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_SET);
+  }
+
+  return HAL_OK;
 }
 
   // TODO: How to not have globals? Will cause issues if function is not called
@@ -68,17 +77,23 @@ void changeDirection(MotorPWM *motor, int percent)
   Updates I_prev with the previous integrator value
 
 */
-
 void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
-  // TODO: IMPORTANT add integrator windup protection since u is limimted 0 - 1
 
+  // while (setDirection(motor, speed) == HAL_BUSY){
+  //   MOTOR_SendPWM(motor, 0);
+  //   // try until succesful change direction
+  // }
+  // if (speed < 0){
+  //   speed = -speed;
+  // }
   // PI control loop with integrator windup protection
+  
   float umin = 0;
   float umax = 1;
-  float Ts = 0.01;
-  float Ti = 0.05;
-  float K = 0.001;
-  float current_speed = MOTOR_ReadSpeed(motor);
+  float Ts = 1.f / CONTROL_FREQ;
+  float Ti = 0.02;
+  float K = 0.00015;
+  float current_speed = (float) MOTOR_ReadSpeed(motor);
   float error = speed - current_speed;
   float I = *I_prev + Ts / Ti * error;
   float v = K * (error + I);
@@ -86,7 +101,6 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
   // integrator windup fix
   if (v < umin || v > umax){
     I = *I_prev;
-    v = K * (error + I);
   }
   if (v > umax){
     u = umax;
@@ -97,10 +111,10 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
   else{
     u = v;
   }
-  LOG_INFO("DATAu:%f;\r\n", u);
+  // LOG_INFO("DATAu:%f;\r\n", u);
+  // HAL_Delay(1);
   MOTOR_SendPWM(motor, u);
   *I_prev = I;
-  // TODO: How to not have globals? Will cause issues if function is not called
   // for some time
 }
 
@@ -121,7 +135,7 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
     pulse_width = 0;
   }
 
-  float max_scale = 0.2; // Use a max scaling for the motor speed
+  float max_scale = 0.5; // Use a max scaling for the motor speed
   float scale = max_scale * pulse_width; // make max_scale largest scaling
 
   // TODO: How to handle rounding errors, do they even matter?
@@ -153,51 +167,20 @@ void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick)
 
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
-  LOG_DEBUG("ticks: %d\r\n", motor->ticks);
+  // LOG_DEBUG("ticks: %d\r\n", motor->ticks);
 
-  float delay_ms = 100; // 100hz update -> 100ms update
 
-  float speed_s = (motor->ticks) * 10;// 100ms update * 10 gives tick/second
-  LOG_DEBUG("speed: %f\r\n", speed_s);
+  float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
+  // LOG_DEBUG("speed: %f\r\n", speed_s);
 
   // timer overflowed, so calculate again
   // could prob do some smart reverse calculations 
   // since we know it overflowed
-  if (speed_s < 0) {
-    speed_s = ( motor->ticks + 65536 - motor->prev_tick) * 10;// 10 gives tick/second
-  }
+  // TODO: Monka race condition with timer
+  // if (speed_s < 0) {
+  //   speed_s = (float)( motor->ticks + 65536 - motor->prev_tick) * (float) CONTROL_FREQ;// 10 gives tick/second
+  // }
 
   return speed_s;
 
 }
-
-
-
-// float MOTOR_ReadSpeed(MotorPWM *motor)
-// {
-//   // each pulse is one rotation of the motor
-//   float radius = 0.1;                         // meters
-//   float PI = 3.1415;                          // meters
-//   float wheelCircumference = 2 * PI * radius; // meters
-
-//   extern Timer timer3;
-//   timer_start(&timer3);
-//   // calcuate 100 up and downs
-//   uint16_t count_amount = 3;
-//   while (count_amount > 0)
-//   {
-//     if (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
-//     {
-//       count_amount--;
-//       while (HAL_GPIO_ReadPin(motor->encoderPinPort, motor->encoderPin))
-//       {
-//         // wait for pin to go low
-//       }
-//     }
-//   }
-//   uint32_t time = timer_GetElapsedTimeMicro(&timer3);
-//   timer_stop(&timer3);
-//   float speed = wheelCircumference / (float)time;
-
-//   return speed;
-// }

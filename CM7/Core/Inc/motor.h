@@ -9,6 +9,7 @@ typedef struct
   TIM_HandleTypeDef *pwm_htim;
   uint32_t channel;
   int ticks; // negative if overflow
+  float speed; // negative if overflow
   int prev_tick; // negative if overflow
   GPIO_TypeDef *breakPinPort;
   uint16_t breakPin;
@@ -16,7 +17,7 @@ typedef struct
   uint16_t reversePin;
   GPIO_TypeDef *encoderPinPort;
   uint16_t encoderPin;
-  uint16_t reversing;
+  uint16_t dir;
 } MotorPWM;
 
 
@@ -55,6 +56,8 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev);
  * Sets the breaking pin
  */
 void MOTOR_Break(MotorPWM *motor);
+
+int setDirection(MotorPWM *motor, float speed);
 
 /**
  * ...
