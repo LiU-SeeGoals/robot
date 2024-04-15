@@ -28,6 +28,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 
 void NAV_set_motor_ticks();
 
+void steer(float vx,float vy, float w);
 /**
  *
  */

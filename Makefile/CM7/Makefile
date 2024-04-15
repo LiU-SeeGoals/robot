@@ -72,8 +72,9 @@ C_SOURCES =  \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c \
 ../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c \
-../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c
-
+../../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c \
+../../Drivers/CMSIS/DSP/Source/ControllerFunctions/arm_sin_cos_f32.c\
+../../Drivers/CMSIS/DSP/Source/CommonTables/arm_common_tables.c 
 # ASM sources
 ASM_SOURCES =  \
 startup_stm32h755xx_CM7.s
@@ -138,6 +139,7 @@ C_INCLUDES =  \
 -I../../Drivers/STM32H7xx_HAL_Driver/Inc \
 -I../../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy \
 -I../../Drivers/CMSIS/Device/ST/STM32H7xx/Include \
+-I../../Drivers/CMSIS/DSP/Include \
 -I../../Drivers/CMSIS/Include \
 -I../../Libraries/nRF24L01P-lib \
 -I../../Libraries/proto-messages/robot_action \

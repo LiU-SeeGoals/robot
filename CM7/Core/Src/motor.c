@@ -79,13 +79,12 @@ int setDirection(MotorPWM *motor, float speed)
 */
 void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
 
-  // while (setDirection(motor, speed) == HAL_BUSY){
-  //   MOTOR_SendPWM(motor, 0);
-  //   // try until succesful change direction
-  // }
-  // if (speed < 0){
-  //   speed = -speed;
-  // }
+  if (setDirection(motor, speed) == HAL_BUSY){
+    MOTOR_SendPWM(motor, 0);
+  }
+  if (speed < 0){
+    speed = -speed;
+  }
   // PI control loop with integrator windup protection
   
   float umin = 0;
