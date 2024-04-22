@@ -63,8 +63,6 @@ void Error_Handler(void);
 #define BTN_USER_Pin GPIO_PIN_13
 #define BTN_USER_GPIO_Port GPIOC
 #define BTN_USER_EXTI_IRQn EXTI15_10_IRQn
-#define MOTOR4_ENCODER_Pin GPIO_PIN_0
-#define MOTOR4_ENCODER_GPIO_Port GPIOA
 #define MOTOR3_ENCODER_Pin GPIO_PIN_4
 #define MOTOR3_ENCODER_GPIO_Port GPIOA
 #define NRF_SCK_Pin GPIO_PIN_5

@@ -110,7 +110,7 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
   else{
     u = v;
   }
-  // LOG_INFO("DATAu:%f;\r\n", u);
+  LOG_INFO("DATAu:%f;\r\n", u);
   // HAL_Delay(1);
   MOTOR_SendPWM(motor, u);
   *I_prev = I;

@@ -15,7 +15,7 @@
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
 static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
-float CLOCK_FREQ = 400000000;
+float TIMER_CLOCK_FREQ = 200000000;
 float CONTROL_FREQ; // set in init
 
 
@@ -23,32 +23,33 @@ float CONTROL_FREQ; // set in init
  * Public function implementations
  */
 
-// void startEncoder(TIM_HandleTypeDef* tim_encoder,  LPTIM_HandleTypeDef* lptim_encoder, MotorPWM* motor){
-//   if (tim_encoder != NULL){
-//     HAL_TIM_Base_Start(tim_encoder);
-//     motor->encoder_ticks = &(tim_encoder->Instance->CNT);
-//   }
-//   else{
-//     HAL_LPTIM_Base_Start(lptim_encoder);
-//     motor->encoder_ticks = &(lptim_encoder->Instance->CNT);
-//   }
-// }
+void startEncoder(TIM_HandleTypeDef* tim_encoder,  LPTIM_HandleTypeDef* lptim_encoder, MotorPWM* motor){
+  if (tim_encoder != NULL){
+    HAL_TIM_Base_Start(tim_encoder);
+    motor->encoder_ticks = &(tim_encoder->Instance->CNT);
+  }
+  else{
+    // HAL_LPTIM_Base_Start(lptim_encoder);
+    // LOG_INFO('starting lowpower \r\n');
+    HAL_LPTIM_Counter_Start(lptim_encoder, 65535);
+    motor->encoder_ticks = &(lptim_encoder->Instance->CNT);
+  }
+}
 
 void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* pwm_htim, 
               TIM_HandleTypeDef* encoder1_htim,
               TIM_HandleTypeDef* encoder2_htim,
               TIM_HandleTypeDef* encoder3_htim,
-              TIM_HandleTypeDef* encoder4_htim
-              // LPTIM_HandleTypeDef* lp_encoder1_htim,
-              // LPTIM_HandleTypeDef* lp_encoder2_htim,
-              // LPTIM_HandleTypeDef* lp_encoder3_htim,
-              // LPTIM_HandleTypeDef* lp_encoder4_htim
-              ) {
+              TIM_HandleTypeDef* encoder4_htim,
+              LPTIM_HandleTypeDef* lp_encoder1_htim,
+              LPTIM_HandleTypeDef* lp_encoder2_htim,
+              LPTIM_HandleTypeDef* lp_encoder3_htim,
+              LPTIM_HandleTypeDef* lp_encoder4_htim) {
 
   LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE);
 
-  LOG_INFO("ticks \r\n");
+  // LOG_INFO("ticks \r\n");
   HAL_TIM_Base_Start(pwm_htim);
 
 
@@ -103,10 +104,10 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[3].dir               = 1;
 
 
-  // startEncoder(encoder1_htim, lp_encoder1_htim, &motors[0]);
-  // startEncoder(encoder2_htim, lp_encoder2_htim, &motors[1]);
-  // startEncoder(encoder3_htim, lp_encoder3_htim, &motors[2]);
-  // startEncoder(encoder4_htim, lp_encoder4_htim, &motors[3]);
+  startEncoder(encoder1_htim, lp_encoder1_htim, &motors[0]);
+  startEncoder(encoder2_htim, lp_encoder2_htim, &motors[1]);
+  startEncoder(encoder3_htim, lp_encoder3_htim, &motors[2]);
+  startEncoder(encoder4_htim, lp_encoder4_htim, &motors[3]);
   MOTOR_PWMStart(&motors[0]);
   MOTOR_PWMStart(&motors[1]);
   MOTOR_PWMStart(&motors[2]);
@@ -114,7 +115,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 
   float control_clock_prescaler = motor_tick_itr->Init.Prescaler + 1; 
   float control_clock_period = motor_tick_itr->Init.Period + 1;
-  CONTROL_FREQ = CLOCK_FREQ / (control_clock_prescaler * control_clock_period);
+  CONTROL_FREQ = TIMER_CLOCK_FREQ / (control_clock_prescaler * control_clock_period);
   HAL_TIM_Base_Start_IT(motor_tick_itr);
   // LOG_INFO("control time %f \r\n", CONTROL_FREQ);
 
@@ -132,6 +133,7 @@ void NAV_set_motor_ticks(){
   for (int i = 0; i < 4; i++){ // do for all motor
     MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
   }
+    // MOTOR_SetSpeed(&motors[3], motors[3].speed, &I_prevs[3]);
 
 }
 
@@ -168,11 +170,11 @@ void steer(float vx,float vy, float w){
 void test_motor() {
   // MOTOR_SetSpeed(&motors[3], -70.0, &I_prev);
   // steer(-1.f * 100.f, 1.f * 100.f, 0.f);
-  // motors[0].speed = 0;
+  motors[0].speed = 4.f * 100.f;
   motors[1].speed = 4.f * 100.f;
-  // motors[2].speed = 0;
+  motors[2].speed = 4.f * 100.f;
   // LOG_INFO("ticks \r\n");
-  // motors[3].speed = 12.f * 100.f;
+  motors[3].speed = 4.f * 100.f;
   // LOG_INFO("ticks %d\r\n", *(motors[3].encoder_ticks));
 
 
