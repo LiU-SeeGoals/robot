@@ -24,7 +24,12 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* encoder1_htim,
               TIM_HandleTypeDef* encoder2_htim,
               TIM_HandleTypeDef* encoder3_htim,
-              TIM_HandleTypeDef* encoder4_htim);
+              TIM_HandleTypeDef* encoder4_htim
+              // LPTIM_HandleTypeDef* lp_encoder1_htim,
+              // LPTIM_HandleTypeDef* lp_encoder2_htim,
+              // LPTIM_HandleTypeDef* lp_encoder3_htim,
+              // LPTIM_HandleTypeDef* lp_encoder4_htim
+              );
 
 void NAV_set_motor_ticks();
 

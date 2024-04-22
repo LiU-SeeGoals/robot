@@ -150,10 +150,10 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick)
 {
   uint16_t ticks = 0;
-  uint16_t ticks_before = motor->encoder_htim->Instance->CNT;
+  uint16_t ticks_before = *(motor->encoder_ticks);
   while(ticks < tick)
   {
-    uint16_t ticks_after = motor->encoder_htim->Instance->CNT;
+    uint16_t ticks_after = *(motor->encoder_ticks);
 
     if (ticks_after != ticks_before){
       ticks += ticks_after - ticks_before;
@@ -169,7 +169,7 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
   // LOG_DEBUG("ticks: %d\r\n", motor->ticks);
 
 
-  float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
+  float speed_s = (float)(motor->delta_ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
   // LOG_DEBUG("speed: %f\r\n", speed_s);
 
   // timer overflowed, so calculate again

@@ -74,8 +74,8 @@ static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM5_Init(void);
-static void MX_TIM8_Init(void);
 static void MX_TIM12_Init(void);
+static void MX_TIM8_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -159,13 +159,15 @@ Error_Handler();
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM5_Init();
-  MX_TIM8_Init();
   MX_TIM12_Init();
+  MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
   LOG_Init(&huart3);
   COM_Init(&hspi1);
-  NAV_Init(&htim12, &htim1, &htim3, &htim4, &htim5, &htim8);
-  MOTOR_Init(&htim1);
+  // NAV_Init(&htim12, &htim1, 
+  //         &htim3, &htim4, &htim5, NULL, 
+  //         NULL, NULL, NULL, &hlptim1);
+  // MOTOR_Init(&htim1);
   KICKER_Init();
   LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_EMERGENCY);
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
@@ -180,7 +182,7 @@ Error_Handler();
   while (1)
   {
 
-    test_motor();
+    // test_motor();
 
 
     /* USER CODE END WHILE */

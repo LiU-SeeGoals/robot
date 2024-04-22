@@ -113,6 +113,45 @@ If for some reason a new `robot.ioc` has to be created from scratch, these are t
 
 ### General stuff
 ...
+### Debugging
+
+How to use GDB
+run st-util in folder with .elf file, this starts gdb server
+in MakeFile/CM*/Build
+run
+```
+st-util
+```
+
+somewhere else run
+
+```
+gdb robot_CM7.elf (or other name for the .elf file)
+```
+
+in gdb run 
+
+```
+target remote localhost:4242
+```
+
+The :4242 port can in theory change so check the output from the st-util command to be sure
+
+in gdb you can for example run 
+
+```
+b main:140
+```
+
+to create a breakpoint at line 140 in the main.c file
+and you can check the surrounding code by running
+
+```
+l
+```
+
+peace be with you for feeling this desperate, good luck...
+
 
 ### Connectivity
 

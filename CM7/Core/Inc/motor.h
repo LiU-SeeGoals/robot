@@ -5,10 +5,10 @@
 
 typedef struct
 {
-  TIM_HandleTypeDef *encoder_htim;
+  uint32_t* encoder_ticks;
   TIM_HandleTypeDef *pwm_htim;
   uint32_t channel;
-  int ticks; // negative if overflow
+  int delta_ticks; // negative if overflow
   float speed; // negative if overflow
   int prev_tick; // negative if overflow
   GPIO_TypeDef *breakPinPort;

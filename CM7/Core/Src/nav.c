@@ -23,25 +23,40 @@ float CONTROL_FREQ; // set in init
  * Public function implementations
  */
 
+// void startEncoder(TIM_HandleTypeDef* tim_encoder,  LPTIM_HandleTypeDef* lptim_encoder, MotorPWM* motor){
+//   if (tim_encoder != NULL){
+//     HAL_TIM_Base_Start(tim_encoder);
+//     motor->encoder_ticks = &(tim_encoder->Instance->CNT);
+//   }
+//   else{
+//     HAL_LPTIM_Base_Start(lptim_encoder);
+//     motor->encoder_ticks = &(lptim_encoder->Instance->CNT);
+//   }
+// }
+
 void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* pwm_htim, 
               TIM_HandleTypeDef* encoder1_htim,
               TIM_HandleTypeDef* encoder2_htim,
               TIM_HandleTypeDef* encoder3_htim,
-              TIM_HandleTypeDef* encoder4_htim) {
+              TIM_HandleTypeDef* encoder4_htim
+              // LPTIM_HandleTypeDef* lp_encoder1_htim,
+              // LPTIM_HandleTypeDef* lp_encoder2_htim,
+              // LPTIM_HandleTypeDef* lp_encoder3_htim,
+              // LPTIM_HandleTypeDef* lp_encoder4_htim
+              ) {
 
   LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE);
-  HAL_TIM_Base_Start(pwm_htim);
-  HAL_TIM_Base_Start(encoder1_htim);
-  HAL_TIM_Base_Start(encoder2_htim);
-  HAL_TIM_Base_Start(encoder3_htim);
-  HAL_TIM_Base_Start(encoder4_htim);
 
+  LOG_INFO("ticks \r\n");
+  HAL_TIM_Base_Start(pwm_htim);
+
+
+  motors[0].encoder_ticks     = NULL;
   motors[0].pwm_htim          = pwm_htim;
-  motors[0].ticks             = 0;
+  motors[0].delta_ticks       = 0;
   motors[0].speed             = 0.f;
   motors[0].prev_tick         = 0;
-  motors[0].encoder_htim      = encoder1_htim;
   motors[0].channel           = MOTOR1_TIM_CHANNEL;
   motors[0].breakPinPort      = MOTOR1_BREAK_GPIO_Port;
   motors[0].breakPin          = MOTOR1_BREAK_Pin;
@@ -51,11 +66,11 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[0].encoderPin        = MOTOR1_ENCODER_Pin;
   motors[0].dir               = 1;
 
+  motors[1].encoder_ticks     = NULL;
   motors[1].pwm_htim          = pwm_htim;
-  motors[1].ticks             = 0;
+  motors[1].delta_ticks       = 0;
   motors[1].speed             = 0.f;
   motors[1].prev_tick         = 0;
-  motors[1].encoder_htim      = encoder2_htim;
   motors[1].channel           = MOTOR2_TIM_CHANNEL;
   motors[1].breakPinPort      = MOTOR2_BREAK_GPIO_Port;
   motors[1].breakPin          = MOTOR2_BREAK_Pin;
@@ -63,11 +78,11 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[1].reversePin        = MOTOR2_REVERSE_Pin;
   motors[1].dir               = 1;
 
+  motors[2].encoder_ticks     = NULL;
   motors[2].pwm_htim          = pwm_htim;
-  motors[2].ticks             = 0;
+  motors[2].delta_ticks       = 0;
   motors[2].speed             = 0.f;
   motors[2].prev_tick         = 0;
-  motors[2].encoder_htim      = encoder3_htim;
   motors[2].channel           = MOTOR3_TIM_CHANNEL;
   motors[2].breakPinPort      = MOTOR3_BREAK_GPIO_Port;
   motors[2].breakPin          = MOTOR3_BREAK_Pin;
@@ -75,11 +90,11 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[2].reversePin        = MOTOR3_REVERSE_Pin;
   motors[2].dir               = 1;
 
+  motors[3].encoder_ticks     = NULL;
   motors[3].pwm_htim          = pwm_htim;
-  motors[3].ticks             = 0;
+  motors[3].delta_ticks       = 0;
   motors[3].speed             = 0.f;
   motors[3].prev_tick         = 0;
-  motors[3].encoder_htim      = encoder4_htim;
   motors[3].channel           = MOTOR4_TIM_CHANNEL;
   motors[3].breakPinPort      = MOTOR4_BREAK_GPIO_Port;
   motors[3].breakPin          = MOTOR4_BREAK_Pin;
@@ -87,6 +102,11 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[3].reversePin        = MOTOR4_REVERSE_Pin;
   motors[3].dir               = 1;
 
+
+  // startEncoder(encoder1_htim, lp_encoder1_htim, &motors[0]);
+  // startEncoder(encoder2_htim, lp_encoder2_htim, &motors[1]);
+  // startEncoder(encoder3_htim, lp_encoder3_htim, &motors[2]);
+  // startEncoder(encoder4_htim, lp_encoder4_htim, &motors[3]);
   MOTOR_PWMStart(&motors[0]);
   MOTOR_PWMStart(&motors[1]);
   MOTOR_PWMStart(&motors[2]);
@@ -105,8 +125,8 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 void NAV_set_motor_ticks(){
   for (int i = 0; i < 4; i++){
     int ticks_before = motors[i].prev_tick;
-    int new_ticks = motors[i].encoder_htim->Instance->CNT;
-    motors[i].ticks = new_ticks - ticks_before;
+    int new_ticks = *(motors[i].encoder_ticks);
+    motors[i].delta_ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
   for (int i = 0; i < 4; i++){ // do for all motor
@@ -147,15 +167,16 @@ void steer(float vx,float vy, float w){
 
 void test_motor() {
   // MOTOR_SetSpeed(&motors[3], -70.0, &I_prev);
-  steer(-1.f * 100.f, 1.f * 100.f, 0.f);
+  // steer(-1.f * 100.f, 1.f * 100.f, 0.f);
   // motors[0].speed = 0;
-  // motors[1].speed = 4.f * 100.f;
+  motors[1].speed = 4.f * 100.f;
   // motors[2].speed = 0;
+  // LOG_INFO("ticks \r\n");
   // motors[3].speed = 12.f * 100.f;
+  // LOG_INFO("ticks %d\r\n", *(motors[3].encoder_ticks));
 
 
   // float speed = MOTOR_ReadSpeed(&motors[3]);
-  // LOG_INFO("control freq %f\r\n", CONTROL_FREQ);
   // HAL_Delay(5000);
   // HAL_GPIO_WritePin(motors[3].reversePinPort, motors[3].reversePin, GPIO_PIN_SET);
   // MOTOR_SendPWM(&motors[3], 0.5);
