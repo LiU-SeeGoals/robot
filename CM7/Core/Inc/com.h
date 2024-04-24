@@ -21,6 +21,11 @@
 void COM_Init(SPI_HandleTypeDef* hspi);
 
 /**
+ * Ping the basestation.
+ */
+void COM_Ping();
+
+/**
  * Parse the received message and handle it correctly.
  *
  * @param pipe What pipe the message was received on.
