@@ -5,9 +5,7 @@
 #include <stdio.h>
 #include <nrf24l01.h>
 #include <nrf_helper_defines.h>
-#include <pb_encode.h>
-#include <pb_decode.h>
-#include <robot_action.pb.h>
+#include <robot_action/robot_action.pb-c.h>
 #include "nav.h"
 #include "log.h"
 
@@ -238,33 +236,33 @@ static int find_id() {
 }
 
 static void parse_controller_packet(uint8_t* payload, uint8_t len) {
-  action_Command cmd = action_Command_init_zero;
-  pb_istream_t stream = pb_istream_from_buffer(payload, len);
-  bool status = pb_decode(&stream, action_Command_fields, &cmd);
-  if (!status) {
-    LOG_WARNING("Decoding PB failed: %s\r\n", PB_GET_ERROR(&stream));
+  Command* cmd = NULL;
+  cmd = command__unpack(NULL, len, payload);
+
+  if (!cmd) {
+    LOG_WARNING("Decoding PB failed\r\n");
     return;
   }
 
-  LOG_DEBUG("Robot %d should", cmd.robot_id);
-  switch(cmd.command_id) {
-    case action_ActionType_STOP_ACTION:
+  LOG_INFO("Robot %d should", cmd->robot_id);
+  switch(cmd->command_id) {
+    case ACTION_TYPE__STOP_ACTION:
       LOG_DEBUG("STOP");
       NAV_Stop();
       break;
-    case action_ActionType_KICK_ACTION:
+    case ACTION_TYPE__KICK_ACTION:
       LOG_DEBUG("KICK");
       break;
-    case action_ActionType_MOVE_ACTION:
+    case ACTION_TYPE__MOVE_ACTION:
       LOG_DEBUG("MOVE");
       break;
-    case action_ActionType_INIT_ACTION:
+    case ACTION_TYPE__INIT_ACTION:
       LOG_DEBUG("INIT");
       break;
-    case action_ActionType_SET_NAVIGATION_DIRECTION_ACTION:
+    case ACTION_TYPE__MOVE_TO_ACTION:
       {
         LOG_DEBUG("NAV");
-        switch(cmd.direction.x) {
+        switch(cmd->direction->x) {
           case 1: // left
             LOG_DEBUG("LEFT");
             NAV_Direction(LEFT);
@@ -275,7 +273,7 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
             break;
         }
 
-        switch(cmd.direction.y) {
+        switch(cmd->direction->y) {
           case 1: // up
             LOG_DEBUG("UP");
             NAV_Direction(UP);
@@ -287,8 +285,10 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
         }
       }
       break;
-    case action_ActionType_ROTATE_ACTION:
+    case ACTION_TYPE__ROTATE_ACTION:
       LOG_DEBUG("ROTATE");
+      break;
+    default:
       break;
   }
 
