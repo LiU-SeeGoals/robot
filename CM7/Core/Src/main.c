@@ -56,6 +56,7 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+volatile uint32_t main_tasks;
 static LOG_Module internal_log_mod;
 /* USER CODE END PV */
 
@@ -161,6 +162,11 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    if ((main_tasks & TASK_PING) != 0) {
+      COM_Ping();
+      main_tasks &= ~TASK_PING;
+    }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

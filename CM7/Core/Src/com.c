@@ -12,16 +12,15 @@
 #include "log.h"
 
 /* Private defines */
-#define PIPE_ACTION     0
-#define PIPE_DATA       1
-#define PIPE_PING       2
+#define MSG_PING       0
+#define MSG_ACTION     1
+
 
 #define CONNECT_MAGIC 0x4d, 0xf8, 0x42, 0x79
 
 #define CONTROLLER_ADDR {2, 255, 255, 255, 255}
-#define ROBOT_DATA_ADDR(id) {1, 255, 255, 255, id}
 #define ROBOT_ACTION_ADDR(id) {1, 255, 255, id, 255}
-#define ROBOT_PING_ADDR(id) {1, 255, id, 255, 255}
+
 
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
@@ -31,16 +30,16 @@ static int find_id();
 static LOG_Module internal_log_mod;
 static int nRFon = 0;
 
+static volatile uint8_t ping_ack;
+
 /*
  * Public functions implementations
  */
 
 void COM_Init(SPI_HandleTypeDef* hspi) {
   int id = find_id();
-  uint8_t controllerAddress[5] = CONTROLLER_ADDR;
+  uint8_t controllerAddress[5]  = CONTROLLER_ADDR;
   uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
-  uint8_t dataAddress[5] = ROBOT_DATA_ADDR(id);
-  uint8_t pingAdress[5] = ROBOT_PING_ADDR(id);
 
   LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
   // Initialize and enter standby-I mode
@@ -61,29 +60,25 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   // Setup the TX address.
   // We also have to set pipe 0 to receive on the same address.
   NRF_WriteRegister(NRF_REG_TX_ADDR, controllerAddress, 5);
-  NRF_WriteRegister(NRF_REG_RX_ADDR_P0, actionAdress, 5);
+  NRF_WriteRegister(NRF_REG_RX_ADDR_P0, controllerAddress, 5);
   NRF_WriteRegister(NRF_REG_RX_ADDR_P1, actionAdress, 5);
-  NRF_WriteRegister(NRF_REG_RX_ADDR_P2, actionAdress, 5);
+  NRF_WriteRegisterByte(NRF_REG_RX_ADDR_P2, 1);
+  NRF_SetRegisterBit(NRF_REG_EN_RXADDR, 0x07);
 
   // We enable ACK payloads which needs dynamic payload to function.
   NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_ACK_PAY);
   NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_DPL);
-  NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x03);
+  NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x07);
 
   // Setup for 3 max retries when sending and 500 us between each retry.
   // For motivation, see page 60 in datasheet.
   NRF_WriteRegisterByte(NRF_REG_SETUP_RETR, 0x13);
 
-  
-  if (id >= 0) {
-    uint8_t data[] = {CONNECT_MAGIC, id};
-    if (NRF_Transmit(data, 5) != NRF_OK) {
-      LOG_WARNING("Failed sending ID...\r\n");
-    }
-  }
+
+  main_tasks |= TASK_PING;
 
   NRF_EnterMode(NRF_MODE_RX);
-  LOG_INFO("Inititalised...\r\n");
+  LOG_INFO("Entered RX mode...\r\n");
 }
 
 void COM_RF_HandleIRQ() {
@@ -92,11 +87,13 @@ void COM_RF_HandleIRQ() {
   if (status & STATUS_MASK_MAX_RT) {
     // Max retries while sending.
     NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_MAX_RT);
+    ping_ack = 2;
   }
 
   if (status & STATUS_MASK_TX_DS) {
     // ACK received
     NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_TX_DS);
+    ping_ack = 1;
   }
 
   if (status & STATUS_MASK_RX_DR) {
@@ -113,24 +110,29 @@ void COM_RF_Receive(uint8_t pipe) {
   uint8_t payload[len];
   NRF_ReadPayload(payload, len);
 
+  NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 
-  LOG_DEBUG("Payload of length %i from pipe %i\r\n", len, pipe);
-  switch (pipe) {
-    case PIPE_ACTION:
-      parse_controller_packet(payload, len);
+  if (len == 0) {
+    return;
+  }
+  uint8_t msg_type = payload[0];
+  LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
+
+  switch (msg_type) {
+    case MSG_ACTION:
+      parse_controller_packet(payload + 1, len - 1);
       break;
-    case PIPE_DATA:
+    case MSG_PING:
+      main_tasks |= TASK_PING;
       break;
-    case PIPE_PING:
-        printf("Got ping!\n");
-      break;
+    default:
+      LOG_WARNING("Unkown message type %d\r\n", msg_type);
   }
 
   // What we're sending back on next receive
   //uint8_t txMsg = 'W';
   //NRF_WriteAckPayload(pipe, &txMsg, 1);
 
-  NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 }
 
 void COM_RF_PrintInfo(void) {
@@ -194,6 +196,27 @@ void COM_SPI_Reset()
   // Clear shift register.
   HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_SET);
+}
+
+void COM_Ping() {
+  uint8_t id = find_id();
+  if (id >= 0) {
+    NRF_EnterMode(NRF_MODE_STANDBY1);
+    ping_ack = 0;
+    uint8_t data[] = {CONNECT_MAGIC, id};
+    if (NRF_Transmit(data, 5) != NRF_OK) {
+      LOG_INFO("Failed sending ID...\r\n");
+    } else {
+      LOG_INFO("Sent ID %d...\r\n", id);
+    }
+    while (!ping_ack) {
+
+    }
+    LOG_INFO("Ack ping %d\r\n", ping_ack);
+  } else {
+    LOG_INFO("Bad ID...\r\n");
+  }
+  NRF_EnterMode(NRF_MODE_RX);
 }
 
 /*
