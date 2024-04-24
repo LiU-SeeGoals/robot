@@ -74,7 +74,6 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   // For motivation, see page 60 in datasheet.
   NRF_WriteRegisterByte(NRF_REG_SETUP_RETR, 0x13);
 
-
   main_tasks |= TASK_PING;
 
   NRF_EnterMode(NRF_MODE_RX);

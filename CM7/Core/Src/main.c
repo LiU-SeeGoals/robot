@@ -57,6 +57,7 @@ UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 volatile uint32_t main_tasks;
+
 static LOG_Module internal_log_mod;
 /* USER CODE END PV */
 
