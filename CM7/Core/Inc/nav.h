@@ -5,6 +5,7 @@
  * Public includes
  */
 #include "main.h"
+#include "motor.h"
 
 typedef enum {
   UP,
@@ -38,6 +39,8 @@ void steer(float vx,float vy, float w);
  *
  */
 void NAV_Direction(DIRECTION dir);
+
+void startEncoder(TIM_HandleTypeDef* tim_encoder,  LPTIM_HandleTypeDef* lptim_encoder, MotorPWM* motor);
 
 void NAV_Stop();
 

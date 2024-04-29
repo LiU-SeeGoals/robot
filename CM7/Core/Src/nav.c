@@ -25,7 +25,17 @@ float CONTROL_FREQ; // set in init
 
 void startEncoder(TIM_HandleTypeDef* tim_encoder,  LPTIM_HandleTypeDef* lptim_encoder, MotorPWM* motor){
   if (tim_encoder != NULL){
-    HAL_TIM_Base_Start(tim_encoder);
+
+    HAL_StatusTypeDef res;
+    // tim_encoder->State = HAL_TIM_STATE_READY;
+    res = HAL_TIM_Base_Start(tim_encoder);
+
+    if (res == HAL_ERROR){
+      LOG_INFO("%d \r\n", tim_encoder->State);
+    }
+    if (res != HAL_OK){
+      LOG_INFO("woopsie \r\n");
+    }
     motor->encoder_ticks = &(tim_encoder->Instance->CNT);
   }
   else{
@@ -170,12 +180,12 @@ void steer(float vx,float vy, float w){
 void test_motor() {
   // MOTOR_SetSpeed(&motors[3], -70.0, &I_prev);
   // steer(-1.f * 100.f, 1.f * 100.f, 0.f);
-  motors[0].speed = 4.f * 100.f;
-  motors[1].speed = 4.f * 100.f;
-  motors[2].speed = 4.f * 100.f;
+  motors[0].speed = 0.f * 100.f;
+  motors[1].speed = 0.f * 100.f;
+  motors[2].speed = 0.f * 100.f;
   // LOG_INFO("ticks \r\n");
   motors[3].speed = 4.f * 100.f;
-  // LOG_INFO("ticks %d\r\n", *(motors[3].encoder_ticks));
+  LOG_INFO("ticks %d\r\n", *(motors[3].encoder_ticks));
 
 
   // float speed = MOTOR_ReadSpeed(&motors[3]);

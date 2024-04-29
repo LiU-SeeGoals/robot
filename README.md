@@ -167,3 +167,60 @@ Prescaler: 32
 ~~~
 
 
+## How to use motor driver
+
+Motor driver has 5 pins, set these signals in STM32CubeMX and check the devboard documentation to find the corresponding pin.
+
+```
+PWM, - Takes PWM signal to decide speed of motor, generate from devboard with timers.
+
+FGOUT, - Hall sensor tick output, work like a wheel encoder and ticking as the motor spins so that we know how much the motor has spun.
+
+nFault, - Gives fault messages when fault states are entered by going low. Currently does not work, set this pin HIGH 5v or motor driver can enter test mode.
+
+brake - HIGH sets all motor coils high breaking the motor hard.
+
+dir - Decides direction for motor
+```
+
+## How to run motor
+
+This will be a overview to give a feeling for the system as things might change with time
+
+What do you need to understand?
+
+* How hardware interuppts work
+* How hardware timers work 
+* PWM signals.
+
+PWM signals are important to understand to be able to run the motors. And the basics will help to understand how the control loop works. Best is to find some tutorials on youtube
+
+Each motor has a timer which ticks each time FGOUT ticks, this is used in an interrupt which is set to interrupt with a fixed frequency. In the interrupt the delta ticks are counted from the previous interrupt called, this way we know how much/fast the motor has moved.
+
+The control loop is currently a PI loop in MOTOR_SetSpeed (name subject to change) which uses the delta ticks to set a control signal, which is sent as a signal between 0 - 1, this is then scaled and a PWM signal is sent.
+
+
+## Short about timers
+
+Timers can be set in STM32CubeMX with prescaler and period which decides how fast it will tick compared to the system clock. Sometimes this systemclock is prescaled before coming to the timers, meaning you have to check clock configuration in STM32CubeMX to find the exact frequency, likely this value is 200Mhz (400Mhz prescaled by 2).
+
+The timers are TIM1-12 and LPTIM1-4, LPTIM has less functionality then TIM
+
+EXAMPLE:
+
+TIM1 has prescaler of 10, period of 100
+
+System clock is 400Mhz, however looking at clock config we see that before coming to the timer this is caled by two, meaning the timer gets tick frequncy of 200Mhz.
+
+Now 200Mhz is divided by prescaler 200/10 = 20Mhz and the timer overflows when this has ticked 100 times. 
+
+Now for PWM signals the HIGH part of the pulse width is set by calling
+
+```
+  __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
+```
+  
+where pwm_speed is a value between 0 - period.
+
+So if we set pwm_speed = period, the motor will run as fast as possible
+and pwm_speed = 0 will turn off the motor.
