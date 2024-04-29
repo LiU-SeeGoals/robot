@@ -55,6 +55,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 #define TASK_PING 1
+#define TASK_NAV_COMMAND 2
 extern volatile uint32_t main_tasks;
 /* USER CODE END EFP */
 

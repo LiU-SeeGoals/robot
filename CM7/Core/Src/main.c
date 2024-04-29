@@ -164,10 +164,13 @@ Error_Handler();
   while (1)
   {
     if ((main_tasks & TASK_PING) != 0) {
-      COM_Ping();
       main_tasks &= ~TASK_PING;
+      COM_Ping();
     }
-
+    if ((main_tasks & TASK_NAV_COMMAND) != 0) {
+      main_tasks &= ~TASK_NAV_COMMAND;
+      NAV_HandleCommands();
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

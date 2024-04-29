@@ -5,6 +5,7 @@
  * Public includes
  */
 #include "main.h"
+#include <robot_action/robot_action.pb-c.h>
 
 typedef enum {
   UP,
@@ -21,11 +22,13 @@ typedef enum {
 void NAV_Init(TIM_HandleTypeDef* htim);
 
 /**
- *
+* Queues a command from the basestation.
+* @param Command The command.
+*/
+void NAV_QueueCommandIRQ(Command* command);
+/**
+ * Handle all received commands.
  */
-void NAV_Direction(DIRECTION dir);
-
-void NAV_Stop();
-
+void NAV_HandleCommands();
 
 #endif /* NAV_H */

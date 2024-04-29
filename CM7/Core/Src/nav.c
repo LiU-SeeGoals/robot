@@ -3,9 +3,10 @@
 /*
  * Private includes
  */
-#include <stdint.h>
+#include <stdlib.h>
 #include "motor.h"
 #include "log.h"
+#include <stdatomic.h>
 
 /*
  * Private variables
@@ -61,26 +62,38 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[3].reversing         = 0;
 }
 
-void NAV_Direction(DIRECTION dir) {
-  switch (dir) {
-    case UP:
-      MOTOR_Start(&motors[0]);
-      break;
-    case DOWN:
-      MOTOR_Start(&motors[1]);
-      break;
-    case LEFT:
-      MOTOR_Start(&motors[2]);
-      break;
-    case RIGHT:
-      MOTOR_Start(&motors[3]);
-      break;
+#define COMMAND_BUF_SIZE 64
+atomic_uint command_val;
+Command * volatile commands[COMMAND_BUF_SIZE];
+
+void NAV_QueueCommandIRQ(Command* command) {
+  unsigned command_count = command_val >> 4;
+  unsigned command_ix = command_val & 0x0f;
+  if (command_count == COMMAND_BUF_SIZE) {
+    LOG_WARNING("Command buffer full\n\r");
+    return;
   }
+  unsigned end = (command_ix + command_count) % COMMAND_BUF_SIZE;
+  command_val += (1 << 4);
+  commands[end] = command;
 }
 
-void NAV_Stop() {
-  MOTOR_Stop(&motors[0]);
-  MOTOR_Stop(&motors[1]);
-  MOTOR_Stop(&motors[2]);
-  MOTOR_Stop(&motors[3]);
+
+void NAV_HandleCommands() {
+  static int handled = 0;
+  while (1) {
+    unsigned command = command_val;
+    unsigned command_count = command >> 4;
+    unsigned command_ix = command & 0x0f;
+    if (command_count == 0) {
+      return;
+    }
+    Command* to_handle = commands[command_ix];
+    LOG_INFO("Handle command %d: %d\n\r", to_handle->command_id, handled);
+    ++handled;
+    command_count -= 1;
+    command_ix += 1;
+    command_val = command_count << 4 & command_ix;
+    free(to_handle);
+  }
 }

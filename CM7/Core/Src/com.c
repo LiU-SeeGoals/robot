@@ -6,6 +6,7 @@
 #include <nrf24l01.h>
 #include <nrf_helper_defines.h>
 #include <robot_action/robot_action.pb-c.h>
+#include "main.h"
 #include "nav.h"
 #include "log.h"
 
@@ -243,56 +244,8 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
     LOG_WARNING("Decoding PB failed\r\n");
     return;
   }
-
-  LOG_INFO("Robot %d should", cmd->robot_id);
-  switch(cmd->command_id) {
-    case ACTION_TYPE__STOP_ACTION:
-      LOG_DEBUG("STOP");
-      NAV_Stop();
-      break;
-    case ACTION_TYPE__KICK_ACTION:
-      LOG_DEBUG("KICK");
-      break;
-    case ACTION_TYPE__MOVE_ACTION:
-      LOG_DEBUG("MOVE");
-      break;
-    case ACTION_TYPE__INIT_ACTION:
-      LOG_DEBUG("INIT");
-      break;
-    case ACTION_TYPE__MOVE_TO_ACTION:
-      {
-        LOG_DEBUG("NAV");
-        switch(cmd->direction->x) {
-          case 1: // left
-            LOG_DEBUG("LEFT");
-            NAV_Direction(LEFT);
-            break;
-          case -1: // right
-            LOG_DEBUG("RIGHT");
-            NAV_Direction(RIGHT);
-            break;
-        }
-
-        switch(cmd->direction->y) {
-          case 1: // up
-            LOG_DEBUG("UP");
-            NAV_Direction(UP);
-            break;
-          case -1: // down
-            LOG_DEBUG("DOWN");
-            NAV_Direction(DOWN);
-            break;
-        }
-      }
-      break;
-    case ACTION_TYPE__ROTATE_ACTION:
-      LOG_DEBUG("ROTATE");
-      break;
-    default:
-      break;
-  }
-
-  LOG_DEBUG("\r\n");
+  NAV_QueueCommandIRQ(cmd);
+  main_tasks |= TASK_NAV_COMMAND;
 }
 
 
