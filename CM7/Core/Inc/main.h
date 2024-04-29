@@ -31,6 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdatomic.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -56,7 +57,8 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 #define TASK_PING 1
 #define TASK_NAV_COMMAND 2
-extern volatile uint32_t main_tasks;
+#define TASK_DATA 4
+extern volatile atomic_uint main_tasks;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

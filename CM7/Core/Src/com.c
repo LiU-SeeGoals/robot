@@ -110,11 +110,12 @@ void COM_RF_Receive(uint8_t pipe) {
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 
+  main_tasks |= TASK_DATA;
   if (len == 0) {
     return;
   }
   uint8_t msg_type = payload[0];
-  LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
+  //LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
 
   switch (msg_type) {
     case MSG_ACTION:
@@ -198,8 +199,11 @@ void COM_SPI_Reset()
 
 void COM_Ping() {
   uint8_t id = find_id();
+
   if (id >= 0) {
+    HAL_Delay(100);
     NRF_EnterMode(NRF_MODE_STANDBY1);
+
     ping_ack = 0;
     uint8_t data[] = {CONNECT_MAGIC, id};
     if (NRF_Transmit(data, 5) != NRF_OK) {
@@ -207,8 +211,13 @@ void COM_Ping() {
     } else {
       LOG_INFO("Sent ID %d...\r\n", id);
     }
-    while (!ping_ack) {
-
+    uint32_t stamp = HAL_GetTick();
+    uint32_t freq = HAL_GetTickFreq();
+    while (!ping_ack && HAL_GetTick() - stamp < freq) {
+      HAL_Delay(1);
+    }
+    if (ping_ack != 1) {
+      NRF_SendCommand(NRF_CMD_FLUSH_TX);
     }
     LOG_INFO("Ack ping %d\r\n", ping_ack);
   } else {
