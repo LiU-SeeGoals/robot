@@ -39,6 +39,7 @@ void KICKER_Charge() {
 }
 
 void KICKER_Kick() {
+  // Kicks on low
   HAL_GPIO_WritePin(KICKER_DISCHARGE_GPIO_Port, KICKER_DISCHARGE_Pin, GPIO_PIN_RESET);
   wait(settings.discharge_wait_us); // TODO replace with hardware timer
   HAL_GPIO_WritePin(KICKER_DISCHARGE_GPIO_Port, KICKER_DISCHARGE_Pin, GPIO_PIN_SET);
