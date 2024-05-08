@@ -1,3 +1,3 @@
 - [ ] My code follows the [style guidelines](https://github.com/LiU-SeeGoals/wiki/wiki/1.1.-Processes-&-Standards#seegoal---firmware-standard) of this project
-- [ ] Any changed pins has been updated [here](https://docs.google.com/spreadsheets/d/17flA5LpzrT9rnQsaOT9ELM54TsmUrEBT-gppVunidXE/edit#gid=0).
+- [ ] I have checked conflicting pins in the .ioc between my branch and main, and notified affected people.
 - [ ] I've set an responsible reviewer and pinged this person on Discord.
