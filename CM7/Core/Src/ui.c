@@ -149,7 +149,7 @@ void parse_key();
 void UI_Init(UART_HandleTypeDef *handle) {
   huart = handle;
   HAL_UART_Receive_IT(huart, &key, 1);
-  LOG_InitModule(&internal_log_mod, "UI", LOG_LEVEL_UI);
+  LOG_InitModule(&internal_log_mod, "UI", LOG_LEVEL_EMERGENCY);
   print_help();
 }
 
