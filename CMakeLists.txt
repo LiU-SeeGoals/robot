@@ -1,6 +1,6 @@
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.25)
 
 # specify cross-compilers and tools
 set(CMAKE_C_COMPILER arm-none-eabi-gcc)
@@ -53,7 +53,7 @@ endif ()
 
 include_directories(Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32H7xx/Include Drivers/CMSIS/Include Drivers/CMSIS/DSP/DSP_Lib_TestSuite/RefLibs/inc Libraries/fw-shared-modules/Inc Libraries/nRF24L01P-lib Libraries/proto-messages/proto_c Libraries/protobuf Drivers/CMSIS/DSP/Include)
 
-add_compile_definitions(-DDEBUG -DUSE_HAL_DRIVER -DSTM32H755xx)
+add_compile_definitions(DEBUG USE_HAL_DRIVER STM32H755xx)
 
 set(DRIVERS_ROOT Drivers/STM32H7xx_HAL_Driver/Src)
 set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
