@@ -6,7 +6,11 @@
 #include <stdlib.h>
 #include "motor.h"
 #include "log.h"
-#include <stdatomic.h>
+#include <ringbuffer.h>
+
+#define BUFFER_SIZE 64
+RINGBUFFER_DEF(Command*, BUFFER_SIZE, Command_buf);
+RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
 
 /*
  * Private variables
@@ -62,38 +66,27 @@ void NAV_Init(TIM_HandleTypeDef* htim) {
   motors[3].reversing         = 0;
 }
 
-#define COMMAND_BUF_SIZE 64
-atomic_uint command_val;
-Command * volatile commands[COMMAND_BUF_SIZE];
+
+Command_buf queue;
+
+static int queued = 0;
 
 void NAV_QueueCommandIRQ(Command* command) {
-  unsigned command_count = command_val >> 4;
-  unsigned command_ix = command_val & 0x0f;
-  if (command_count == COMMAND_BUF_SIZE) {
+  if (!Command_buf_write(&queue, command)) {
     LOG_WARNING("Command buffer full\n\r");
-    return;
   }
-  unsigned end = (command_ix + command_count) % COMMAND_BUF_SIZE;
-  command_val += (1 << 4);
-  commands[end] = command;
+  ++queued;
 }
-
 
 void NAV_HandleCommands() {
   static int handled = 0;
   while (1) {
-    unsigned command = command_val;
-    unsigned command_count = command >> 4;
-    unsigned command_ix = command & 0x0f;
-    if (command_count == 0) {
+    Command *cmd;
+    if (!Command_buf_read(&queue, &cmd)) {
       return;
     }
-    Command* to_handle = commands[command_ix];
-    LOG_INFO("Handle command %d: %d\n\r", to_handle->command_id, handled);
+    LOG_INFO("Handle command %d: %d, %d\n\r", cmd->command_id, handled, queued);
     ++handled;
-    command_count -= 1;
-    command_ix += 1;
-    command_val = command_count << 4 & command_ix;
-    free(to_handle);
+    protobuf_c_message_free_unpacked(cmd, NULL);
   }
 }
