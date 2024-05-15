@@ -264,9 +264,9 @@ static int find_id() {
   if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
     return 0;
   }
-
-  LOG_DEBUG("Unmapped id: %iu, %iu, %iu\r\n", w0, w1, w2);
-
+  if (w0 == 3080253 && w1 == 892490001 && w2 ==  842217265) {
+    return 1;
+  }
   return -1;
 }
 
