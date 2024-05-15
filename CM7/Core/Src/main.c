@@ -175,6 +175,9 @@ Error_Handler();
       main_tasks &= ~TASK_DATA;
       LOG_INFO("Data\r\n");
     }
+    if (!COM_Update()) {
+
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

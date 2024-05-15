@@ -3,6 +3,7 @@
 
 /* Public includes */
 #include "main.h"
+#include <stdbool.h>
 
 /* Public constants */
 #define COM_CS_MOTOR_DRIVER_1 1 << 0
@@ -11,6 +12,7 @@
 #define COM_CS_MOTOR_DRIVER_4 1 << 3
 #define COM_CS_MOTOR_DRIVER_5 1 << 4
 
+#define COM_BASESTATION_TIMEOUT_MS 3000
 /* Public function declarations */
 
 /**
@@ -24,6 +26,12 @@ void COM_Init(SPI_HandleTypeDef* hspi);
  * Ping the basestation.
  */
 void COM_Ping();
+
+/**
+ * Checks if a message was received within COM_BASESTATION_TIMEOUT_MS.
+ * Call often.
+ */
+bool COM_Update();
 
 /**
  * Parse the received message and handle it correctly.

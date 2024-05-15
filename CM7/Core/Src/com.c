@@ -101,6 +101,15 @@ void COM_RF_HandleIRQ() {
   }
 }
 
+/* The id of last message.
+ * The value is contained in the upper 4 bits. Sequential ids should be: 0x00, 0x10, 0x20, etc.
+ * 0xff is used for no last message, 0xfe for connection timed out.
+ * This field is used to remove duplicate messages.
+*/
+volatile uint8_t last_rec_id = 0xff;
+// Timestamp of last message.
+volatile uint32_t last_rec_time = 0;
+
 void COM_RF_Receive(uint8_t pipe) {
   uint8_t len = 0;
   NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
@@ -110,11 +119,18 @@ void COM_RF_Receive(uint8_t pipe) {
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 
-  main_tasks |= TASK_DATA;
-  if (len == 0) {
+
+  if (len == 0 || pipe == 0) {
     return;
   }
-  uint8_t msg_type = payload[0];
+  main_tasks |= TASK_DATA;
+  uint8_t msg_type = payload[0] & 0xf;
+  uint8_t order = payload[0] & 0xf0;
+  last_rec_time = HAL_GetTick();
+  if (order == last_rec_id) {
+    return;
+  }
+  last_rec_id = order;
   //LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
 
   switch (msg_type) {
@@ -198,7 +214,7 @@ void COM_SPI_Reset()
 }
 
 void COM_Ping() {
-  uint8_t id = find_id();
+  int id = find_id();
 
   if (id >= 0) {
     HAL_Delay(100);
@@ -212,8 +228,7 @@ void COM_Ping() {
       LOG_INFO("Sent ID %d...\r\n", id);
     }
     uint32_t stamp = HAL_GetTick();
-    uint32_t freq = HAL_GetTickFreq();
-    while (!ping_ack && HAL_GetTick() - stamp < freq) {
+    while (!ping_ack && HAL_GetTick() - stamp < 1000) {
       HAL_Delay(1);
     }
     if (ping_ack != 1) {
@@ -221,11 +236,21 @@ void COM_Ping() {
     }
     LOG_INFO("Ack ping %d\r\n", ping_ack);
   } else {
-    LOG_INFO("Bad ID...\r\n");
+    LOG_INFO("Bad ID: (%u, %u, %u)\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
   }
   NRF_EnterMode(NRF_MODE_RX);
 }
 
+bool COM_Update() {
+  if (HAL_GetTick() - last_rec_time < COM_BASESTATION_TIMEOUT_MS) {
+    return true;
+  }
+  if (last_rec_id != 0xfe) {
+    last_rec_id = 0xfe;
+    LOG_INFO("Basestation connection timed out\r\n");
+  }
+  return false;
+}
 /*
  * Private function implementations
  */
