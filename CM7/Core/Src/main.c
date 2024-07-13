@@ -198,7 +198,7 @@ Error_Handler();
       LOG_INFO("Data\r\n");
     }
     if (!COM_Update()) {
-
+      steer(0.f, 0.f, 0.f);
     }
     /* USER CODE END WHILE */
 

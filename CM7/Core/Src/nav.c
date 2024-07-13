@@ -184,7 +184,7 @@ void tire_test() {
 
 void test_motor() {
   /*tire_test();*/
-  steer(1.f * 100.f, 0.f * 100.f, 0.f * 100.f);
+  /*steer(1.f * 100.f, 0.f * 100.f, 0.f * 100.f);*/
   /*motors[0].speed = -1.f * 100.f;*/
   /*motors[1].speed = -1.f * 100.f;*/
   /*motors[2].speed = 1.f * 100.f;*/
@@ -217,6 +217,7 @@ void NAV_Direction(DIRECTION dir) {
       MOTOR_PWMStart(&motors[3]);
       break;
   }
+}
 
 Command_buf queue;
 
@@ -235,6 +236,30 @@ void NAV_Stop() {
   MOTOR_PWMStop(&motors[2]);
   MOTOR_PWMStop(&motors[3]);
 }
+
+float speed = 0;
+
+void command_move(Command *cmd){
+
+  LOG_INFO("got nav command %d %d %d \r\n",cmd->kick_speed, cmd->command_id, cmd->direction->x, cmd->direction->y);
+  if (cmd->command_id == ACTION_TYPE__STOP_ACTION){
+    steer(0.f, 0.f, 0.f);
+    return;
+  }
+
+  if (cmd->command_id == ACTION_TYPE__KICK_ACTION){
+    speed = cmd->kick_speed;
+    if (speed > 10){
+      speed = 10;
+    }
+    return;
+  }
+
+  if (cmd->command_id == ACTION_TYPE__MOVE_ACTION){
+    steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
+  }
+}
+
 void NAV_HandleCommands() {
   static int handled = 0;
   while (1) {
@@ -244,6 +269,7 @@ void NAV_HandleCommands() {
     }
     LOG_INFO("Handle command %d: %d, %d\n\r", cmd->command_id, handled, queued);
     ++handled;
+    command_move(cmd);
     protobuf_c_message_free_unpacked(cmd, NULL);
   }
 }
