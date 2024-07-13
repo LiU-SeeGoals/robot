@@ -6,6 +6,7 @@
 #include <nrf24l01.h>
 #include <nrf_helper_defines.h>
 #include <robot_action/robot_action.pb-c.h>
+#include "main.h"
 #include "nav.h"
 #include "log.h"
 
@@ -100,6 +101,15 @@ void COM_RF_HandleIRQ() {
   }
 }
 
+/* The id of last message.
+ * The value is contained in the upper 4 bits. Sequential ids should be: 0x00, 0x10, 0x20, etc.
+ * 0xff is used for no last message, 0xfe for connection timed out.
+ * This field is used to remove duplicate messages.
+*/
+volatile uint8_t last_rec_id = 0xff;
+// Timestamp of last message.
+volatile uint32_t last_rec_time = 0;
+
 void COM_RF_Receive(uint8_t pipe) {
   uint8_t len = 0;
   NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
@@ -109,11 +119,19 @@ void COM_RF_Receive(uint8_t pipe) {
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 
-  if (len == 0) {
+
+  if (len == 0 || pipe == 0) {
     return;
   }
-  uint8_t msg_type = payload[0];
-  LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
+  main_tasks |= TASK_DATA;
+  uint8_t msg_type = payload[0] & 0xf;
+  uint8_t order = payload[0] & 0xf0;
+  last_rec_time = HAL_GetTick();
+  if (order == last_rec_id) {
+    return;
+  }
+  last_rec_id = order;
+  //LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
 
   switch (msg_type) {
     case MSG_ACTION:
@@ -196,9 +214,12 @@ void COM_SPI_Reset()
 }
 
 void COM_Ping() {
-  uint8_t id = find_id();
+  int id = find_id();
+
   if (id >= 0) {
+    HAL_Delay(100);
     NRF_EnterMode(NRF_MODE_STANDBY1);
+
     ping_ack = 0;
     uint8_t data[] = {CONNECT_MAGIC, id};
     if (NRF_Transmit(data, 5) != NRF_OK) {
@@ -206,16 +227,30 @@ void COM_Ping() {
     } else {
       LOG_INFO("Sent ID %d...\r\n", id);
     }
-    while (!ping_ack) {
-
+    uint32_t stamp = HAL_GetTick();
+    while (!ping_ack && HAL_GetTick() - stamp < 1000) {
+      HAL_Delay(1);
+    }
+    if (ping_ack != 1) {
+      NRF_SendCommand(NRF_CMD_FLUSH_TX);
     }
     LOG_INFO("Ack ping %d\r\n", ping_ack);
   } else {
-    LOG_INFO("Bad ID...\r\n");
+    LOG_INFO("Bad ID: (%u, %u, %u)\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
   }
   NRF_EnterMode(NRF_MODE_RX);
 }
 
+bool COM_Update() {
+  if (HAL_GetTick() - last_rec_time < COM_BASESTATION_TIMEOUT_MS) {
+    return true;
+  }
+  if (last_rec_id != 0xfe) {
+    last_rec_id = 0xfe;
+    LOG_INFO("Basestation connection timed out\r\n");
+  }
+  return false;
+}
 /*
  * Private function implementations
  */
@@ -229,9 +264,9 @@ static int find_id() {
   if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
     return 0;
   }
-
-  LOG_DEBUG("Unmapped id: %iu, %iu, %iu\r\n", w0, w1, w2);
-
+  if (w0 == 3080253 && w1 == 892490001 && w2 ==  842217265) {
+    return 1;
+  }
   return -1;
 }
 
@@ -243,56 +278,8 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
     LOG_WARNING("Decoding PB failed\r\n");
     return;
   }
-
-  LOG_INFO("Robot %d should", cmd->robot_id);
-  switch(cmd->command_id) {
-    case ACTION_TYPE__STOP_ACTION:
-      LOG_DEBUG("STOP");
-      NAV_Stop();
-      break;
-    case ACTION_TYPE__KICK_ACTION:
-      LOG_DEBUG("KICK");
-      break;
-    case ACTION_TYPE__MOVE_ACTION:
-      LOG_DEBUG("MOVE");
-      break;
-    case ACTION_TYPE__INIT_ACTION:
-      LOG_DEBUG("INIT");
-      break;
-    case ACTION_TYPE__MOVE_TO_ACTION:
-      {
-        LOG_DEBUG("NAV");
-        switch(cmd->direction->x) {
-          case 1: // left
-            LOG_DEBUG("LEFT");
-            NAV_Direction(LEFT);
-            break;
-          case -1: // right
-            LOG_DEBUG("RIGHT");
-            NAV_Direction(RIGHT);
-            break;
-        }
-
-        switch(cmd->direction->y) {
-          case 1: // up
-            LOG_DEBUG("UP");
-            NAV_Direction(UP);
-            break;
-          case -1: // down
-            LOG_DEBUG("DOWN");
-            NAV_Direction(DOWN);
-            break;
-        }
-      }
-      break;
-    case ACTION_TYPE__ROTATE_ACTION:
-      LOG_DEBUG("ROTATE");
-      break;
-    default:
-      break;
-  }
-
-  LOG_DEBUG("\r\n");
+  NAV_QueueCommandIRQ(cmd);
+  main_tasks |= TASK_NAV_COMMAND;
 }
 
 

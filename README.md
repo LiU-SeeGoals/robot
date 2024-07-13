@@ -5,7 +5,7 @@ This is the firmware that all robots (NUCLEO-H755ZI-Q) are running. It receives 
 Make sure to follow the [firmware standard](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#seegoal---firmware-standard) and the [feature branch](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#feature-branch-integration) concept.
 
 ## Building and flashing
-This is a Makefile project generated with STM32CubeMX.
+This is a CMake project.
 
 ### CLI approach
 You'll need [stlink](https://github.com/stlink-org/stlink#installation), usually available through your package manager.
@@ -18,16 +18,19 @@ $ sudo apt install gcc-arm-none-eabi
 ~~~
 
 Building the project is done from the `Makefile` directory by running `make`:
+=======
 ~~~bash
-# from project root
-$ cd Makefile && make
+# from project root, done once:
+$ cmake -B build . -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+# every time you want to build:
+$ cd build && make
 ~~~
 
 
 Flashing can be done when the NUCLEO card is connected through USB (marked `USB PWR`).
 ~~~bash
-# from project root
-$ cd Makefile && st-flash --reset write CM7/build/robot_CM7.bin 0x08000000
+# from project root:
+$ cd build && make flash_cm7
 ~~~
 
 ### GUI approach

@@ -3,11 +3,16 @@
 /*
  * Private includes
  */
-#include <stdint.h>
+#include <stdlib.h>
 #include "motor.h"
 #include "log.h"
 #include "arm_math.h"
 
+#include <ringbuffer.h>
+
+#define BUFFER_SIZE 64
+RINGBUFFER_DEF(Command*, BUFFER_SIZE, Command_buf);
+RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
 
 /*
  * Private variables
@@ -212,6 +217,16 @@ void NAV_Direction(DIRECTION dir) {
       MOTOR_PWMStart(&motors[3]);
       break;
   }
+
+Command_buf queue;
+
+static int queued = 0;
+
+void NAV_QueueCommandIRQ(Command* command) {
+  if (!Command_buf_write(&queue, command)) {
+    LOG_WARNING("Command buffer full\n\r");
+  }
+  ++queued;
 }
 
 void NAV_Stop() {
@@ -219,4 +234,16 @@ void NAV_Stop() {
   MOTOR_PWMStop(&motors[1]);
   MOTOR_PWMStop(&motors[2]);
   MOTOR_PWMStop(&motors[3]);
+}
+void NAV_HandleCommands() {
+  static int handled = 0;
+  while (1) {
+    Command *cmd;
+    if (!Command_buf_read(&queue, &cmd)) {
+      return;
+    }
+    LOG_INFO("Handle command %d: %d, %d\n\r", cmd->command_id, handled, queued);
+    ++handled;
+    protobuf_c_message_free_unpacked(cmd, NULL);
+  }
 }

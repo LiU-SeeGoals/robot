@@ -62,7 +62,7 @@ TIM_HandleTypeDef htim12;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-volatile uint32_t main_tasks;
+volatile atomic_uint main_tasks;
 
 static LOG_Module internal_log_mod;
 /* USER CODE END PV */
@@ -186,10 +186,20 @@ Error_Handler();
     test_motor();
 
     if ((main_tasks & TASK_PING) != 0) {
-      COM_Ping();
       main_tasks &= ~TASK_PING;
+      COM_Ping();
     }
+    if ((main_tasks & TASK_NAV_COMMAND) != 0) {
+      main_tasks &= ~TASK_NAV_COMMAND;
+      NAV_HandleCommands();
+    }
+    if ((main_tasks & TASK_DATA) != 0) {
+      main_tasks &= ~TASK_DATA;
+      LOG_INFO("Data\r\n");
+    }
+    if (!COM_Update()) {
 
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -5,6 +5,7 @@
  * Public includes
  */
 #include "main.h"
+#include <robot_action/robot_action.pb-c.h>
 
 typedef enum {
   UP,
@@ -30,11 +31,13 @@ void NAV_set_motor_ticks();
 
 void steer(float vx,float vy, float w);
 /**
- *
+* Queues a command from the basestation.
+* @param Command The command.
+*/
+void NAV_QueueCommandIRQ(Command* command);
+/**
+ * Handle all received commands.
  */
-void NAV_Direction(DIRECTION dir);
-
-void NAV_Stop();
-
+void NAV_HandleCommands();
 
 #endif /* NAV_H */
