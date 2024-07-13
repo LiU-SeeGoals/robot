@@ -63,7 +63,7 @@ int setDirection(MotorPWM *motor, float speed)
       return HAL_BUSY;
     }
     motor->dir = 0;
-    LOG_DEBUG("going for dir: %d\r\n", motor->dir);
+    /*LOG_DEBUG("going for dir: %d\r\n", motor->dir);*/
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_SET);
   }
 
@@ -110,7 +110,7 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
   else{
     u = v;
   }
-  // LOG_INFO("DATAu:%f;\r\n", u);
+  /*LOG_INFO("DATAu:%f;\r\n", u);*/
   // HAL_Delay(1);
   MOTOR_SendPWM(motor, u);
   *I_prev = I;

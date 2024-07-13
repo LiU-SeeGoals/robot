@@ -117,8 +117,8 @@ void NAV_set_motor_ticks(){
 
 void steer(float vx,float vy, float w){
 
-  // float theta = 31.f * PI / 180.f;
-  float theta = 45.f;
+  /*float theta = 31.f * PI / 180.f;*/
+  float theta = 31.f;
   float psi = 45.f;
   float r = 1.f;
   float th_sin, th_cos;
@@ -138,20 +138,52 @@ void steer(float vx,float vy, float w){
   motors[2].speed = v3;
   // motors[3].speed = v41 + v42;
   motors[3].speed = v4;
-  LOG_INFO("v1 %f,v2 %f,v3 %f,v4 %f  \r\n", v1,v2,v3,v4);
+  // LOG_INFO("v1 %f,v2 %f,v3 %f,v4 %f  \r\n", v1,v2,v3,v4);
   // LOG_INFO("v4 %f \r\n", v4);
   // LOG_INFO("hej \r\n");
   // HAL_Delay(10);
 
 }
 
+void set_motors(float m1, float m2, float m3, float m4){
+
+  motors[0].speed = m1 * 100.f;
+  motors[1].speed = m2 * 100.f;
+  motors[2].speed = m3 * 100.f;
+  motors[3].speed = m4 * 100.f;
+
+}
+
+void tire_test() {
+
+  HAL_Delay(2000);
+  set_motors(1,0,0,0);
+  HAL_Delay(2000);
+  set_motors(-1,0,0,0);
+  HAL_Delay(2000);
+  set_motors(0,1,0,0);
+  HAL_Delay(2000);
+  set_motors(0,-1,0,0);
+  HAL_Delay(2000);
+  set_motors(0,0,1,0);
+  HAL_Delay(2000);
+  set_motors(0,0,-1,0);
+  HAL_Delay(2000);
+  set_motors(0,0,0,1);
+  HAL_Delay(2000);
+  set_motors(0,0,0,-1);
+  HAL_Delay(2000);
+
+
+}
+
 void test_motor() {
-  // MOTOR_SetSpeed(&motors[3], -70.0, &I_prev);
-  steer(-1.f * 100.f, 1.f * 100.f, 0.f);
-  // motors[0].speed = 0;
-  // motors[1].speed = 4.f * 100.f;
-  // motors[2].speed = 0;
-  // motors[3].speed = 12.f * 100.f;
+  /*tire_test();*/
+  steer(1.f * 100.f, 0.f * 100.f, 0.f * 100.f);
+  /*motors[0].speed = -1.f * 100.f;*/
+  /*motors[1].speed = -1.f * 100.f;*/
+  /*motors[2].speed = 1.f * 100.f;*/
+  /*motors[3].speed = 1.f * 100.f;*/
 
 
   // float speed = MOTOR_ReadSpeed(&motors[3]);

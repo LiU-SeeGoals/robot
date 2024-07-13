@@ -166,7 +166,8 @@ Error_Handler();
   /* USER CODE BEGIN 2 */
   LOG_Init(&huart3);
   COM_Init(&hspi1);
-  NAV_Init(&htim12, &htim1, &htim3, &htim4, &htim5, &htim8);
+  NAV_Init(&htim12, &htim1, 
+           &htim3, &htim4, &htim5, &htim8);
   MOTOR_Init(&htim1);
   KICKER_Init();
   LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_EMERGENCY);
