@@ -166,11 +166,10 @@ Error_Handler();
   /* USER CODE BEGIN 2 */
   LOG_Init(&huart3);
   COM_Init(&hspi1);
-  NAV_Init(&htim12, &htim1, 
-           &htim3, &htim4, &htim5, &htim8);
+  NAV_Init(&htim12, &htim1, &htim3, &htim4, &htim5, &htim8);
   MOTOR_Init(&htim1);
   KICKER_Init();
-  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_EMERGENCY);
+  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
   LOG_INFO("Startup finished...\r\n");
@@ -179,27 +178,27 @@ Error_Handler();
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // HAL_TIM_Base_Start(&htim1);
   while (1)
   {
-
-    test_motor();
-
-    if ((main_tasks & TASK_PING) != 0) {
+    if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();
     }
-    if ((main_tasks & TASK_NAV_COMMAND) != 0) {
+
+    if (main_tasks & TASK_NAV_COMMAND) {
       main_tasks &= ~TASK_NAV_COMMAND;
       NAV_HandleCommands();
     }
-    if ((main_tasks & TASK_DATA) != 0) {
+
+    if (main_tasks & TASK_DATA) {
       main_tasks &= ~TASK_DATA;
-      LOG_INFO("Data\r\n");
     }
+
+    // Failsafe for when communication fails.
     if (!COM_Update()) {
       steer(0.f, 0.f, 0.f);
     }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
