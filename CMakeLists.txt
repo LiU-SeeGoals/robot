@@ -99,11 +99,11 @@ list(APPEND CM7_SOURCES
 
 file(GLOB_RECURSE CM4_SOURCES "CM4/Core/*.*")
 
-set(CM7_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Makefile/CM7/stm32h755xx_flash_CM7.ld)
-set(CM4_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Makefile/CM4/stm32h755xx_flash_CM4.ld)
+set(CM7_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Buildfiles/CM7/stm32h755xx_flash_CM7.ld)
+set(CM4_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Buildfiles/CM4/stm32h755xx_flash_CM4.ld)
 
-file(GLOB CM7_ASM_SOURCE "Makefile/CM7/*.s")
-file(GLOB CM4_ASM_SOURCE "Makefile/CM4/*.s")
+file(GLOB CM7_ASM_SOURCE "Buildfiles/CM7/*.s")
+file(GLOB CM4_ASM_SOURCE "Buildfiles/CM4/*.s")
 
 add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork -specs=nano.specs -u _printf_float)
 
@@ -142,4 +142,5 @@ add_custom_command(TARGET robot_CM4.elf POST_BUILD
     Building ${CM4_BIN_FILE}")
 
 
-add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)
+add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND STM32_Programmer_CLI -c port=SWD -w ${CM7_BIN_FILE} 0x08000000 -rst)
+add_custom_target(flash_cm7_st DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)

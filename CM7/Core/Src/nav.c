@@ -270,6 +270,6 @@ void NAV_HandleCommands() {
     LOG_INFO("Handle command %d: %d, %d\n\r", cmd->command_id, handled, queued);
     ++handled;
     command_move(cmd);
-    protobuf_c_message_free_unpacked(cmd, NULL);
+    protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
   }
 }

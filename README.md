@@ -4,43 +4,29 @@ This is the firmware that all robots (NUCLEO-H755ZI-Q) are running. It receives 
 ## Contributing
 Make sure to follow the [firmware standard](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#seegoal---firmware-standard) and the [feature branch](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#feature-branch-integration) concept.
 
+## Git Submodules 
+This project uses several Git Submodules. To get all Submodules at the correct version, use `git submodule update --init --recursive`.
+This has to be done the first time you clone, and everytime you change branch to a branch with different submodule versions.
+
 ## Building and flashing
-This is a CMake project.
+This is a cmake project.
 
-### CLI approach
-You'll need [stlink](https://github.com/stlink-org/stlink#installation), usually available through your package manager.
+To be able to build, make sure you've the `gcc-arm-none-eabi` compiler installed.
 
-You need a arm cross compiler, sometimes this comes by default
+Then build with:  
+```
+cmake -B build && make -C build
+```
 
-~~~bash
-# Install arm cross compiler
-$ sudo apt install gcc-arm-none-eabi
-~~~
+To flash, you can use the `STM32_Programmer_CLI` program downloadable from [here](https://www.st.com/en/development-tools/stm32cubeprog.html).
+```
+STM32_Programmer_CLI -c port=SWD -w build/robot_CM7.bin 0x08000000 -rst
+```
 
-Building the project is done from the `Makefile` directory by running `make`:
-=======
-~~~bash
-# from project root, done once:
-$ cmake -B build . -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
-# every time you want to build:
-$ cd build && make
-~~~
-
-
-Flashing can be done when the NUCLEO card is connected through USB (marked `USB PWR`).
-~~~bash
-# from project root:
-$ cd build && make flash_cm7
-~~~
-
-### GUI approach
-Install the GUI program stmcube32prog.
-
-Click Erasing & programming choose the .bin file create from make process as file path.
-
-Enable Run after programming
-
-Connect to board at the top right corner and click start programming
+There's also a build rule in make:  
+```
+make flash_cm7 -C build
+```
 
 # Documentation
 
@@ -48,127 +34,7 @@ Connect to board at the top right corner and click start programming
 [NUCLEO-H755ZI-Q](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
 
 ## Pins
-
-### CN7
-
-| Zio pin | MCU pin | STM32 function | Label    | Cable colour | NRF Pin |
-| ------- | ------- | -------------- | -------- | ------------ | ------- |
-| 1       | PC6     | GPIO_Output    | NRF_CE   | Yellow       | CE      |
-| 2       | PB8     | GPIO_Output    | NRF_CSN  | Orange       | CSN     |
-| 3       | PB15    | GPIO_EXTI15    | NRF_IRQ  | Gray         | IRQ     |
-| 6       | VDD     | VDD            | -        | Red          | VDD     |
-| 8       | GND     | GND            | -        | Black        | GND     |
-| 10      | PA5     | SPI1_SCK       | NRF_SCK  | Green        | SCK     |
-| 12      | PA6     | SPI1_MISO      | NRF_MISO | Purple       | M1      |
-| 14      | PB5     | SPI1_MOSI      | NRF_MOSI | Blue         | M0      |
-
-### CN9
-
-| Zio pin | MCU pin | STM32 function | Label         | Cable colour |
-| ------- | ------- | -------------- | ------------- | ------------ |
-| 10      | PD3     | GPIO_Output    | SPI_CS_OUTPUT | -            |
-| 8       | PD4     | GPIO_Output    | SPI_CS_RESET  | -            |
-| 6       | PD5     | GPIO_Output    | SPI_CS_STORE  | -            |
-| 4       | PD6     | GPIO_Output    | SPI_CS_SHIFT  | -            |
-| 2       | PD7     | GPIO_Output    | SPI_CS_CONF   | -            |
-
-### CN10
-| Zio pin | MCU pin | STM32 function | Label            | Cable colour |
-|---------|---------|----------------|------------------|--------------|
-| 4       | PA8     | TIM1_CH1       | MOTOR1_PWM       | -            |
-| 6       | PE11    | TIM1_CH2       | MOTOR2_PWM       | -            |
-| 7       | PF6     | GPIO_Input     | MOTOR1_ENCODER   | -            |
-| 8       | PE14    | TIM1_CH4       | MOTOR4_PWM       | -            |
-| 9       | PF10    | GPIO_Input     | MOTOR2_ENCODER   | -            |
-| 10      | PE13    | TIM1_CH3       | MOTOR3_PWM       | -            |
-| 11      | PA2     | GPIO_Input     | MOTOR3_ENCODER   | -            |
-| 13      | PG6     | GPIO_Input     | MOTOR4_ENCODER   | -            |
-| 14      | PB6     | GPIO_Output    | MOTOR1_REVERSE   | -            |
-| 15      | PB2     | GPIO_Output    | MOTOR1_BREAK     | -            |
-| 18      | PE8     | GPIO_Output    | MOTOR2_REVERSE   | -            |
-| 19      | PD13    | GPIO_Output    | MOTOR2_BREAK     | -            |
-| 20      | PE7     | GPIO_Output    | MOTOR3_REVERSE   | -            |
-| 21      | PD12    | GPIO_Output    | MOTOR3_BREAK     | -            |
-| 24      | PE10    | -              |-                 | -            |
-| 30      | PE15    | GPIO_Output    | MOTOR4_REVERSE   | -            |
-| 25      | PE2     | GPIO_Output    | MOTOR4_BREAK     | -            |
-| 32      | PB10    | GPIO_Output    | KICKER_DISCHARGE | -            |
-| 34      | PB11    | GPIO_Output    | KICKER_CHARGE    | -            |
-
-### Internal
-| Zio pin | MCU pin | STM32 function | Label          | Cable colour |
-|---------|---------|----------------|----------------|--------------|
-| -       | PC13    | GPIO_EXTI13    | BTN_USER       | -            |
-| -       | PD8     | USART3_TX      | USART3_TX      | -            |
-| -       | PD9     | USART3_RX      | USART3_RX      | -            |
-| -       | PB0     | GPIO_Output    | LED_GREEN      | -            |
-| -       | PE1     | GPIO_Output    | LED_YELLOW     | -            |
-| -       | PB14    | GPIO_Output    | LED_RED        | -            |
-
-## Creating an `compile_command.json`
-~~~bash
-# from project root
-$ cd Makefile && bear --output ../compile_commands.json -- make
-~~~
-
-## MX configuration
-If for some reason a new `robot.ioc` has to be created from scratch, these are the changes needed in of STM32CubeMX.
-
-### General stuff
-...
-### Debugging
-
-How to use GDB
-run st-util in folder with .elf file, this starts gdb server
-in MakeFile/CM*/Build
-run
-```
-st-util
-```
-
-somewhere else run
-
-```
-gdb robot_CM7.elf (or other name for the .elf file)
-```
-
-in gdb run 
-
-```
-target remote localhost:4242
-```
-
-The :4242 port can in theory change so check the output from the st-util command to be sure
-
-in gdb you can for example run 
-
-```
-b main:140
-```
-
-to create a breakpoint at line 140 in the main.c file
-and you can check the surrounding code by running
-
-```
-l
-```
-
-peace be with you for feeling this desperate, good luck...
-
-
-### Connectivity
-
-#### USART3
-Mode: Asynchronous
-
-#### SPI1
-Mode: Full-Duplex Master
-Parameter Settings:
-~~~
-Data Size: 8 Bits
-Prescaler: 32
-~~~
-
+Use the `robot.ioc` to view the pins, it's opened with [STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html).
 
 ## How to use motor driver
 
