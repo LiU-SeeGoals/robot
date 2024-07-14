@@ -1,0 +1,7 @@
+CompileFlags:
+  Add:
+    - -I/usr/lib/gcc/arm-none-eabi/14.1.0/include
+    - -I/usr/arm-none-eabi/include
+    - -mcpu=cortex-m33
+    - -mthumb
+  Remove: [-mthumb-interwork]
