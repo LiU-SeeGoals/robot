@@ -1,4 +1,5 @@
 #include "nav.h"
+#include "kalman.h"
 
 /*
  * Private includes
@@ -30,6 +31,7 @@ float CONTROL_FREQ; // set in init
 
 void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* pwm_htim, 
+              TIM_HandleTypeDef* pwm15_htim, 
               TIM_HandleTypeDef* encoder1_htim,
               TIM_HandleTypeDef* encoder2_htim,
               TIM_HandleTypeDef* encoder3_htim,
@@ -37,6 +39,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 
   LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE);
   HAL_TIM_Base_Start(pwm_htim);
+  HAL_TIM_Base_Start(pwm15_htim);
   HAL_TIM_Base_Start(encoder1_htim);
   HAL_TIM_Base_Start(encoder2_htim);
   HAL_TIM_Base_Start(encoder3_htim);
@@ -56,7 +59,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[0].encoderPin        = MOTOR1_ENCODER_Pin;
   motors[0].dir               = 1;
 
-  motors[1].pwm_htim          = pwm_htim;
+  motors[1].pwm_htim          = pwm15_htim;
   motors[1].ticks             = 0;
   motors[1].speed             = 0.f;
   motors[1].prev_tick         = 0;
@@ -136,6 +139,7 @@ void steer(float vx,float vy, float w){
   float v2 = th_sin * vx + -th_cos * vy + -r * w;
   float v3 = -psi_sin  * vx +  -psi_cos *  vy+  -r * w;
   float v4 = -psi_sin  * vx +  psi_cos *  vy + -r * w;
+
   // float v4 = -th_cos;
   // v1 = sin(vx * theta * PI / 180.f);
   motors[0].speed = v1;
