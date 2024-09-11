@@ -64,14 +64,12 @@ extern volatile atomic_uint main_tasks;
 /* Private defines -----------------------------------------------------------*/
 #define MOTOR4_BREAK_Pin GPIO_PIN_2
 #define MOTOR4_BREAK_GPIO_Port GPIOE
-#define MOTOR2_ENCODER_Pin GPIO_PIN_5
-#define MOTOR2_ENCODER_GPIO_Port GPIOE
-
 #define MOTOR2_REVERSE_Pin GPIO_PIN_4
 #define MOTOR2_REVERSE_GPIO_Port GPIOE
+#define MOTOR2_PWM_Pin GPIO_PIN_5
+#define MOTOR2_PWM_GPIO_Port GPIOE
 #define MOTOR2_BREAK_Pin GPIO_PIN_6
 #define MOTOR2_BREAK_GPIO_Port GPIOE
-
 #define BTN_USER_Pin GPIO_PIN_13
 #define BTN_USER_GPIO_Port GPIOC
 #define BTN_USER_EXTI_IRQn EXTI15_10_IRQn
@@ -110,8 +108,8 @@ extern volatile atomic_uint main_tasks;
 #define MOTOR3_BREAK_GPIO_Port GPIOD
 #define NRF_CE_Pin GPIO_PIN_6
 #define NRF_CE_GPIO_Port GPIOC
-#define MOTOR2_PWM_Pin GPIO_PIN_15
-#define MOTOR2_PWM_GPIO_Port GPIOA
+#define MOTOR2_ENCODER_Pin GPIO_PIN_15
+#define MOTOR2_ENCODER_GPIO_Port GPIOA
 #define MOTOR1_ENCODER_Pin GPIO_PIN_2
 #define MOTOR1_ENCODER_GPIO_Port GPIOD
 #define SPI_MOSI_Pin GPIO_PIN_5
