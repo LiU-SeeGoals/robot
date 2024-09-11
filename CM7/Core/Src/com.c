@@ -11,15 +11,9 @@
 #include "log.h"
 
 /* Private defines */
-#define MSG_PING       0
-#define MSG_ACTION     1
 
-
-#define CONNECT_MAGIC 0x4d, 0xf8, 0x42, 0x79
-
-#define CONTROLLER_ADDR {2, 255, 255, 255, 255}
-#define ROBOT_ACTION_ADDR(id) {1, 255, 255, id, 255}
-
+#define PIPE_DIRECT 1
+#define PIPE_BROADCAST 2
 
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
@@ -37,8 +31,8 @@ static volatile uint8_t ping_ack;
 
 void COM_Init(SPI_HandleTypeDef* hspi) {
   int id = find_id();
-  uint8_t controllerAddress[5]  = CONTROLLER_ADDR;
-  uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
+  uint8_t controllerAddress[5] = CONTROLLER_ADDR;
+  uint8_t actionAdress[5] = ROBOT_ADDR(id);
 
   LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
   // Initialize and enter standby-I mode
@@ -61,8 +55,8 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   NRF_WriteRegister(NRF_REG_TX_ADDR, controllerAddress, 5);
   NRF_WriteRegister(NRF_REG_RX_ADDR_P0, controllerAddress, 5);
   NRF_WriteRegister(NRF_REG_RX_ADDR_P1, actionAdress, 5);
-  NRF_WriteRegisterByte(NRF_REG_RX_ADDR_P2, 1);
-  NRF_SetRegisterBit(NRF_REG_EN_RXADDR, 0x07);
+  NRF_WriteRegisterByte(NRF_REG_RX_ADDR_P2, ROBOT_ID_BROADCAST);
+  NRF_WriteRegisterByte(NRF_REG_EN_RXADDR, 0x07);
 
   // We enable ACK payloads which needs dynamic payload to function.
   NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_ACK_PAY);
@@ -106,7 +100,10 @@ void COM_RF_HandleIRQ() {
  * 0xff is used for no last message, 0xfe for connection timed out.
  * This field is used to remove duplicate messages.
 */
-volatile uint8_t last_rec_id = 0xff;
+#define NO_LAST_MESSAGE 0xff
+#define TIMEOUT_LAST_MESSAGE 0xfe
+
+volatile uint8_t last_rec_id = NO_LAST_MESSAGE;
 // Timestamp of last message.
 volatile uint32_t last_rec_time = 0;
 
@@ -124,20 +121,26 @@ void COM_RF_Receive(uint8_t pipe) {
     return;
   }
   main_tasks |= TASK_DATA;
+
   uint8_t msg_type = payload[0] & 0xf;
-  uint8_t order = payload[0] & 0xf0;
-  last_rec_time = HAL_GetTick();
-  if (order == last_rec_id) {
-    return;
+
+  // Direct messages are resent if they do not arrive
+  // Filter away duplicates of same message.
+  if (pipe == PIPE_DIRECT) {
+    uint8_t order = payload[0] & 0xf0;
+    last_rec_time = HAL_GetTick();
+    if (order == last_rec_id) {
+      return;
+    }
+    last_rec_id = order;
   }
-  last_rec_id = order;
-  //LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
+  LOG_INFO("Payload of length %i on pipe %i\r\n", len, pipe);
 
   switch (msg_type) {
-    case MSG_ACTION:
+    case MESSAGE_ID_COMMAND:
       parse_controller_packet(payload + 1, len - 1);
       break;
-    case MSG_PING:
+    case MESSAGE_ID_PING:
       main_tasks |= TASK_PING;
       break;
     default:
@@ -221,7 +224,7 @@ void COM_Ping() {
     NRF_EnterMode(NRF_MODE_STANDBY1);
 
     ping_ack = 0;
-    uint8_t data[] = {CONNECT_MAGIC, id};
+    uint8_t data[] = {CONNECT_MAGIC_BYTES, id};
     if (NRF_Transmit(data, 5) != NRF_OK) {
       LOG_INFO("Failed sending ID...\r\n");
     } else {
@@ -245,8 +248,8 @@ bool COM_Update() {
   if (HAL_GetTick() - last_rec_time < COM_BASESTATION_TIMEOUT_MS) {
     return true;
   }
-  if (last_rec_id != 0xfe) {
-    last_rec_id = 0xfe;
+  if (last_rec_id != TIMEOUT_LAST_MESSAGE) {
+    last_rec_id = TIMEOUT_LAST_MESSAGE;
     LOG_INFO("Basestation connection timed out\r\n");
   }
   return false;

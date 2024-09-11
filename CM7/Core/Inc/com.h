@@ -4,6 +4,7 @@
 /* Public includes */
 #include "main.h"
 #include <stdbool.h>
+#include <radio.h>
 
 /* Public constants */
 #define COM_CS_MOTOR_DRIVER_1 1 << 0
