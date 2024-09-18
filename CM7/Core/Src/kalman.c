@@ -1,15 +1,21 @@
 #include "../Inc/HandmadeMath.h"
 #include <stdio.h>
 
-// State is x, vx
+// Each state is for one dimeion
+// state x is x position and velocity
+// state y is y position and velocity
+// state w is angle and angle-velocity
+
 Vec2 statex = {2,1};
 Vec2 statey = {2,1};
 Vec2 statew = {2,1};
 
-Mat2 Px = {0,0,
-           0,0};
-Mat2 Py = {0,0,
-           0,0};
+Mat2 Px = {1,0,
+           0,1};
+Mat2 Py = {1,0,
+           0,1};
+Mat2 Pw = {1,0,
+           0,1};
 
 // Constant velocity model
 // state space model
@@ -101,21 +107,18 @@ Vec3 time_update_vec3(Mat3 F, Mat3 Q, Vec3* x)
 }
 
 void printm2(Mat2 a){
-
   printf("----------------\n");
   printf("%f %f\n", a.Columns[0].X, a.Columns[0].Y);
   printf("%f %f\n", a.Columns[1].X, a.Columns[1].Y);
   printf("----------------\n");
-
 }
-void printm3(Mat3 a){
 
+void printm3(Mat3 a){
   printf("----------------\n");
   printf("%f %f %f\n", a.Columns[0].X, a.Columns[0].Y, a.Columns[0].Z);
   printf("%f %f %f\n", a.Columns[1].X, a.Columns[1].Y, a.Columns[1].Z);
   printf("%f %f %f\n", a.Columns[2].X, a.Columns[2].Y, a.Columns[2].Z);
   printf("----------------\n");
-
 }
 
 void printv2(Vec2* a){
@@ -145,6 +148,7 @@ void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
   time_update_vec2(F, Q, P, x, B, u);
 }
 
+// Do time update for pos, vel, angle 
 void cv_update_vec3(Vec3* x) {
   float T = 1;
   Mat3 F = {1, T, 0, 
@@ -165,19 +169,21 @@ void cv_update_vec3(Vec3* x) {
   time_update_vec3(F, Q, x);
 }
 
-void do_some_kalman(){
-
-    printf("cv update\n");
-
+void do_some_kalman() {
     float T = 1;
 
     Mat2 Bnone = {0,0,0,0};
-    Mat2 B = {T*T/2,0,
-                T,  0};
+    Mat2 B = {T*T/2, 0,
+                0,   T};
     B = TransposeM2(B);
+
     Vec2 accmejure = {1, 0};
 
+    printf("cv update no acceleration\n");
     cv_update_vec2(&Px, &statex, Bnone, accmejure);
+    printv2(&statex);
+    printf("cv update with acceleration 1\n");
+    cv_update_vec2(&Px, &statex, B, accmejure);
     printv2(&statex);
 
     Mat2 H = {1, 0, 
@@ -186,8 +192,10 @@ void do_some_kalman(){
 
     Mat2 R = {1, 0,
               0, 1};
+    H = TransposeM2(R);
     Vec2 posmejure = {1, 0};
     measurement_update_vec2(H, &Px, R, posmejure, &statex);
+    printf("measurement update\n");
     printf("states\n");
     printv2(&statex);
     printf("hello world\n");

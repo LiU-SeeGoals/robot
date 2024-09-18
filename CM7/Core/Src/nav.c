@@ -165,6 +165,16 @@ void set_motors(float m1, float m2, float m3, float m4){
 
 void tire_test() {
 
+  steer(0.f * 100.f, 10.f * 100.f, 0.f * 100.f);
+  set_motors(10,10,10,10);
+  HAL_Delay(1000);
+  steer(0.f * 100.f, 0.f * 100.f, 0.f * 100.f);
+  HAL_Delay(10000);
+  steer(-1.f * 100.f, 0.f * 100.f, 0.f * 100.f);
+  HAL_Delay(1000);
+  set_motors(1,0,0,0);
+  HAL_Delay(2000);
+  set_motors(-1,0,0,0);
   HAL_Delay(2000);
   set_motors(1,0,0,0);
   HAL_Delay(2000);
