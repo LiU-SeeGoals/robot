@@ -21,7 +21,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
 #include "stm32h7xx_hal_gpio.h"
 #include "com.h"
 #include "motor.h"
@@ -62,7 +61,14 @@ TIM_HandleTypeDef htim12;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+/**
+ * Used to set tasks to be performed within the main
+ * loop of the firmware. It's written to whenever we
+ * want to queue such a task (see com.c).
+ */
 volatile atomic_uint main_tasks;
+
+volatile atomic_uint connected = 0;
 
 static LOG_Module internal_log_mod;
 /* USER CODE END PV */
@@ -196,7 +202,7 @@ Error_Handler();
 
     // Failsafe for when communication fails.
     if (!COM_Update()) {
-      steer(0.f, 0.f, 0.f);
+      NAV_StopMovement();
     }
 
     /* USER CODE END WHILE */
@@ -816,8 +822,6 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

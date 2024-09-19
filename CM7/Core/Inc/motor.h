@@ -29,7 +29,7 @@ void MOTOR_Init(TIM_HandleTypeDef* htim);
 /**
  * Sets the break pin LOW
  */
-void MOTOR_Stopbreak(MotorPWM *motor);
+void MOTOR_StopBreak(MotorPWM *motor);
 
 void MOTOR_PWMStart(MotorPWM *motor);
 

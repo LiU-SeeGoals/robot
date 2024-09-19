@@ -2,17 +2,15 @@
 
 /* Private includes */
 #include "log.h"
-#include "timer.h"
 
 /* Private variables */
 static LOG_Module internal_log_mod;
 extern float CONTROL_FREQ;
 
-void MOTOR_Init(TIM_HandleTypeDef* pwm_htim) {
-
+void MOTOR_Init(TIM_HandleTypeDef* pwm_htim)
+{
   LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_TRACE);
   HAL_TIM_Base_Start(pwm_htim);
-
 }
 
 void MOTOR_PWMStop(MotorPWM *motor)
@@ -26,7 +24,7 @@ void MOTOR_PWMStart(MotorPWM *motor)
   HAL_TIM_PWM_Start(motor->pwm_htim, motor->channel);
 }
 
-void MOTOR_Stopbreak(MotorPWM *motor)
+void MOTOR_StopBreak(MotorPWM *motor)
 {
   HAL_GPIO_WritePin(motor->breakPinPort, motor->breakPin, GPIO_PIN_RESET);
 }
@@ -41,7 +39,6 @@ void MOTOR_Break(MotorPWM *motor)
 */
 int setDirection(MotorPWM *motor, float speed)
 {
-
   // If going backward and speed is positive, change direction
   if (motor->dir == 0 && speed > 0)
   {
@@ -51,7 +48,7 @@ int setDirection(MotorPWM *motor, float speed)
       return HAL_BUSY;
     }
     motor->dir = 1;
-    LOG_DEBUG("going backchinging dir: %d\r\n", motor->dir);
+    LOG_DEBUG("changing dir: %d\r\n", motor->dir);
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_RESET);
   }
   // If going forward and speed is negative, change direction
@@ -75,18 +72,17 @@ int setDirection(MotorPWM *motor, float speed)
 /*
   PI controls the motor to the given speed value in hall ticks / second
   Updates I_prev with the previous integrator value
-
 */
-void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
-
+void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev)
+{
   if (setDirection(motor, speed) == HAL_BUSY){
     MOTOR_SendPWM(motor, 0);
   }
   if (speed < 0){
     speed = -speed;
   }
+
   // PI control loop with integrator windup protection
-  
   float umin = 0;
   float umax = 1;
   float Ts = 1.f / CONTROL_FREQ;
@@ -97,6 +93,7 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
   float I = *I_prev + Ts / Ti * error;
   float v = K * (error + I);
   float u = 0;
+
   // integrator windup fix
   if (v < umin || v > umax){
     I = *I_prev;
@@ -121,7 +118,6 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
   Send pwm with with pulse width of pulse_width * timer_period
   meaning pulse width is a float between 0 - 1.
 */
-
 void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 {
   // TODO: How to handle changing directions?
@@ -139,13 +135,12 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 
   // TODO: How to handle rounding errors, do they even matter?
   int pwm_speed = motor->pwm_htim->Init.Period * scale;
-  // LOG_INFO("pwm %d\r\n", pwm_speed);
+  //LOG_INFO("pwm %d\r\n", pwm_speed);
 
   // pwm_speed = motor->pwm_htim->Init.Period * 0.2;
 
   __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
 }
-
 
 void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick)
 {
@@ -163,11 +158,9 @@ void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick)
   }
 }
 
-
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
   // LOG_DEBUG("ticks: %d\r\n", motor->ticks);
-
 
   float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
   // LOG_DEBUG("speed: %f\r\n", speed_s);
@@ -181,5 +174,4 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
   // }
 
   return speed_s;
-
 }

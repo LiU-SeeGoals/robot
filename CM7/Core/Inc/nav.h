@@ -29,15 +29,25 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 
 void NAV_set_motor_ticks();
 
-void steer(float vx,float vy, float w);
 /**
 * Queues a command from the basestation.
 * @param Command The command.
 */
 void NAV_QueueCommandIRQ(Command* command);
+
 /**
  * Handle all received commands.
  */
 void NAV_HandleCommands();
+
+/**
+ * Stops all movement
+ */
+void NAV_StopMovement();
+
+/**
+ *
+ */
+void NAV_TestMovement();
 
 #endif /* NAV_H */

@@ -5,3 +5,4 @@ Makefile/CM7/build
 compile_commands.json
 .cache
 build
+.clangd
