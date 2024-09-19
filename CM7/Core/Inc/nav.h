@@ -19,16 +19,35 @@ typedef enum {
  *
  * @param htim Timer handle for motors.
  */
-void NAV_Init(TIM_HandleTypeDef* htim);
+
+void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
+              TIM_HandleTypeDef* pwm_htim, 
+              TIM_HandleTypeDef* encoder1_htim,
+              TIM_HandleTypeDef* encoder2_htim,
+              TIM_HandleTypeDef* encoder3_htim,
+              TIM_HandleTypeDef* encoder4_htim);
+
+void NAV_set_motor_ticks();
 
 /**
 * Queues a command from the basestation.
 * @param Command The command.
 */
 void NAV_QueueCommandIRQ(Command* command);
+
 /**
  * Handle all received commands.
  */
 void NAV_HandleCommands();
+
+/**
+ * Stops all movement
+ */
+void NAV_StopMovement();
+
+/**
+ *
+ */
+void NAV_TestMovement();
 
 #endif /* NAV_H */

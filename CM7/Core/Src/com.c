@@ -111,6 +111,8 @@ volatile uint8_t last_rec_id = 0xff;
 volatile uint32_t last_rec_time = 0;
 
 void COM_RF_Receive(uint8_t pipe) {
+  HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
+
   uint8_t len = 0;
   NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
 
@@ -118,7 +120,6 @@ void COM_RF_Receive(uint8_t pipe) {
   NRF_ReadPayload(payload, len);
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
-
 
   if (len == 0 || pipe == 0) {
     return;
@@ -142,12 +143,15 @@ void COM_RF_Receive(uint8_t pipe) {
       break;
     default:
       LOG_WARNING("Unkown message type %d\r\n", msg_type);
+      HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
+      break;
   }
 
   // What we're sending back on next receive
   //uint8_t txMsg = 'W';
   //NRF_WriteAckPayload(pipe, &txMsg, 1);
 
+  HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
 }
 
 void COM_RF_PrintInfo(void) {
@@ -187,32 +191,6 @@ void COM_RF_PrintInfo(void) {
   LOG_INFO("\r\n");
 }
 
-void COM_SPI_Config(uint8_t devices)
-{
-  for (int i = 0; i < 8; i++)
-  {
-    // Shift each CS.
-    int cs = ((1 << i) & devices) >> i;
-    HAL_GPIO_WritePin(SPI_CS_CONF_GPIO_Port, SPI_CS_CONF_Pin, cs);
-    HAL_GPIO_WritePin(SPI_CS_SHIFT_GPIO_Port, SPI_CS_SHIFT_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(SPI_CS_SHIFT_GPIO_Port, SPI_CS_SHIFT_Pin, GPIO_PIN_RESET);
-  }
-
-  // Store.
-  HAL_GPIO_WritePin(SPI_CS_STORE_GPIO_Port, SPI_CS_STORE_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(SPI_CS_STORE_GPIO_Port, SPI_CS_STORE_Pin, GPIO_PIN_RESET);
-  // Output.
-  HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_RESET);
-}
-
-void COM_SPI_Reset()
-{
-  HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_SET);
-  // Clear shift register.
-  HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_SET);
-}
-
 void COM_Ping() {
   int id = find_id();
 
@@ -233,11 +211,14 @@ void COM_Ping() {
     }
     if (ping_ack != 1) {
       NRF_SendCommand(NRF_CMD_FLUSH_TX);
+    } else {
+      last_rec_time = HAL_GetTick();
     }
     LOG_INFO("Ack ping %d\r\n", ping_ack);
   } else {
     LOG_INFO("Bad ID: (%u, %u, %u)\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
   }
+
   NRF_EnterMode(NRF_MODE_RX);
 }
 
@@ -251,6 +232,8 @@ bool COM_Update() {
   }
   return false;
 }
+
+
 /*
  * Private function implementations
  */
@@ -264,8 +247,11 @@ static int find_id() {
   if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
     return 0;
   }
-  if (w0 == 3080253 && w1 == 892490001 && w2 ==  842217265) {
+  if (w0 == 3080253 && w1 == 892490001 && w2 == 842217265) {
     return 1;
+  }
+  if (w0 == 2490418 && w1 == 858935561 && w2 == 808727605) {
+    return 2;
   }
   return -1;
 }
@@ -281,6 +267,3 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   NAV_QueueCommandIRQ(cmd);
   main_tasks |= TASK_NAV_COMMAND;
 }
-
-
-

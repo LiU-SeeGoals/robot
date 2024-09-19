@@ -5,41 +5,59 @@
 
 typedef struct
 {
-  TIM_HandleTypeDef *htim;
+  TIM_HandleTypeDef *encoder_htim;
+  TIM_HandleTypeDef *pwm_htim;
   uint32_t channel;
+  int ticks; // negative if overflow
+  float speed; // negative if overflow
+  int prev_tick; // negative if overflow
   GPIO_TypeDef *breakPinPort;
   uint16_t breakPin;
   GPIO_TypeDef *reversePinPort;
   uint16_t reversePin;
   GPIO_TypeDef *encoderPinPort;
   uint16_t encoderPin;
-  uint16_t reversing;
+  uint16_t dir;
 } MotorPWM;
 
 
-void MOTOR_Init();
-
 /**
- * Start motor
+ * Initilaize motor
  */
-void MOTOR_Start(MotorPWM *motor);
+void MOTOR_Init(TIM_HandleTypeDef* htim);
 
 /**
- * Stop motor
+ * Sets the break pin LOW
+ */
+void MOTOR_StopBreak(MotorPWM *motor);
+
+void MOTOR_PWMStart(MotorPWM *motor);
+
+/**
+ * Disables the PWM signal
  * @param motor Pointer to motor.
  */
-void MOTOR_Stop(MotorPWM *motor);
+void MOTOR_PWMStop(MotorPWM *motor);
 
 /**
- * Set speed of motor in percent 0 - 100
- * Negative values are interpreted as reverse
+ * Set speed of motor in percent 0 - 1
+ * TODO: Negative values are interpreted as reverse
  */
-void MOTOR_SetSpeed(MotorPWM *motor, float percent);
+void MOTOR_SendPWM(MotorPWM *motor, float pulse_width);
+
+void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick);
+
+
+int printf_uart(const char *format, ...);
+
+void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev);
 
 /**
  * Sets the breaking pin
  */
 void MOTOR_Break(MotorPWM *motor);
+
+int setDirection(MotorPWM *motor, float speed);
 
 /**
  * ...

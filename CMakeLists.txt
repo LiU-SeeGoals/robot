@@ -1,6 +1,6 @@
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.25)
 
 # specify cross-compilers and tools
 set(CMAKE_C_COMPILER arm-none-eabi-gcc)
@@ -51,9 +51,9 @@ else ()
     add_compile_options(-Og -g)
 endif ()
 
-include_directories(Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32H7xx/Include Drivers/CMSIS/Include Drivers/CMSIS/DSP/DSP_Lib_TestSuite/RefLibs/inc Libraries/fw-shared-modules/Inc Libraries/nRF24L01P-lib Libraries/proto-messages/proto_c Libraries/protobuf)
+include_directories(Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32H7xx/Include Drivers/CMSIS/Include Drivers/CMSIS/DSP/DSP_Lib_TestSuite/RefLibs/inc Libraries/fw-shared-modules/Inc Libraries/nRF24L01P-lib Libraries/proto-messages/proto_c Libraries/protobuf Drivers/CMSIS/DSP/Include)
 
-add_compile_definitions(-DDEBUG -DUSE_HAL_DRIVER -DSTM32H755xx)
+add_compile_definitions(DEBUG USE_HAL_DRIVER STM32H755xx)
 
 set(DRIVERS_ROOT Drivers/STM32H7xx_HAL_Driver/Src)
 set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
@@ -78,21 +78,34 @@ set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_uart_ex.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_spi.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_spi_ex.c
+       Drivers/CMSIS/DSP/Source/ControllerFunctions/arm_sin_cos_f32.c
+       Drivers/CMSIS/DSP/Source/CommonTables/arm_common_tables.c 
 )
 
 file(GLOB_RECURSE COMMON_SOURCES "Common/*.*" "Libraries/proto-messages/proto_c/*.*" "Libraries/protobuf/*.*")
 file(GLOB NRF_SOURCE "Libraries/nRF24L01P-lib/*.*")
+file(GLOB_RECURSE CM7_SOURCES "Libraries/fw-shared-modules/Src/*.*")
+list(APPEND CM7_SOURCES 
+        CM7/Core/Src/main.c
+        CM7/Core/Src/nav.c
+        CM7/Core/Src/kicker.c
+        CM7/Core/Src/motor.c
+        CM7/Core/Src/com.c
+        CM7/Core/Src/stm32h7xx_hal_msp.c
+        CM7/Core/Src/stm32h7xx_it.c
+        CM7/Core/Src/ui.c
+)
 
-file(GLOB_RECURSE CM7_SOURCES "CM7/Core/*.*" "Libraries/fw-shared-modules/Src/*.*")
+
 file(GLOB_RECURSE CM4_SOURCES "CM4/Core/*.*")
 
-set(CM7_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Makefile/CM7/stm32h755xx_flash_CM7.ld)
-set(CM4_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Makefile/CM4/stm32h755xx_flash_CM4.ld)
+set(CM7_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Buildfiles/CM7/stm32h755xx_flash_CM7.ld)
+set(CM4_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Buildfiles/CM4/stm32h755xx_flash_CM4.ld)
 
-file(GLOB CM7_ASM_SOURCE "Makefile/CM7/*.s")
-file(GLOB CM4_ASM_SOURCE "Makefile/CM4/*.s")
+file(GLOB CM7_ASM_SOURCE "Buildfiles/CM7/*.s")
+file(GLOB CM4_ASM_SOURCE "Buildfiles/CM4/*.s")
 
-add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork -specs=nano.specs)
+add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork -specs=nano.specs -u _printf_float)
 
 add_executable(robot_CM7.elf ${CM7_SOURCES} ${COMMON_SOURCES} ${DRIVERS_SOURCE} ${NRF_SOURCE} ${CM7_LINKER_SCRIPT} ${CM7_ASM_SOURCE})
 add_executable(robot_CM4.elf ${CM4_SOURCES} ${COMMON_SOURCES} ${DRIVERS_SOURCE} ${CM4_LINKER_SCRIPT} ${CM4_ASM_SOURCE})
@@ -129,4 +142,5 @@ add_custom_command(TARGET robot_CM4.elf POST_BUILD
     Building ${CM4_BIN_FILE}")
 
 
-add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)
+add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND STM32_Programmer_CLI -c port=SWD -w ${CM7_BIN_FILE} 0x08000000 -rst)
+add_custom_target(flash_cm7_st DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)

@@ -6,13 +6,8 @@
 #include <stdbool.h>
 
 /* Public constants */
-#define COM_CS_MOTOR_DRIVER_1 1 << 0
-#define COM_CS_MOTOR_DRIVER_2 1 << 1
-#define COM_CS_MOTOR_DRIVER_3 1 << 2
-#define COM_CS_MOTOR_DRIVER_4 1 << 3
-#define COM_CS_MOTOR_DRIVER_5 1 << 4
-
 #define COM_BASESTATION_TIMEOUT_MS 3000
+
 /* Public function declarations */
 
 /**
@@ -49,18 +44,5 @@ void COM_RF_HandleIRQ(void);
  * Printf:s status and FIFO status registers from the NRF.
  */
 void COM_RF_PrintInfo(void);
-
-/**
- * Configure chip selects for communication through SPI.
- *
- * @param devices Which devices to communicate with, encoded in an
- * 8 bit integer.
- */
-void COM_SPI_Config(uint8_t devices);
-
-/**
- * Reset chip selects for communication through SPI.
- */
-void COM_SPI_Reset();
 
 #endif /* COM_H */

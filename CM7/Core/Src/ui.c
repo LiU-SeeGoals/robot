@@ -4,6 +4,8 @@
 #include "log.h"
 #include "com.h"
 #include "kicker.h"
+#include <string.h>
+#include <stdlib.h>
 
 /* Private defines */
 #define RX_BUFFER_LEN 20

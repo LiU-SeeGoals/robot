@@ -1,37 +1,34 @@
 # Robot
 This is the firmware that all robots (NUCLEO-H755ZI-Q) are running. It receives data from the [basestation](https://github.com/LiU-SeeGoals/basestation) and acts upon this.
 
+**BEWARE** that the wired connections to the motordrivers might behave *funky* when the board is powered through the st-link.
+
 ## Contributing
 Make sure to follow the [firmware standard](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#seegoal---firmware-standard) and the [feature branch](https://github.com/LiU-SeeGoals/wiki/wiki/1.-Processes-&-Standards#feature-branch-integration) concept.
 
+## Git Submodules 
+This project uses several Git Submodules. To get all Submodules at the correct version, use `git submodule update --init --recursive`.
+This has to be done the first time you clone, and everytime you change branch to a branch with different submodule versions.
+
 ## Building and flashing
-This is a CMake project.
+This is a cmake project.
 
-### CLI approach
-You'll need [stlink](https://github.com/stlink-org/stlink#installation), usually available through your package manager.
+To be able to build, make sure you've the `gcc-arm-none-eabi` compiler installed.
 
-Building the project is done with CMake:
-~~~bash
-# from project root, done once:
-$ cmake -B build . -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
-# every time you want to build:
-$ cd build && make
-~~~
+Then build with:  
+```
+cmake -B build && make -C build
+```
 
-Flashing can be done when the NUCLEO card is connected through USB (marked `USB PWR`)
-~~~bash
-# from project root:
-$ cd build && make flash_cm7
-~~~
+To flash, you can use the `STM32_Programmer_CLI` program downloadable from [here](https://www.st.com/en/development-tools/stm32cubeprog.html).
+```
+STM32_Programmer_CLI -c port=SWD -w build/robot_CM7.bin 0x08000000 -rst
+```
 
-### GUI approach
-Install the GUI program stmcube32prog.
-
-Click Erasing & programming choose the .bin file create from make process as file path.
-
-Enable Run after programming
-
-Connect to board at the top right corner and click start programming
+There's also a build rule in make:  
+```
+make flash_cm7 -C build
+```
 
 # Documentation
 
@@ -39,85 +36,62 @@ Connect to board at the top right corner and click start programming
 [NUCLEO-H755ZI-Q](https://www.st.com/resource/en/user_manual/um2408-stm32h7-nucleo144-boards-mb1363-stmicroelectronics.pdf)
 
 ## Pins
+Use the `robot.ioc` to view the pins, it's opened with [STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html).
 
-### CN7
+## How to use motor driver
 
-| Zio pin | MCU pin | STM32 function | Label    | Cable colour | NRF Pin |
-| ------- | ------- | -------------- | -------- | ------------ | ------- |
-| 1       | PC6     | GPIO_Output    | NRF_CE   | Yellow       | CE      |
-| 2       | PB8     | GPIO_Output    | NRF_CSN  | Orange       | CSN     |
-| 3       | PB15    | GPIO_EXTI15    | NRF_IRQ  | Gray         | IRQ     |
-| 6       | VDD     | VDD            | -        | Red          | VDD     |
-| 8       | GND     | GND            | -        | Black        | GND     |
-| 10      | PA5     | SPI1_SCK       | NRF_SCK  | Green        | SCK     |
-| 12      | PA6     | SPI1_MISO      | NRF_MISO | Purple       | M1      |
-| 14      | PB5     | SPI1_MOSI      | NRF_MOSI | Blue         | M0      |
+Motor driver has 5 pins, set these signals in STM32CubeMX and check the devboard documentation to find the corresponding pin.
 
-### CN9
+```
+PWM, - Takes PWM signal to decide speed of motor, generate from devboard with timers.
 
-| Zio pin | MCU pin | STM32 function | Label         | Cable colour |
-| ------- | ------- | -------------- | ------------- | ------------ |
-| 10      | PD3     | GPIO_Output    | SPI_CS_OUTPUT | -            |
-| 8       | PD4     | GPIO_Output    | SPI_CS_RESET  | -            |
-| 6       | PD5     | GPIO_Output    | SPI_CS_STORE  | -            |
-| 4       | PD6     | GPIO_Output    | SPI_CS_SHIFT  | -            |
-| 2       | PD7     | GPIO_Output    | SPI_CS_CONF   | -            |
+FGOUT, - Hall sensor tick output, work like a wheel encoder and ticking as the motor spins so that we know how much the motor has spun.
 
-### CN10
-| Zio pin | MCU pin | STM32 function | Label            | Cable colour |
-|---------|---------|----------------|------------------|--------------|
-| 4       | PA8     | TIM1_CH1       | MOTOR1_PWM       | -            |
-| 6       | PE11    | TIM1_CH2       | MOTOR2_PWM       | -            |
-| 7       | PF6     | GPIO_Input     | MOTOR1_ENCODER   | -            |
-| 8       | PE14    | TIM1_CH4       | MOTOR3_PWM       | -            |
-| 9       | PF10    | GPIO_Input     | MOTOR2_ENCODER   | -            |
-| 10      | PE13    | TIM1_CH3       | MOTOR4_PWM       | -            |
-| 11      | PA2     | GPIO_Input     | MOTOR3_ENCODER   | -            |
-| 13      | PG6     | GPIO_Input     | MOTOR4_ENCODER   | -            |
-| 14      | PB6     | GPIO_Output    | MOTOR1_REVERSE   | -            |
-| 15      | PB2     | GPIO_Output    | MOTOR1_BREAK     | -            |
-| 18      | PE8     | GPIO_Output    | MOTOR2_REVERSE   | -            |
-| 19      | PD13    | GPIO_Output    | MOTOR2_BREAK     | -            |
-| 20      | PE7     | GPIO_Output    | MOTOR3_REVERSE   | -            |
-| 21      | PD12    | GPIO_Output    | MOTOR3_BREAK     | -            |
-| 24      | PE10    | GPIO_Output    | MOTOR4_REVERSE   | -            |
-| 25      | PE2     | GPIO_Output    | MOTOR4_BREAK     | -            |
-| 32      | PB10    | GPIO_Output    | KICKER_DISCHARGE | -            |
-| 34      | PB11    | GPIO_Output    | KICKER_CHARGE    | -            |
+nFault, - Gives fault messages when fault states are entered by going low. Currently does not work, set this pin HIGH 5v or motor driver can enter test mode.
 
-### Internal
-| Zio pin | MCU pin | STM32 function | Label          | Cable colour |
-|---------|---------|----------------|----------------|--------------|
-| -       | PC13    | GPIO_EXTI13    | BTN_USER       | -            |
-| -       | PD8     | USART3_TX      | USART3_TX      | -            |
-| -       | PD9     | USART3_RX      | USART3_RX      | -            |
-| -       | PB0     | GPIO_Output    | LED_GREEN      | -            |
-| -       | PE1     | GPIO_Output    | LED_YELLOW     | -            |
-| -       | PB14    | GPIO_Output    | LED_RED        | -            |
+brake - HIGH sets all motor coils high breaking the motor hard.
 
-## Creating an `compile_command.json`
-~~~bash
-# from project root
-$ cd Makefile && bear --output ../compile_commands.json -- make
-~~~
+dir - Decides direction for motor
+```
 
-## MX configuration
-If for some reason a new `robot.ioc` has to be created from scratch, these are the changes needed in of STM32CubeMX.
+## How to run motor
 
-### General stuff
-...
+This will be a overview to give a feeling for the system as things might change with time
 
-### Connectivity
+What do you need to understand?
 
-#### USART3
-Mode: Asynchronous
+* How hardware interuppts work
+* How hardware timers work 
+* PWM signals.
 
-#### SPI1
-Mode: Full-Duplex Master
-Parameter Settings:
-~~~
-Data Size: 8 Bits
-Prescaler: 32
-~~~
+PWM signals are important to understand to be able to run the motors. And the basics will help to understand how the control loop works. Best is to find some tutorials on youtube
+
+Each motor has a timer which ticks each time FGOUT ticks, this is used in an interrupt which is set to interrupt with a fixed frequency. In the interrupt the delta ticks are counted from the previous interrupt called, this way we know how much/fast the motor has moved.
+
+The control loop is currently a PI loop in MOTOR_SetSpeed (name subject to change) which uses the delta ticks to set a control signal, which is sent as a signal between 0 - 1, this is then scaled and a PWM signal is sent.
 
 
+## Short about timers
+
+Timers can be set in STM32CubeMX with prescaler and period which decides how fast it will tick compared to the system clock. Sometimes this systemclock is prescaled before coming to the timers, meaning you have to check clock configuration in STM32CubeMX to find the exact frequency, likely this value is 200Mhz (400Mhz prescaled by 2).
+
+The timers are TIM1-12 and LPTIM1-4, LPTIM has less functionality then TIM
+
+EXAMPLE:
+
+TIM1 has prescaler of 10, period of 100
+
+System clock is 400Mhz, however looking at clock config we see that before coming to the timer this is caled by two, meaning the timer gets tick frequncy of 200Mhz.
+
+Now 200Mhz is divided by prescaler 200/10 = 20Mhz and the timer overflows when this has ticked 100 times. 
+
+Now for PWM signals the HIGH part of the pulse width is set by calling
+
+```
+  __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
+```
+  
+where pwm_speed is a value between 0 - period.
+
+So if we set pwm_speed = period, the motor will run as fast as possible
+and pwm_speed = 0 will turn off the motor.

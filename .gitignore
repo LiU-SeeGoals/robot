@@ -4,3 +4,5 @@ Makefile/CM7/build
 .vscode
 compile_commands.json
 .cache
+build
+.clangd
