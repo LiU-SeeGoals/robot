@@ -1,10 +1,10 @@
 #include "../Inc/HandmadeMath.h"
 #include <stdio.h>
 
-// Each state is for one dimeion
-// state x is x position and velocity
-// state y is y position and velocity
-// state w is angle and angle-velocity
+// Each state is for one dimension
+// statex is vx position and velocity
+// statey is vy position and velocity
+// statew is angle and angle-velocity
 
 Vec2 statex = {2,1};
 Vec2 statey = {2,1};
@@ -16,6 +16,7 @@ Mat2 Py = {1,0,
            0,1};
 Mat2 Pw = {1,0,
            0,1};
+robot_state robot;
 
 // Constant velocity model
 // state space model
@@ -75,11 +76,32 @@ Mat2 Pw = {1,0,
 // which is why you will see every matrix be transposed before intialization
 // This also means if you wanna visualize a matrix you should transpose it before printing
 
+void measurement_update_vec2_1d(Mat2* P, float R, float mejurement, Vec2* x)
+{
+  /*Vec2 y = SubV2(mejurement, MulV2(H, *x));*/
+  float y = mejurement - x->X;
+
+  /*Vec2 Sxy = Add(MulV2(H, MulM2V2(*P, H)), R);*/
+
+  float S = P->Columns[0].X + R;
+  /*printf("determinant %f\n", DeterminantM2(S));*/
+  /*Mat2 K = MulM2(*P, MulM2(TransposeM2(H), InvGeneralM2(S)));*/
+  Vec2 K = MulV2F(P->Columns[0], 1/S);
+  /**x = AddV2(*x, MulM2V2(K, y));*/
+  Mat2 KH = {K.X, 0, 
+             K.Y, 0};
+  KH = TransposeM2(KH);
+
+  *x = AddV2(*x, MulV2F(K, y));
+  *P = SubM2(*P, MulM2(KH, *P));
+}
+
 void measurement_update_vec2(Mat2 H, Mat2* P, Mat2 R, Vec2 mejurement, Vec2* x)
 {
   Vec2 y = SubV2(mejurement, MulM2V2(H, *x));
 
   Mat2 S = AddM2(MulM2(H, MulM2(*P, TransposeM2(H))), R);
+  printf("determinant %f\n", DeterminantM2(S));
   Mat2 K = MulM2(*P, MulM2(TransposeM2(H), InvGeneralM2(S)));
   *x = AddV2(*x, MulM2V2(K, y));
   *P = SubM2(*P, MulM2(K,MulM2(H, *P)));
@@ -107,18 +129,21 @@ Vec3 time_update_vec3(Mat3 F, Mat3 Q, Vec3* x)
 }
 
 void printm2(Mat2 a){
+
   printf("----------------\n");
   printf("%f %f\n", a.Columns[0].X, a.Columns[0].Y);
   printf("%f %f\n", a.Columns[1].X, a.Columns[1].Y);
   printf("----------------\n");
-}
 
+}
 void printm3(Mat3 a){
+
   printf("----------------\n");
   printf("%f %f %f\n", a.Columns[0].X, a.Columns[0].Y, a.Columns[0].Z);
   printf("%f %f %f\n", a.Columns[1].X, a.Columns[1].Y, a.Columns[1].Z);
   printf("%f %f %f\n", a.Columns[2].X, a.Columns[2].Y, a.Columns[2].Z);
   printf("----------------\n");
+
 }
 
 void printv2(Vec2* a){
@@ -148,7 +173,6 @@ void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
   time_update_vec2(F, Q, P, x, B, u);
 }
 
-// Do time update for pos, vel, angle 
 void cv_update_vec3(Vec3* x) {
   float T = 1;
   Mat3 F = {1, T, 0, 
@@ -174,10 +198,13 @@ void do_some_kalman() {
 
     Mat2 Bnone = {0,0,0,0};
     Mat2 B = {T*T/2, 0,
-                0,   T};
+                T,   0};
     B = TransposeM2(B);
 
     Vec2 accmejure = {1, 0};
+
+    Mat2 H = {T*T/2, T, 0, T};
+    H = TransposeM2(H);
 
     printf("cv update no acceleration\n");
     cv_update_vec2(&Px, &statex, Bnone, accmejure);
@@ -185,18 +212,57 @@ void do_some_kalman() {
     printf("cv update with acceleration 1\n");
     cv_update_vec2(&Px, &statex, B, accmejure);
     printv2(&statex);
-
-    Mat2 H = {1, 0, 
-              0, 1};
-    H = TransposeM2(H);
-
-    Mat2 R = {1, 0,
-              0, 1};
-    H = TransposeM2(R);
-    Vec2 posmejure = {1, 0};
-    measurement_update_vec2(H, &Px, R, posmejure, &statex);
+    float posmejure = 8;
+    printf("covariance\n");
+    printm2(Px);
+    float R = 1;
+    /*Mat2 H = {2/(T * T)}*/
+    /*measurement_update_vec2(H, &Px, R, posmejure, &statex);*/
+    measurement_update_vec2_1d(&Px, R, posmejure, &statex);
+    cv_update_vec2(&Px, &statex, Bnone, accmejure);
+    /*measurement_update_vec2_1d(&Px, R, posmejure, &statex);*/
+    /*cv_update_vec2(&Px, &statex, Bnone, accmejure);*/
+    /*measurement_update_vec2_1d(&Px, R, posmejure, &statex);*/
+    /*cv_update_vec2(&Px, &statex, Bnone, accmejure);*/
+    /*measurement_update_vec2_1d(&Px, R, posmejure, &statex);*/
+    /*cv_update_vec2(&Px, &statex, Bnone, accmejure);*/
+    /*measurement_update_vec2_1d(&Px, R, posmejure, &statex);*/
+    /*cv_update_vec2(&Px, &statex, Bnone, accmejure);*/
     printf("measurement update\n");
-    printf("states\n");
+    printm2(Px);
     printv2(&statex);
+    printf("cov\n");
+    printm2(Px);
     printf("hello world\n");
+}
+
+float get_robot_angle() {
+
+  if (statew.X < 0){
+    statew.X += 2 * PI;
+  }
+  if (statew.X > 2 * PI){
+    statew.X -= 2 * PI;
+  }
+  return statew.X;
+}
+
+float get_angle_vel(){
+  return statew.Y;
+}
+
+float get_posx(){
+  return statex.X;
+}
+
+float get_posy(){
+  return statex.X;
+}
+
+float get_vx(){
+  return statex.Y;
+}
+
+float get_vy(){
+  return statey.Y;
 }
