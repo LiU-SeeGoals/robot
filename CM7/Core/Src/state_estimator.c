@@ -1,21 +1,8 @@
-#include "../Inc/HandmadeMath.h"
+#include "HandmadeMath.h"
+#include "state_estimator.h"
 #include <stdio.h>
 
-// Each state is for one dimension
-// statex is vx position and velocity
-// statey is vy position and velocity
-// statew is angle and angle-velocity
 
-Vec2 statex = {2,1};
-Vec2 statey = {2,1};
-Vec2 statew = {2,1};
-
-Mat2 Px = {1,0,
-           0,1};
-Mat2 Py = {1,0,
-           0,1};
-Mat2 Pw = {1,0,
-           0,1};
 robot_state robot;
 
 // Constant velocity model
@@ -75,6 +62,28 @@ robot_state robot;
 // This means that matrices act as if they were transposed when multiplying
 // which is why you will see every matrix be transposed before intialization
 // This also means if you wanna visualize a matrix you should transpose it before printing
+
+void init(Mat2* P, float R, float mejurement, Vec2* x){
+  Vec2 statex = {2,1};
+  Vec2 statey = {2,1};
+  Vec2 statew = {2,1};
+
+  Mat2 Px = {1,0,
+             0,1};
+  Mat2 Py = {1,0,
+             0,1};
+  Mat2 Pw = {1,0,
+             0,1};
+
+  robot.statex = statex;
+  robot.statey = statex;
+  robot.statew = statex;
+
+  robot.Px = Px;
+  robot.Py = Py;
+  robot.Pw = Pw;
+}
+
 
 void measurement_update_vec2_1d(Mat2* P, float R, float mejurement, Vec2* x)
 {
@@ -193,6 +202,13 @@ void cv_update_vec3(Vec3* x) {
   time_update_vec3(F, Q, x);
 }
 
+
+void camera_meas(float posx, float posy){
+    float R = 1;
+    measurement_update_vec2_1d(&robot.Px, R, posx, &robot.statex);
+    measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);
+}
+
 void do_some_kalman() {
     float T = 1;
 
@@ -207,19 +223,19 @@ void do_some_kalman() {
     H = TransposeM2(H);
 
     printf("cv update no acceleration\n");
-    cv_update_vec2(&Px, &statex, Bnone, accmejure);
-    printv2(&statex);
+    cv_update_vec2(&robot.Px, &robot.statex, Bnone, accmejure);
+    printv2(&robot.statex);
     printf("cv update with acceleration 1\n");
-    cv_update_vec2(&Px, &statex, B, accmejure);
-    printv2(&statex);
+    cv_update_vec2(&robot.Px, &robot.statex, B, accmejure);
+    printv2(&robot.statex);
     float posmejure = 8;
     printf("covariance\n");
-    printm2(Px);
+    printm2(robot.Px);
     float R = 1;
     /*Mat2 H = {2/(T * T)}*/
     /*measurement_update_vec2(H, &Px, R, posmejure, &statex);*/
-    measurement_update_vec2_1d(&Px, R, posmejure, &statex);
-    cv_update_vec2(&Px, &statex, Bnone, accmejure);
+    measurement_update_vec2_1d(&robot.Px, R, posmejure, &robot.statex);
+    cv_update_vec2(&robot.Px, &robot.statex, Bnone, accmejure);
     /*measurement_update_vec2_1d(&Px, R, posmejure, &statex);*/
     /*cv_update_vec2(&Px, &statex, Bnone, accmejure);*/
     /*measurement_update_vec2_1d(&Px, R, posmejure, &statex);*/
@@ -229,40 +245,40 @@ void do_some_kalman() {
     /*measurement_update_vec2_1d(&Px, R, posmejure, &statex);*/
     /*cv_update_vec2(&Px, &statex, Bnone, accmejure);*/
     printf("measurement update\n");
-    printm2(Px);
-    printv2(&statex);
+    printm2(robot.Px);
+    printv2(&robot.statex);
     printf("cov\n");
-    printm2(Px);
+    printm2(robot.Px);
     printf("hello world\n");
 }
 
 float get_robot_angle() {
 
-  if (statew.X < 0){
-    statew.X += 2 * PI;
+  if (robot.statew.X < 0){
+    robot.statew.X += 2 * PI;
   }
-  if (statew.X > 2 * PI){
-    statew.X -= 2 * PI;
+  if (robot.statew.X > 2 * PI){
+    robot.statew.X -= 2 * PI;
   }
-  return statew.X;
+  return robot.statew.X;
 }
 
 float get_angle_vel(){
-  return statew.Y;
+  return robot.statew.Y;
 }
 
 float get_posx(){
-  return statex.X;
+  return robot.statex.X;
 }
 
 float get_posy(){
-  return statex.X;
+  return robot.statey.X;
 }
 
 float get_vx(){
-  return statex.Y;
+  return robot.statex.Y;
 }
 
 float get_vy(){
-  return statey.Y;
+  return robot.statey.Y;
 }

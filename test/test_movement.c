@@ -1,16 +1,43 @@
-#include "HandmadeMath.h"
-#include "pos_follow.h"
-#include "state_estimator.h"
-#include "nav.h"
+#include <math.h>
+#include <stdio.h>
 
+#include "../CM7/Core/Inc/HandmadeMath.h"
+#include "../CM7/Core/Inc/pos_follow.h"
+/*#include "pos_follow.h"*/
+
+// === "mocked" functions ====
+Vec2 current;
+float curangle;
+
+float get_posx() {
+  return current.X;
+}
+
+float get_posy() {
+  return current.Y;
+}
+
+float get_robot_angle() {
+  return curangle;
+};
+float DELTA_T = 1;
+void steer(float vx, float vy, float vw) {
+  current.X += vx * DELTA_T;
+  current.Y += vy * DELTA_T;
+  curangle += vw * DELTA_T;
+};
+// === "mocked" functions ====
+
+// === start real code ===
 // Each state has an integration part in the pid controller
-
 float dist_I = 0;
 float angle_I = 0;
+
 control_params params_dist;
 control_params params_angle;
 
 const float CLOCK_FREQ = 400000000;
+
 
 float angle_error(float angle, float desired){
 
@@ -39,13 +66,13 @@ void set_params() {
 
   params_angle.umin = -10.0;
   params_angle.umax = 10.0;
-  params_angle.Ts = 1/CLOCK_FREQ;
+  params_angle.Ts = DELTA_T;
   params_angle.Ti = 0.02;
   params_angle.K = 0.0015;
 
   params_dist.umin = -10.0;
   params_dist.umax = 10.0;
-  params_dist.Ts = 1/CLOCK_FREQ;
+  params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.02;
   params_dist.K = 0.0015;
 }
@@ -105,4 +132,22 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   *I_prev = I;
   return u;
   // for some time
+}
+
+// === end real code ===
+
+int main(){
+  Vec2 want = {0,0};
+  current.X = 10;
+  current.Y = 10;
+  curangle = PI/2;
+  set_params();
+  for (int i = 0; i < 10; i++){
+    go_to_position(want, 0);
+    printf("== State ==\n");
+    printf("%f\n", current.X);
+    printf("%f\n", current.Y);
+    printf("%f\n", curangle);
+  }
+  return 0;
 }

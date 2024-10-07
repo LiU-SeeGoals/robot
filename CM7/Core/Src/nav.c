@@ -1,5 +1,5 @@
 #include "nav.h"
-#include "kalman.h"
+#include "state_estimator.h"
 
 /*
  * Private includes
@@ -21,7 +21,7 @@ RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
 static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
-float CLOCK_FREQ = 400000000;
+const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
 
 

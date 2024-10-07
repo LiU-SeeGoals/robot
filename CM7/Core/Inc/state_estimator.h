@@ -1,23 +1,29 @@
 #include "../Inc/HandmadeMath.h"
 #include <stdio.h>
 
-/*// State is x, vx*/
-/*Vec2 statex = {2,1};*/
-/*Vec2 statey = {2,1};*/
-/*Mat2 Px = {0,0,*/
-/*           0,0};*/
-/*Mat2 Py = {0,0,*/
-/*           0,0};*/
+// Each state is for one dimension
+// statex is vx position and velocity
+// statey is vy position and velocity
+// statew is angle and angle-velocity
+// This might seem counter intuivative but
+// The reason is that x is dependant on vx 
+// and each dimension is independant of each other
+// So ordering it this way makes it easier to handle
+// Each matrix
+
+// NOTE: maybe replace matrices with simple structs?
+// will be annoying having to handroll all matrix mults
+// but will be more intiuative and more effiecient
 
 typedef struct {
 
   Vec2 statex;
   Vec2 statey;
-  Vec2 statez;
+  Vec2 statew;
 
   Mat2 Px;
   Mat2 Py;
-  Mat2 Pz;
+  Mat2 Pw;
 
 } robot_state; 
 
@@ -36,8 +42,7 @@ void printv2(Vec2* a);
 void printv3(Vec3* a);
 
 // Return different states,
-// Only the state estimator should write to
-// the state variables
+// Consider each state variable private to the state_estimator
 float get_robot_angle();
 float get_angle_vel();
 float get_posx();
