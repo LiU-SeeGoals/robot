@@ -97,10 +97,10 @@ void go_to_position(Vec2 desired_pos, float wantw) {
 
   Vec2 r = {cos(angle), sin(angle)};
   // Project the local coordinate vector unto the relative vector to get the desiered scaled contribute of each x and y axis
-  Vec2 projected =  MulV2F(relative_pos, DotV2(r, relative_pos) / euclidian_distance);
+  Vec2 projected =  MulV2F(relative_pos, distance_control_signal * DotV2(r, relative_pos) / euclidian_distance);
 
   // Dont know why minus lol
-  steer(-projected.X, -projected.Y, -control_w);
+  steer(projected.X, projected.Y, -control_w);
 }
 
 
@@ -142,7 +142,7 @@ int main(){
   current.Y = 10;
   curangle = PI/2;
   set_params();
-  for (int i = 0; i < 10; i++){
+  for (int i = 0; i < 1000; i++){
     go_to_position(want, 0);
     printf("== State ==\n");
     printf("%f\n", current.X);
