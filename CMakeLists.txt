@@ -128,5 +128,5 @@ add_custom_command(TARGET robot_CM4.elf POST_BUILD
     COMMENT "Building ${CM4_HEX_FILE}
     Building ${CM4_BIN_FILE}")
 
-
 add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)
+add_custom_target(flashStm_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND STM32_Programmer_CLI -c port=SWD ap=1 -w ${CM7_BIN_FILE} 0x08000000 -rst)

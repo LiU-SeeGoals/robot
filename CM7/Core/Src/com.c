@@ -1,14 +1,15 @@
 #include "com.h"
 
 /* Private includes */
-#include <stdint.h>
-#include <stdio.h>
+#include "log.h"
+#include "main.h"
+#include "nav.h"
 #include <nrf24l01.h>
 #include <nrf_helper_defines.h>
 #include <robot_action/robot_action.pb-c.h>
-#include "main.h"
-#include "nav.h"
-#include "log.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 /* Private defines */
 
@@ -16,7 +17,7 @@
 #define PIPE_BROADCAST 2
 
 /* Private functions declarations */
-static void parse_controller_packet(uint8_t* payload, uint8_t len);
+static void parse_controller_packet(uint8_t *payload, uint8_t len);
 static int find_id();
 
 /* Private variables */
@@ -29,7 +30,7 @@ static volatile uint8_t ping_ack;
  * Public functions implementations
  */
 
-void COM_Init(SPI_HandleTypeDef* hspi) {
+void COM_Init(SPI_HandleTypeDef *hspi) {
   int id = find_id();
   uint8_t controllerAddress[5] = CONTROLLER_ADDR;
   uint8_t actionAdress[5] = ROBOT_ADDR(id);
@@ -37,7 +38,7 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
-  if(NRF_VerifySPI() != NRF_OK) {
+  if (NRF_VerifySPI() != NRF_OK) {
     LOG_ERROR("Couldn't verify nRF24 SPI communication...\r\n");
     return;
   }
@@ -96,10 +97,10 @@ void COM_RF_HandleIRQ() {
 }
 
 /* The id of last message.
- * The value is contained in the upper 4 bits. Sequential ids should be: 0x00, 0x10, 0x20, etc.
- * 0xff is used for no last message, 0xfe for connection timed out.
- * This field is used to remove duplicate messages.
-*/
+ * The value is contained in the upper 4 bits. Sequential ids should be: 0x00,
+ * 0x10, 0x20, etc. 0xff is used for no last message, 0xfe for connection timed
+ * out. This field is used to remove duplicate messages.
+ */
 #define NO_LAST_MESSAGE 0xff
 #define TIMEOUT_LAST_MESSAGE 0xfe
 
@@ -110,17 +111,30 @@ volatile uint32_t last_rec_time = 0;
 void COM_RF_Receive(uint8_t pipe) {
   uint8_t len = 0;
   NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
+  if (len == 0 || len > 32) {
+    // Invalid packet: flush RX 
+    NRF_SendCommand(NRF_CMD_FLUSH_RX);
+    NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
+    return;
+  }
 
   uint8_t payload[len];
   NRF_ReadPayload(payload, len);
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 
-
   if (len == 0 || pipe == 0) {
     return;
   }
-  main_tasks |= TASK_DATA;
+  //main_tasks |= TASK_DATA;
+  //
+  static uint32_t ball_messages = 0;
+  static uint32_t pos_messages = 0;
+
+  struct {
+    uint32_t a, b;
+  } data = {ball_messages, pos_messages};
+  NRF_WriteAckPayload(1, &data, sizeof(data));
 
   uint8_t msg_type = payload[0] & 0xf;
 
@@ -137,20 +151,55 @@ void COM_RF_Receive(uint8_t pipe) {
   LOG_INFO("Payload of length %i on pipe %i\r\n", len, pipe);
 
   switch (msg_type) {
-    case MESSAGE_ID_COMMAND:
-      parse_controller_packet(payload + 1, len - 1);
+  case MESSAGE_ID_COMMAND:
+    parse_controller_packet(payload + 1, len - 1);
+    break;
+  case MESSAGE_ID_PING:
+    main_tasks |= TASK_PING;
+    break;
+  case MESSAGE_ID_VISION:
+    if (pipe == PIPE_BROADCAST) {
+      if (len != 9) {
+        LOG_WARNING("Invalid vision packet\r\n");
+        break;
+      }
+      // Broadcast means ball
+      int32_t ball_x, ball_y;
+      memcpy(&ball_x, payload + 1, sizeof(int32_t));
+      memcpy(&ball_y, payload + 1 + sizeof(int32_t), sizeof(int32_t));
+      ++ball_messages;
+      LOG_INFO("Ball position(%d): %d, %d\r\n", ball_messages, ball_x, ball_y);
+    } else {
+
+      struct {
+        int32_t x, y;
+        float w;
+        int32_t dx, dy;
+        float dw;
+      } pos;
+
+      ++pos_messages;
+      LOG_INFO("Robot pos(%d)\r\n");
       break;
-    case MESSAGE_ID_PING:
-      main_tasks |= TASK_PING;
-      break;
-    default:
-      LOG_WARNING("Unkown message type %d\r\n", msg_type);
+      if (len != sizeof(pos) + 1) {
+        LOG_WARNING("Invalid vision packet\r\n");
+        break;
+      }
+      memcpy(&pos, payload + 1, sizeof(pos));
+      int32_t w, dw;
+      w = pos.w;
+      dw = pos.dw;
+      LOG_INFO("Robot pos(%d): (%d, %d, %d), (%d, %d, %d)\r\n",
+               pos_messages, pos.x, pos.y, w, pos.dx, pos.dy, dw);
+    }
+    break;
+  default:
+    LOG_WARNING("Unkown message type %d\r\n", msg_type);
   }
 
   // What we're sending back on next receive
-  //uint8_t txMsg = 'W';
-  //NRF_WriteAckPayload(pipe, &txMsg, 1);
-
+  // uint8_t txMsg = 'W';
+  // NRF_WriteAckPayload(pipe, &txMsg, 1);
 }
 
 void COM_RF_PrintInfo(void) {
@@ -162,38 +211,36 @@ void COM_RF_PrintInfo(void) {
   }
 
   LOG_INFO("Status register: %02X\r\n", ret);
-  LOG_INFO("TX_FULL:  %1X\r\n", ret & (1<<0));
-  LOG_INFO("RX_P_NO:  %1X\r\n", (ret & (0x3<<1)) >> 1);
-  LOG_INFO("MAX_RT:   %1X\r\n", (ret & (1<<4))    >> 4);
-  LOG_INFO("TX_DS:    %1X\r\n", (ret & (1<<5))     >> 5);
-  LOG_INFO("RX_DR:    %1X\r\n", (ret & (1<<6))     >> 6);
+  LOG_INFO("TX_FULL:  %1X\r\n", ret & (1 << 0));
+  LOG_INFO("RX_P_NO:  %1X\r\n", (ret & (0x3 << 1)) >> 1);
+  LOG_INFO("MAX_RT:   %1X\r\n", (ret & (1 << 4)) >> 4);
+  LOG_INFO("TX_DS:    %1X\r\n", (ret & (1 << 5)) >> 5);
+  LOG_INFO("RX_DR:    %1X\r\n", (ret & (1 << 6)) >> 6);
   LOG_INFO("\r\n");
 
   ret = NRF_ReadRegisterByte(NRF_REG_FIFO_STATUS);
   LOG_INFO("FIFO status register: %02X\r\n", ret);
-  LOG_INFO("RX_EMPTY:   %2X\r\n", ret &  (1<<0));
-  LOG_INFO("RX_FULL:    %2X\r\n", (ret & (1<<1)) >> 1);
-  LOG_INFO("TX_EMPTY:   %2X\r\n", (ret & (1<<4)) >> 4);
-  LOG_INFO("TX_FULL:    %2X\r\n", (ret & (1<<5)) >> 5);
-  LOG_INFO("TX_REUSE:   %2X\r\n", (ret & (1<<6)) >> 6);
+  LOG_INFO("RX_EMPTY:   %2X\r\n", ret & (1 << 0));
+  LOG_INFO("RX_FULL:    %2X\r\n", (ret & (1 << 1)) >> 1);
+  LOG_INFO("TX_EMPTY:   %2X\r\n", (ret & (1 << 4)) >> 4);
+  LOG_INFO("TX_FULL:    %2X\r\n", (ret & (1 << 5)) >> 5);
+  LOG_INFO("TX_REUSE:   %2X\r\n", (ret & (1 << 6)) >> 6);
   LOG_INFO("\r\n");
 
   ret = NRF_ReadRegisterByte(NRF_REG_CONFIG);
   LOG_INFO("Config register: %02X\r\n", ret);
-  LOG_INFO("PRIM_RX:      %1X\r\n", ret & (1<<0));
-  LOG_INFO("PWR_UP:       %1X\r\n", ret & (1<<1));
-  LOG_INFO("CRCO:         %1X\r\n", ret & (1<<2));
-  LOG_INFO("EN_CRC:       %1X\r\n", ret & (1<<3));
-  LOG_INFO("MASK_MAX_RT:  %1X\r\n", ret & (1<<4));
-  LOG_INFO("MASK_TX_DS:   %1X\r\n", ret & (1<<5));
-  LOG_INFO("MASK_RX_DR:   %1X\r\n", ret & (1<<6));
+  LOG_INFO("PRIM_RX:      %1X\r\n", ret & (1 << 0));
+  LOG_INFO("PWR_UP:       %1X\r\n", ret & (1 << 1));
+  LOG_INFO("CRCO:         %1X\r\n", ret & (1 << 2));
+  LOG_INFO("EN_CRC:       %1X\r\n", ret & (1 << 3));
+  LOG_INFO("MASK_MAX_RT:  %1X\r\n", ret & (1 << 4));
+  LOG_INFO("MASK_TX_DS:   %1X\r\n", ret & (1 << 5));
+  LOG_INFO("MASK_RX_DR:   %1X\r\n", ret & (1 << 6));
   LOG_INFO("\r\n");
 }
 
-void COM_SPI_Config(uint8_t devices)
-{
-  for (int i = 0; i < 8; i++)
-  {
+void COM_SPI_Config(uint8_t devices) {
+  for (int i = 0; i < 8; i++) {
     // Shift each CS.
     int cs = ((1 << i) & devices) >> i;
     HAL_GPIO_WritePin(SPI_CS_CONF_GPIO_Port, SPI_CS_CONF_Pin, cs);
@@ -208,8 +255,7 @@ void COM_SPI_Config(uint8_t devices)
   HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_RESET);
 }
 
-void COM_SPI_Reset()
-{
+void COM_SPI_Reset() {
   HAL_GPIO_WritePin(SPI_CS_OUTPUT_GPIO_Port, SPI_CS_OUTPUT_Pin, GPIO_PIN_SET);
   // Clear shift register.
   HAL_GPIO_WritePin(SPI_CS_RESET_GPIO_Port, SPI_CS_RESET_Pin, GPIO_PIN_RESET);
@@ -239,7 +285,8 @@ void COM_Ping() {
     }
     LOG_INFO("Ack ping %d\r\n", ping_ack);
   } else {
-    LOG_INFO("Bad ID: (%u, %u, %u)\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
+    LOG_INFO("Bad ID: (%u, %u, %u)\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(),
+             HAL_GetUIDw2());
   }
   NRF_EnterMode(NRF_MODE_RX);
 }
@@ -267,14 +314,17 @@ static int find_id() {
   if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
     return 0;
   }
-  if (w0 == 3080253 && w1 == 892490001 && w2 ==  842217265) {
+  if (w0 == 3080253 && w1 == 892490001 && w2 == 842217265) {
     return 1;
+  }
+  if (w0 == 2490418 && w1 == 858935561 && w2 == 808727605) {
+    return 2;
   }
   return -1;
 }
 
-static void parse_controller_packet(uint8_t* payload, uint8_t len) {
-  Command* cmd = NULL;
+static void parse_controller_packet(uint8_t *payload, uint8_t len) {
+  Command *cmd = NULL;
   cmd = command__unpack(NULL, len, payload);
 
   if (!cmd) {
@@ -284,6 +334,3 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   NAV_QueueCommandIRQ(cmd);
   main_tasks |= TASK_NAV_COMMAND;
 }
-
-
-
