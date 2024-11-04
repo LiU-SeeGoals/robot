@@ -4,13 +4,14 @@
 #include "nav.h"
 
 // Each state has an integration part in the pid controller
-
 float dist_I = 0;
 float angle_I = 0;
+
 control_params params_dist;
 control_params params_angle;
 
 const float CLOCK_FREQ = 400000000;
+
 
 float angle_error(float angle, float desired){
 
@@ -39,13 +40,13 @@ void set_params() {
 
   params_angle.umin = -10.0;
   params_angle.umax = 10.0;
-  params_angle.Ts = 1/CLOCK_FREQ;
+  params_angle.Ts = DELTA_T;
   params_angle.Ti = 0.02;
   params_angle.K = 0.0015;
 
   params_dist.umin = -10.0;
   params_dist.umax = 10.0;
-  params_dist.Ts = 1/CLOCK_FREQ;
+  params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.02;
   params_dist.K = 0.0015;
 }
@@ -70,10 +71,10 @@ void go_to_position(Vec2 desired_pos, float wantw) {
 
   Vec2 r = {cos(angle), sin(angle)};
   // Project the local coordinate vector unto the relative vector to get the desiered scaled contribute of each x and y axis
-  Vec2 projected =  MulV2F(relative_pos, DotV2(r, relative_pos) / euclidian_distance);
+  Vec2 projected =  MulV2F(relative_pos, distance_control_signal * DotV2(r, relative_pos) / euclidian_distance);
 
   // Dont know why minus lol
-  steer(-projected.X, -projected.Y, -control_w);
+  steer(projected.X, projected.Y, -control_w);
 }
 
 
@@ -105,4 +106,25 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   *I_prev = I;
   return u;
   // for some time
+}
+
+// === end real code ===
+
+int test_func(){
+  Vec2 want = {0,0};
+  current.X = 10;
+  current.Y = 10;
+  curangle = PI/2;
+
+  set_params();
+
+  for (int i = 0; i < 10; i++){
+    go_to_position(want, 0);
+    printf("== State ==\n");
+    printf("%f\n", current.X);
+    printf("%f\n", current.Y);
+    printf("%f\n", curangle);
+  }
+
+  return 0;
 }

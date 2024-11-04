@@ -26,6 +26,7 @@ void steer(float vx, float vy, float vw) {
   current.Y += vy * DELTA_T;
   curangle += vw * DELTA_T;
 };
+
 // === "mocked" functions ====
 
 // === start real code ===
@@ -141,13 +142,16 @@ int main(){
   current.X = 10;
   current.Y = 10;
   curangle = PI/2;
+
   set_params();
-  for (int i = 0; i < 1000; i++){
+
+  for (int i = 0; i < 100000; i++){
     go_to_position(want, 0);
     printf("== State ==\n");
     printf("%f\n", current.X);
     printf("%f\n", current.Y);
     printf("%f\n", curangle);
   }
+
   return 0;
 }
