@@ -29,7 +29,7 @@ void MOTOR_Init(TIM_HandleTypeDef* htim);
 /**
  * Sets the break pin LOW
  */
-void MOTOR_Stopbreak(MotorPWM *motor);
+void MOTOR_StopBreak(MotorPWM *motor);
 
 void MOTOR_PWMStart(MotorPWM *motor);
 
@@ -44,9 +44,6 @@ void MOTOR_PWMStop(MotorPWM *motor);
  * TODO: Negative values are interpreted as reverse
  */
 void MOTOR_SendPWM(MotorPWM *motor, float pulse_width);
-
-void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick);
-
 
 int printf_uart(const char *format, ...);
 

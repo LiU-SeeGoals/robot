@@ -21,9 +21,14 @@ RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
 static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
-const float CLOCK_FREQ = 400000000;
+float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
+Command_buf queue;
+static int queued = 0;
 
+/* Private functions declarations */
+void handle_command(Command* cmd);
+void set_motors(float m1, float m2, float m3, float m4);
 
 /*
  * Public function implementations
@@ -104,12 +109,8 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   float control_clock_period = motor_tick_itr->Init.Period + 1;
   CONTROL_FREQ = CLOCK_FREQ / (control_clock_prescaler * control_clock_period);
   HAL_TIM_Base_Start_IT(motor_tick_itr);
-  // LOG_INFO("control time %f \r\n", CONTROL_FREQ);
-
 }
 
-
-// float I_prev = 0.f;
 void NAV_set_motor_ticks(){
   for (int i = 0; i < 4; i++){
     int ticks_before = motors[i].prev_tick;
@@ -117,6 +118,7 @@ void NAV_set_motor_ticks(){
     motors[i].ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
+  // Dont move this into the other for loop !!
   for (int i = 0; i < 4; i++){ // do for all motor
     MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
   }
@@ -151,48 +153,6 @@ void steer(float vx,float vy, float w){
   // LOG_INFO("v4 %f \r\n", v4);
   // LOG_INFO("hej \r\n");
   // HAL_Delay(10);
-
-}
-
-void set_motors(float m1, float m2, float m3, float m4){
-
-  motors[0].speed = m1 * 100.f;
-  motors[1].speed = m2 * 100.f;
-  motors[2].speed = m3 * 100.f;
-  motors[3].speed = m4 * 100.f;
-
-}
-
-void tire_test() {
-
-  steer(0.f * 100.f, 10.f * 100.f, 0.f * 100.f);
-  set_motors(10,10,10,10);
-  HAL_Delay(1000);
-  steer(0.f * 100.f, 0.f * 100.f, 0.f * 100.f);
-  HAL_Delay(10000);
-  steer(-1.f * 100.f, 0.f * 100.f, 0.f * 100.f);
-  HAL_Delay(1000);
-  set_motors(1,0,0,0);
-  HAL_Delay(2000);
-  set_motors(-1,0,0,0);
-  HAL_Delay(2000);
-  set_motors(1,0,0,0);
-  HAL_Delay(2000);
-  set_motors(-1,0,0,0);
-  HAL_Delay(2000);
-  set_motors(0,1,0,0);
-  HAL_Delay(2000);
-  set_motors(0,-1,0,0);
-  HAL_Delay(2000);
-  set_motors(0,0,1,0);
-  HAL_Delay(2000);
-  set_motors(0,0,-1,0);
-  HAL_Delay(2000);
-  set_motors(0,0,0,1);
-  HAL_Delay(2000);
-  set_motors(0,0,0,-1);
-  HAL_Delay(2000);
-
 
 }
 
@@ -232,10 +192,6 @@ void NAV_Direction(DIRECTION dir) {
       break;
   }
 }
-
-Command_buf queue;
-
-static int queued = 0;
 
 void NAV_QueueCommandIRQ(Command* command) {
   if (!Command_buf_write(&queue, command)) {
@@ -281,9 +237,78 @@ void NAV_HandleCommands() {
     if (!Command_buf_read(&queue, &cmd)) {
       return;
     }
-    LOG_INFO("Handle command %d: %d, %d\n\r", cmd->command_id, handled, queued);
     ++handled;
-    command_move(cmd);
+    handle_command(cmd);
     protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
   }
+}
+
+void NAV_TestMovement() {
+  steer(0, 1, 0);
+}
+
+void NAV_StopMovement() {
+  steer(0, 0, 0);
+}
+
+
+/*
+ * Private function implementations
+ */
+
+void handle_command(Command* cmd){
+  switch (cmd->command_id) {
+    case ACTION_TYPE__STOP_ACTION:
+      NAV_StopMovement();
+      LOG_DEBUG("Stop\r\n");
+      break;
+    case ACTION_TYPE__MOVE_ACTION: {
+      const int32_t speed = cmd->kick_speed;
+      const int32_t x = cmd->direction->x;
+      const int32_t y = cmd->direction->y;
+
+      LOG_DEBUG("(x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
+      LOG_DEBUG("(x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
+      // TODO: Should somehow know that we're in remote control mode
+      if (0 <= speed && speed <= 10) {
+        steer(100.f * speed * x, 100.f * speed * y, 0.f);
+      }
+      } break;
+    case ACTION_TYPE__PING:
+      break;
+    case ACTION_TYPE__ROTATE_ACTION:
+      break;
+    case ACTION_TYPE__KICK_ACTION:
+      break;
+    default:
+      LOG_WARNING("Not known command: %i\r\n", cmd->command_id);
+      break;
+  }
+}
+
+void tire_test() {
+  HAL_Delay(2000);
+  set_motors(1,0,0,0);
+  HAL_Delay(2000);
+  set_motors(-1,0,0,0);
+  HAL_Delay(2000);
+  set_motors(0,1,0,0);
+  HAL_Delay(2000);
+  set_motors(0,-1,0,0);
+  HAL_Delay(2000);
+  set_motors(0,0,1,0);
+  HAL_Delay(2000);
+  set_motors(0,0,-1,0);
+  HAL_Delay(2000);
+  set_motors(0,0,0,1);
+  HAL_Delay(2000);
+  set_motors(0,0,0,-1);
+  HAL_Delay(2000);
+}
+
+void set_motors(float m1, float m2, float m3, float m4){
+  motors[0].speed = m1 * 100.f;
+  motors[1].speed = m2 * 100.f;
+  motors[2].speed = m3 * 100.f;
+  motors[3].speed = m4 * 100.f;
 }

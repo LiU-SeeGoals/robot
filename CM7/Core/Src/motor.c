@@ -2,17 +2,15 @@
 
 /* Private includes */
 #include "log.h"
-#include "timer.h"
 
 /* Private variables */
 static LOG_Module internal_log_mod;
 extern float CONTROL_FREQ;
 
-void MOTOR_Init(TIM_HandleTypeDef* pwm_htim) {
-
+void MOTOR_Init(TIM_HandleTypeDef* pwm_htim)
+{
   LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_TRACE);
   HAL_TIM_Base_Start(pwm_htim);
-
 }
 
 void MOTOR_PWMStop(MotorPWM *motor)
@@ -26,7 +24,7 @@ void MOTOR_PWMStart(MotorPWM *motor)
   HAL_TIM_PWM_Start(motor->pwm_htim, motor->channel);
 }
 
-void MOTOR_Stopbreak(MotorPWM *motor)
+void MOTOR_StopBreak(MotorPWM *motor)
 {
   HAL_GPIO_WritePin(motor->breakPinPort, motor->breakPin, GPIO_PIN_RESET);
 }
@@ -41,7 +39,6 @@ void MOTOR_Break(MotorPWM *motor)
 */
 int setDirection(MotorPWM *motor, float speed)
 {
-
   // If going backward and speed is positive, change direction
   if (motor->dir == 0 && speed > 0)
   {
@@ -146,28 +143,9 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
   __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
 }
 
-
-void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick)
-{
-  uint16_t ticks = 0;
-  uint16_t ticks_before = motor->encoder_htim->Instance->CNT;
-  while(ticks < tick)
-  {
-    uint16_t ticks_after = motor->encoder_htim->Instance->CNT;
-
-    if (ticks_after != ticks_before){
-      ticks += ticks_after - ticks_before;
-      // LOG_DEBUG("tick: %d\r\n", ticks);
-      ticks_before = ticks_after;
-    }
-  }
-}
-
-
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
   // LOG_DEBUG("ticks: %d\r\n", motor->ticks);
-
 
   float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
   // LOG_DEBUG("speed: %f\r\n", speed_s);
@@ -181,5 +159,4 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
   // }
 
   return speed_s;
-
 }
