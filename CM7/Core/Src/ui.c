@@ -1,11 +1,12 @@
 #include "ui.h"
 
 /* Private includes */
+#include <string.h>
+#include <stdlib.h>
 #include "log.h"
 #include "com.h"
 #include "kicker.h"
-#include <string.h>
-#include <stdlib.h>
+#include "battery.h"
 
 /* Private defines */
 #define RX_BUFFER_LEN 20
@@ -40,6 +41,7 @@ typedef enum {
   state_logs,
   state_logs_mod_configure,
   state_logs_back_configure,
+  state_battery,
 } state;
 
 /**
@@ -50,10 +52,11 @@ typedef enum {
  * global commands.
  */
 //!@{
-CommandInfo default_commands[3] = {
+CommandInfo default_commands[4] = {
   {'R', "F"},
   {'K', "icker"},
-  {'L', "ogs"}
+  {'L', "ogs"},
+  {'B', "attery"},
 };
 
 CommandInfo kicker_commands[4] = {
@@ -79,6 +82,10 @@ CommandInfo log_mod_conf_commands[2] = {
   {'M', "ute"},
   {'S', "et minimum output level"},
 };
+
+CommandInfo battery_commands[1] = {
+  {'S', "how levels"},
+};
 //!@}
 
 /**
@@ -92,7 +99,7 @@ CommandInfo log_mod_conf_commands[2] = {
  * the user presses B. The name will be printed
  * from the print_help() function.
  */
-StructInfo states[6] = {
+StructInfo states[8] = {
   {
     .name     = "", 
     .cmds     = default_commands,
@@ -122,6 +129,12 @@ StructInfo states[6] = {
     .cmds     = log_mod_conf_commands,
     .len_cmds = sizeof(log_mod_conf_commands)/sizeof(CommandInfo),
     .parent   = state_logs,
+  },
+  {
+    .name     = "Battery",
+    .cmds     = battery_commands,
+    .len_cmds = sizeof(battery_commands)/sizeof(CommandInfo),
+    .parent   = state_default,
   },
 };
 
@@ -265,6 +278,10 @@ void parse_key() {
         }
         print_help();
         break;
+      case 'B': // Battery
+        current_state = state_battery;
+        print_help();
+        break;
       default:
         LOG_UI("Unknown command: %c (%x)\r\n", key, key);
         print_help();
@@ -371,6 +388,13 @@ void parse_key() {
           start_reading_to_buffer();
         }
         break;
+    }
+  } else if (current_state == state_battery) {
+    switch (key) {
+      case 'S': // Battery levels
+        {
+          BATTERY_GetLevel();
+        }
     }
   }
 }

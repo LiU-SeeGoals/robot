@@ -78,6 +78,8 @@ set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_uart_ex.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_spi.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_spi_ex.c
+       ${DRIVERS_ROOT}/stm32h7xx_hal_adc.c
+       ${DRIVERS_ROOT}/stm32h7xx_hal_adc_ex.c
        Drivers/CMSIS/DSP/Source/ControllerFunctions/arm_sin_cos_f32.c
        Drivers/CMSIS/DSP/Source/CommonTables/arm_common_tables.c 
 )
@@ -94,6 +96,7 @@ list(APPEND CM7_SOURCES
         CM7/Core/Src/stm32h7xx_hal_msp.c
         CM7/Core/Src/stm32h7xx_it.c
         CM7/Core/Src/ui.c
+        CM7/Core/Src/battery.c
 )
 
 
