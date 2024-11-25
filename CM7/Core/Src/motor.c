@@ -48,7 +48,7 @@ int setDirection(MotorPWM *motor, float speed)
       return HAL_BUSY;
     }
     motor->dir = 1;
-    LOG_DEBUG("changing dir: %d\r\n", motor->dir);
+    LOG_DEBUG("going backchinging dir: %d\r\n", motor->dir);
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_RESET);
   }
   // If going forward and speed is negative, change direction
@@ -72,17 +72,18 @@ int setDirection(MotorPWM *motor, float speed)
 /*
   PI controls the motor to the given speed value in hall ticks / second
   Updates I_prev with the previous integrator value
+
 */
-void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev)
-{
-  if (setDirection(motor, speed) == HAL_BUSY){
+void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
+
+  if (setDirection(motor, speed) == HAL_BUSY) {
     MOTOR_SendPWM(motor, 0);
   }
-  if (speed < 0){
+  if (speed < 0) {
     speed = -speed;
   }
-
   // PI control loop with integrator windup protection
+  
   float umin = 0;
   float umax = 1;
   float Ts = 1.f / CONTROL_FREQ;
@@ -93,7 +94,6 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev)
   float I = *I_prev + Ts / Ti * error;
   float v = K * (error + I);
   float u = 0;
-
   // integrator windup fix
   if (v < umin || v > umax){
     I = *I_prev;
@@ -118,6 +118,7 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev)
   Send pwm with with pulse width of pulse_width * timer_period
   meaning pulse width is a float between 0 - 1.
 */
+
 void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 {
   // TODO: How to handle changing directions?
@@ -135,27 +136,11 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 
   // TODO: How to handle rounding errors, do they even matter?
   int pwm_speed = motor->pwm_htim->Init.Period * scale;
-  //LOG_INFO("pwm %d\r\n", pwm_speed);
+  // LOG_INFO("pwm %d\r\n", pwm_speed);
 
   // pwm_speed = motor->pwm_htim->Init.Period * 0.2;
 
   __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
-}
-
-void MOTOR_SetToTick(MotorPWM *motor, uint16_t tick)
-{
-  uint16_t ticks = 0;
-  uint16_t ticks_before = motor->encoder_htim->Instance->CNT;
-  while(ticks < tick)
-  {
-    uint16_t ticks_after = motor->encoder_htim->Instance->CNT;
-
-    if (ticks_after != ticks_before){
-      ticks += ticks_after - ticks_before;
-      // LOG_DEBUG("tick: %d\r\n", ticks);
-      ticks_before = ticks_after;
-    }
-  }
 }
 
 float MOTOR_ReadSpeed(MotorPWM *motor)
