@@ -89,6 +89,7 @@ void init(){
   robot.Px = Px;
   robot.Py = Py;
   robot.Pw = Pw;
+  robot.is_initiated = -1;
 }
 
 
@@ -169,6 +170,9 @@ void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
   Mat2 Q = MulM2(G, MulM2(q ,TransposeM2(G)));
   time_update_vec2(F, Q, P, x, B, u);
 }
+int kalman_is_initiated(){
+  return robot.is_initiated;
+}
 
 void camera_meas(float posx, float posy){
     float R = 1;
@@ -176,7 +180,7 @@ void camera_meas(float posx, float posy){
     measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);
 }
 
-void main() {
+void main_() {
     float T = 1;
 
     init();
@@ -234,6 +238,14 @@ float get_robot_angle() {
     robot.statew.X -= 2 * PI;
   }
   return robot.statew.X;
+}
+
+void initialize_kalman(float x, float y){
+  robot.statex.X = x;
+  robot.statey.X = y;
+  robot.statex.Y = 0;
+  robot.statey.Y = 0;
+  robot.is_initiated = 1;
 }
 
 float get_angle_vel(){

@@ -267,6 +267,24 @@ void handle_command(Command* cmd){
       const int32_t x = cmd->direction->x;
       const int32_t y = cmd->direction->y;
 
+      const int32_t cam_x = cmd->pos->x;
+      const int32_t cam_y = cmd->pos->y;
+
+      const int32_t nav_x = cmd->dest->x;
+      const int32_t nav_y = cmd->dest->y;
+      const int32_t nav_w = cmd->dest->y;
+
+      if (kalman_is_initiated() == -1)
+      {
+        initialize_kalman(cam_x, cam_y)
+      }
+      else
+      {
+        camera_meas(cam_x, cam_y);
+      }
+      Vec2 position = {nav_x,nav_y};
+      go_to_position(position, nav_w);
+
       LOG_DEBUG("(x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
       LOG_DEBUG("(x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
       // TODO: Should somehow know that we're in remote control mode

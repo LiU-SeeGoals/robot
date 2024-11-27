@@ -17,6 +17,7 @@
 
 typedef struct {
 
+  int is_initiated;
   Vec2 statex;
   Vec2 statey;
   Vec2 statew;
@@ -33,7 +34,8 @@ void time_update_vec2(Mat2 F,  Mat2 Q, Mat2* P, Vec2* x, Mat2 B, Vec2 u);
 Vec3 time_update_vec3(Mat3 F, Mat3 Q, Vec3* x);
 void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u);
 void cv_update_vec3(Vec3* x);
-
+int kalman_is_initiated();
+void initialize_kalman(float x, float y);
 void do_some_kalman();
 
 void printm2(Mat2 a);
