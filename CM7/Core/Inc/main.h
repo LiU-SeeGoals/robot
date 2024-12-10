@@ -120,6 +120,11 @@ extern volatile atomic_uint main_tasks;
 #define NRF_CSN_GPIO_Port GPIOB
 #define LED_YELLOW_Pin GPIO_PIN_1
 #define LED_YELLOW_GPIO_Port GPIOE
+#define IMU_SCL_Pin GPIO_PIN_14
+#define IMU_SCL_GPIO_Port GPIOF
+#define IMU_SDA_Pin GPIO_PIN_15
+#define IMU_SDA_GPIO_Port GPIOF
+
 
 /* USER CODE BEGIN Private defines */
 #define MOTOR1_TIM_CHANNEL TIM_CHANNEL_1

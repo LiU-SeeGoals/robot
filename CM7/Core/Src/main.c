@@ -28,6 +28,7 @@
 #include "log.h"
 #include "kicker.h"
 #include "ui.h"
+#include "imu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +63,9 @@ TIM_HandleTypeDef htim15;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+
+I2C_HandleTypeDef hi2c4; // For IMU
+
 /**
  * Used to set tasks to be performed within the main
  * loop of the firmware. It's written to whenever we
@@ -87,6 +91,8 @@ static void MX_TIM12_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM15_Init(void);
 /* USER CODE BEGIN PFP */
+
+static void I2C4_Init(void);
 
 /* USER CODE END PFP */
 
@@ -173,22 +179,30 @@ Error_Handler();
   MX_TIM2_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
+  
+  I2C4_Init(); // Initialize I2C used for IMU
+  
   LOG_Init(&huart3);
   COM_Init(&hspi1);
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
   MOTOR_Init(&htim1);
   KICKER_Init();
+  IMU_Init(&hi2c4);
   LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
   LOG_INFO("Startup finished...\r\n");
-  UI_Init(&huart3);
+  /* UI_Init(&huart3); */
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
+    IMU_test();
+    HAL_Delay(100);
+
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();
@@ -273,6 +287,34 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
+
+
+/* Initialize I2C for IMU */
+static void I2C4_Init(void)
+{
+  __HAL_RCC_I2C4_CLK_ENABLE();
+
+  hi2c4.Instance              = I2C4;
+  hi2c4.Init.Timing           = 0x009034B6; //0x10C0ECFF;
+  hi2c4.Init.OwnAddress1      = 0;
+  hi2c4.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
+  hi2c4.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
+  hi2c4.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
+  hi2c4.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
+
+  if (HAL_I2C_Init(&hi2c4) != HAL_OK) {
+      Error_Handler();
+  }
+  
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c4, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
+      Error_Handler();
+  } 
+
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c4, 0) != HAL_OK) {
+      Error_Handler();
+  }
+}
+
 
 /**
   * @brief SPI1 Initialization Function
@@ -777,6 +819,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, MOTOR4_BREAK_Pin|MOTOR2_REVERSE_Pin|MOTOR2_BREAK_Pin|MOTOR3_REVERSE_Pin
@@ -841,6 +884,22 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(NRF_CE_GPIO_Port, &GPIO_InitStruct);
+
+  /* Configure IMU_SCL_Pin */
+  GPIO_InitStruct.Pin = IMU_SCL_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL; // Pullup resistor is on IMU board
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF4_I2C4;
+  HAL_GPIO_Init(IMU_SCL_GPIO_Port, &GPIO_InitStruct);
+  
+  /* Configure IMU_SDA_Pin */
+  GPIO_InitStruct.Pin = IMU_SDA_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL; // Pullup resistor is on IMU board
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF4_I2C4;
+  HAL_GPIO_Init(IMU_SDA_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
