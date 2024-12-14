@@ -147,34 +147,9 @@ void steer(float vx,float vy, float w){
   motors[0].speed = v1;
   motors[1].speed = v2;
   motors[2].speed = v3;
-  // motors[3].speed = v41 + v42;
   motors[3].speed = v4;
-  // LOG_INFO("v1 %f,v2 %f,v3 %f,v4 %f  \r\n", v1,v2,v3,v4);
-  // LOG_INFO("v4 %f \r\n", v4);
-  // LOG_INFO("hej \r\n");
-  // HAL_Delay(10);
 
 }
-
-void test_motor() {
-  /*tire_test();*/
-  /*steer(1.f * 100.f, 0.f * 100.f, 0.f * 100.f);*/
-  /*motors[0].speed = -1.f * 100.f;*/
-  /*motors[1].speed = -1.f * 100.f;*/
-  /*motors[2].speed = 1.f * 100.f;*/
-  /*motors[3].speed = 1.f * 100.f;*/
-
-
-  // float speed = MOTOR_ReadSpeed(&motors[3]);
-  // LOG_INFO("control freq %f\r\n", CONTROL_FREQ);
-  // HAL_Delay(5000);
-  // HAL_GPIO_WritePin(motors[3].reversePinPort, motors[3].reversePin, GPIO_PIN_SET);
-  // MOTOR_SendPWM(&motors[3], 0.5);
-  // MOTOR_SendPWM(&motors[3], 0.15);
-  // HAL_Delay(2000);
-
-}
-
 
 void NAV_Direction(DIRECTION dir) {
   switch (dir) {
