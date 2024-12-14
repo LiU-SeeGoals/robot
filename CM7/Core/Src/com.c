@@ -35,7 +35,7 @@ static volatile uint8_t ping_ack;
  * Public functions implementations
  */
 
-void COM_Init(SPI_HandleTypeDef* hspi) {
+void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available) {
   LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
 
   // Initialize and enter standby-I mode
@@ -43,6 +43,8 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
   if(NRF_VerifySPI() != NRF_OK) {
     LOG_ERROR("Couldn't verify nRF24 SPI communication...\r\n");
     return;
+  } else {
+    nrf_available = (uint8_t*) 1;
   }
 
   nRFon = 1;

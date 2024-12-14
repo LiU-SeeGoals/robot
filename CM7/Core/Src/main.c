@@ -71,6 +71,8 @@ volatile atomic_uint main_tasks;
 
 volatile atomic_uint connected = 0;
 
+uint8_t NRF_AVAILABLE = 0;
+
 static LOG_Module internal_log_mod;
 /* USER CODE END PV */
 
@@ -174,7 +176,7 @@ Error_Handler();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
   LOG_Init(&huart3);
-  COM_Init(&hspi1);
+  COM_Init(&hspi1, &NRF_AVAILABLE);
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
   MOTOR_Init(&htim1);
   KICKER_Init();
@@ -204,7 +206,7 @@ Error_Handler();
     }
 
     // Failsafe for when communication fails.
-    if (!COM_Update()) {
+    if (!COM_Update() && NRF_AVAILABLE) {
       NAV_StopMovement();
       COM_RF_Reset();
     }
