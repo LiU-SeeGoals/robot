@@ -323,8 +323,8 @@ void NAV_RunDribbler(){
 
 void NAV_TestDribbler(){
 
-  start_dribbler();
+  NAV_RunDribbler();
   HAL_Delay(2000);
-  stop_dribbler();
+  NAV_StopDribbler();
 
 }
