@@ -36,11 +36,8 @@ static volatile uint8_t ping_ack;
  */
 
 void COM_Init(SPI_HandleTypeDef* hspi) {
-  int id = find_id();
-  uint8_t controllerAddress[5]  = CONTROLLER_ADDR;
-  uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
-
   LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
+
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
   if(NRF_VerifySPI() != NRF_OK) {
@@ -52,6 +49,15 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
 
   // Resets all registers but keeps the device in standby-I mode
   NRF_Reset();
+
+  // Setup the nRF registers
+  COM_RF_Init();
+}
+
+void COM_RF_Init() {
+  int id = find_id();
+  uint8_t controllerAddress[5]  = CONTROLLER_ADDR;
+  uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
 
   // Set the RF channel frequency, it's defined as: 2400 + NRF_REG_RF_CH [MHz]
   NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x0F);
@@ -82,10 +88,10 @@ void COM_Init(SPI_HandleTypeDef* hspi) {
 void COM_RF_HandleIRQ() {
   uint8_t status = NRF_ReadStatus();
 
-  if (status & STATUS_MASK_MAX_RT) {
-    // Max retries while sending.
-    NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_MAX_RT);
-    ping_ack = 2;
+  if (status & STATUS_MASK_RX_DR) {
+    // Received packet
+    uint8_t pipe = (status & STATUS_MASK_RX_P_NO) >> 1;
+    COM_RF_Receive(pipe);
   }
 
   if (status & STATUS_MASK_TX_DS) {
@@ -94,10 +100,14 @@ void COM_RF_HandleIRQ() {
     ping_ack = 1;
   }
 
-  if (status & STATUS_MASK_RX_DR) {
-    // Received packet
-    uint8_t pipe = (status & STATUS_MASK_RX_P_NO) >> 1;
-    COM_RF_Receive(pipe);
+  if (status & STATUS_MASK_MAX_RT) {
+    // Max retries while sending.
+    NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_MAX_RT);
+    ping_ack = 2;
+  }
+
+  if (!status) {
+    LOG_ERROR("RF_HandleIRQ called but status empty...\r\n");
   }
 }
 
@@ -189,6 +199,23 @@ void COM_RF_PrintInfo(void) {
   LOG_INFO("MASK_TX_DS:   %1X\r\n", ret & (1<<5));
   LOG_INFO("MASK_RX_DR:   %1X\r\n", ret & (1<<6));
   LOG_INFO("\r\n");
+}
+
+void COM_RF_Reset() {
+  // Initialize and enter standby-I mode
+  if(NRF_VerifySPI() != NRF_OK) {
+    LOG_ERROR("Couldn't verify nRF24 SPI communication...\r\n");
+    return;
+  } else {
+    LOG_INFO("Could communicate with nRF24.\r\n");
+  }
+
+  // Resets all registers but keeps the device in standby-I mode
+  NRF_Reset();
+
+  LOG_INFO("nRF24 resetted.\r\n");
+
+  COM_RF_Init();
 }
 
 void COM_Ping() {
