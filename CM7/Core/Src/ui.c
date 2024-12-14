@@ -41,6 +41,7 @@ typedef enum {
   state_logs_mod_configure,
   state_logs_back_configure,
   state_rf,
+  state_motors,
 } state;
 
 /**
@@ -84,6 +85,10 @@ CommandInfo log_mod_conf_commands[2] = {
 CommandInfo rf_commands[2] = {
   {'S', "tatus"},
   {'R', "eset"},
+};
+
+CommandInfo motors_commands[2] = {
+  {'T', "est"},
 };
 //!@}
 
@@ -133,6 +138,12 @@ StructInfo states[7] = {
     .name     = "RF",
     .cmds     = rf_commands,
     .len_cmds = sizeof(rf_commands)/sizeof(CommandInfo),
+    .parent   = state_default,
+  },
+  {
+    .name     = "Motors",
+    .cmds     = motors_commands,
+    .len_cmds = sizeof(motors_commands)/sizeof(CommandInfo),
     .parent   = state_default,
   },
 };
@@ -395,6 +406,14 @@ void parse_key() {
       case 'R': // Reset
         {
           COM_RF_Reset();
+        }
+        break;
+    }
+  } else if (current_state == state_motors) {
+    switch (key) {
+      case 'T': // Test
+        {
+          NAV_tire_test();
         }
         break;
     }
