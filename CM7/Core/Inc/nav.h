@@ -57,5 +57,7 @@ void NAV_RunDribbler();
 
 void NAV_TestDribbler();
 
+void NAV_TireTest();
+
 #endif /* NAV_H */
 

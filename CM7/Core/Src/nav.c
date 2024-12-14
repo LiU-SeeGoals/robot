@@ -261,7 +261,7 @@ void handle_command(Command* cmd){
   }
 }
 
-void tire_test() {
+void NAV_TireTest() {
   HAL_Delay(2000);
   set_motors(1,0,0,0);
   HAL_Delay(2000);
