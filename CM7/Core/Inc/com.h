@@ -29,11 +29,22 @@ void COM_Ping();
 bool COM_Update();
 
 /**
+ * Initialize the nRF card.
+ */
+void COM_RF_Init();
+
+/**
  * Parse the received message and handle it correctly.
  *
  * @param pipe What pipe the message was received on.
  */
 void COM_RF_Receive(uint8_t pipe);
+
+
+/**
+ * Verifies nRF communication (through SPI) and resets nRF.
+ */
+void COM_RF_Reset();
 
 /**
  * Handles interrupts sent from the IRQ pin on the NRF.

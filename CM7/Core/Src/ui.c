@@ -40,6 +40,7 @@ typedef enum {
   state_logs,
   state_logs_mod_configure,
   state_logs_back_configure,
+  state_rf,
 } state;
 
 /**
@@ -79,6 +80,11 @@ CommandInfo log_mod_conf_commands[2] = {
   {'M', "ute"},
   {'S', "et minimum output level"},
 };
+
+CommandInfo rf_commands[2] = {
+  {'S', "tatus"},
+  {'R', "eset"},
+};
 //!@}
 
 /**
@@ -92,7 +98,7 @@ CommandInfo log_mod_conf_commands[2] = {
  * the user presses B. The name will be printed
  * from the print_help() function.
  */
-StructInfo states[6] = {
+StructInfo states[7] = {
   {
     .name     = "", 
     .cmds     = default_commands,
@@ -122,6 +128,12 @@ StructInfo states[6] = {
     .cmds     = log_mod_conf_commands,
     .len_cmds = sizeof(log_mod_conf_commands)/sizeof(CommandInfo),
     .parent   = state_logs,
+  },
+  {
+    .name     = "RF",
+    .cmds     = rf_commands,
+    .len_cmds = sizeof(rf_commands)/sizeof(CommandInfo),
+    .parent   = state_default,
   },
 };
 
@@ -245,7 +257,8 @@ void parse_key() {
   if (current_state == state_default) {
     switch (key) {
       case 'R': // RF
-        COM_RF_PrintInfo();
+        current_state = state_rf;
+        print_help();
         break;
       case 'K': // Kicker
         current_state = state_kicker;
@@ -369,6 +382,19 @@ void parse_key() {
             LOG_UI("   [%i] %s\r\n", i, LOG_LEVEL[i].name);
           }
           start_reading_to_buffer();
+        }
+        break;
+    }
+  } else if (current_state == state_rf) {
+    switch (key) {
+      case 'S': // Status
+        {
+          COM_RF_PrintInfo();
+        }
+        break;
+      case 'R': // Reset
+        {
+          COM_RF_Reset();
         }
         break;
     }

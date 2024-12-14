@@ -203,6 +203,7 @@ Error_Handler();
     // Failsafe for when communication fails.
     if (!COM_Update()) {
       NAV_StopMovement();
+      COM_RF_Reset();
     }
 
     /* USER CODE END WHILE */
