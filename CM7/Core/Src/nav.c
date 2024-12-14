@@ -312,3 +312,19 @@ void set_motors(float m1, float m2, float m3, float m4){
   motors[2].speed = m3 * 100.f;
   motors[3].speed = m4 * 100.f;
 }
+
+void stop_dribbler(){
+  HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_RESET);
+}
+
+void start_dribbler(){
+  HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_SET);
+}
+
+void test_dribbler(){
+
+  start_dribbler();
+  HAL_Delay(2000);
+  stop_dribbler();
+
+}

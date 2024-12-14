@@ -118,6 +118,8 @@ extern volatile atomic_uint main_tasks;
 #define MOTOR1_REVERSE_GPIO_Port GPIOB
 #define NRF_CSN_Pin GPIO_PIN_8
 #define NRF_CSN_GPIO_Port GPIOB
+#define DRIBBLER_Pin GPIO_PIN_9
+#define DRIBBLER_GPIO_Port GPIOB
 #define LED_YELLOW_Pin GPIO_PIN_1
 #define LED_YELLOW_GPIO_Port GPIOE
 

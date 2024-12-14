@@ -51,4 +51,10 @@ void NAV_StopMovement();
  */
 void NAV_TestMovement();
 
+void stop_dribbler();
+
+void run_dribbler();
+
+void test_dribbler();
 #endif /* NAV_H */
+
