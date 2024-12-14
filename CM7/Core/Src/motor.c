@@ -136,27 +136,14 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 
   // TODO: How to handle rounding errors, do they even matter?
   int pwm_speed = motor->pwm_htim->Init.Period * scale;
-  // LOG_INFO("pwm %d\r\n", pwm_speed);
-
-  // pwm_speed = motor->pwm_htim->Init.Period * 0.2;
 
   __HAL_TIM_SET_COMPARE(motor->pwm_htim, motor->channel, pwm_speed);
 }
 
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
-  // LOG_DEBUG("ticks: %d\r\n", motor->ticks);
 
   float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
-  // LOG_DEBUG("speed: %f\r\n", speed_s);
-
-  // timer overflowed, so calculate again
-  // could prob do some smart reverse calculations 
-  // since we know it overflowed
-  // TODO: Monka race condition with timer
-  // if (speed_s < 0) {
-  //   speed_s = (float)( motor->ticks + 65536 - motor->prev_tick) * (float) CONTROL_FREQ;// 10 gives tick/second
-  // }
 
   return speed_s;
 }

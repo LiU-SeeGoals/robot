@@ -147,34 +147,9 @@ void steer(float vx,float vy, float w){
   motors[0].speed = v1;
   motors[1].speed = v2;
   motors[2].speed = v3;
-  // motors[3].speed = v41 + v42;
   motors[3].speed = v4;
-  // LOG_INFO("v1 %f,v2 %f,v3 %f,v4 %f  \r\n", v1,v2,v3,v4);
-  // LOG_INFO("v4 %f \r\n", v4);
-  // LOG_INFO("hej \r\n");
-  // HAL_Delay(10);
 
 }
-
-void test_motor() {
-  /*tire_test();*/
-  /*steer(1.f * 100.f, 0.f * 100.f, 0.f * 100.f);*/
-  /*motors[0].speed = -1.f * 100.f;*/
-  /*motors[1].speed = -1.f * 100.f;*/
-  /*motors[2].speed = 1.f * 100.f;*/
-  /*motors[3].speed = 1.f * 100.f;*/
-
-
-  // float speed = MOTOR_ReadSpeed(&motors[3]);
-  // LOG_INFO("control freq %f\r\n", CONTROL_FREQ);
-  // HAL_Delay(5000);
-  // HAL_GPIO_WritePin(motors[3].reversePinPort, motors[3].reversePin, GPIO_PIN_SET);
-  // MOTOR_SendPWM(&motors[3], 0.5);
-  // MOTOR_SendPWM(&motors[3], 0.15);
-  // HAL_Delay(2000);
-
-}
-
 
 void NAV_Direction(DIRECTION dir) {
   switch (dir) {
@@ -286,7 +261,7 @@ void handle_command(Command* cmd){
   }
 }
 
-void tire_test() {
+void NAV_TireTest() {
   HAL_Delay(2000);
   set_motors(1,0,0,0);
   HAL_Delay(2000);
@@ -311,4 +286,20 @@ void set_motors(float m1, float m2, float m3, float m4){
   motors[1].speed = m2 * 100.f;
   motors[2].speed = m3 * 100.f;
   motors[3].speed = m4 * 100.f;
+}
+
+void NAV_StopDribbler(){
+  HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_RESET);
+}
+
+void NAV_RunDribbler(){
+  HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_SET);
+}
+
+void NAV_TestDribbler(){
+
+  NAV_RunDribbler();
+  HAL_Delay(2000);
+  NAV_StopDribbler();
+
 }
