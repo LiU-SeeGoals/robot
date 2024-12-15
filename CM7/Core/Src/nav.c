@@ -76,7 +76,6 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[1].reversePinPort    = MOTOR2_REVERSE_GPIO_Port;
   motors[1].reversePin        = MOTOR2_REVERSE_Pin;
   motors[1].dir               = 1;
-
 #else
   motors[1].pwm_htim          = pwm_htim;
   motors[1].ticks             = 0;
