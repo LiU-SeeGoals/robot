@@ -15,7 +15,7 @@
  *
  * @param hspi The handle for the SPI communication.
  */
-void COM_Init(SPI_HandleTypeDef* hspi);
+void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available);
 
 /**
  * Ping the basestation.

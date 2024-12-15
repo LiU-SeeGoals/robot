@@ -278,23 +278,37 @@ void handle_command(Command* cmd){
 }
 
 void NAV_TireTest() {
-  HAL_Delay(2000);
+  LOG_INFO("Starting tire test...\r\n");
+
+  LOG_INFO("First motor forward...\r\n");
   set_motors(1,0,0,0);
   HAL_Delay(2000);
+  LOG_INFO("First motor backwards...\r\n");
   set_motors(-1,0,0,0);
   HAL_Delay(2000);
+
+  LOG_INFO("Second motor forward...\r\n");
   set_motors(0,1,0,0);
   HAL_Delay(2000);
+  LOG_INFO("Second motor backwards...\r\n");
   set_motors(0,-1,0,0);
   HAL_Delay(2000);
+
+  LOG_INFO("Third motor forward...\r\n");
   set_motors(0,0,1,0);
   HAL_Delay(2000);
+  LOG_INFO("Third motor backwards...\r\n");
   set_motors(0,0,-1,0);
   HAL_Delay(2000);
+
+  LOG_INFO("Fourth motor forward...\r\n");
   set_motors(0,0,0,1);
   HAL_Delay(2000);
+  LOG_INFO("Fourth motor Backwards...\r\n");
   set_motors(0,0,0,-1);
   HAL_Delay(2000);
+
+  LOG_INFO("Finished tire test...\r\n");
 }
 
 void set_motors(float m1, float m2, float m3, float m4){

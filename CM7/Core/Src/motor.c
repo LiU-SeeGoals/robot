@@ -48,7 +48,7 @@ int setDirection(MotorPWM *motor, float speed)
       return HAL_BUSY;
     }
     motor->dir = 1;
-    LOG_DEBUG("going backchinging dir: %d\r\n", motor->dir);
+    LOG_DEBUG("changing dir: %d\r\n", motor->dir);
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_RESET);
   }
   // If going forward and speed is negative, change direction
