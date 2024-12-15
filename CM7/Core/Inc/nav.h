@@ -59,5 +59,7 @@ void NAV_TestDribbler();
 
 void NAV_TireTest();
 
+void NAV_GoToAction(Command* command);
+
 #endif /* NAV_H */
 

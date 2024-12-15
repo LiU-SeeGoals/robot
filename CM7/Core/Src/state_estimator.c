@@ -1,5 +1,5 @@
-#include "../Inc/HandmadeMath.h"
-#include "../Inc/state_estimator.h"
+#include "HandmadeMath.h"
+#include "state_estimator.h"
 #include <stdio.h>
 
 
@@ -89,6 +89,7 @@ void init(){
   robot.Px = Px;
   robot.Py = Py;
   robot.Pw = Pw;
+  robot.is_initiated = -1;
 }
 
 
@@ -176,7 +177,7 @@ void camera_meas(float posx, float posy){
     measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);
 }
 
-void main() {
+void test() {
     float T = 1;
 
     init();
@@ -234,6 +235,21 @@ float get_robot_angle() {
     robot.statew.X -= 2 * PI;
   }
   return robot.statew.X;
+}
+
+void initialize_kalman(float x, float y){
+  robot.statex.X = x;
+  robot.statey.X = y;
+  robot.statex.Y = 0;
+  robot.statey.Y = 0;
+  robot.is_initiated = 1;
+}
+
+/*
+  @Return -1 if not inited 1 
+*/
+int kalman_is_initiated(){
+  return robot.is_initiated;
 }
 
 float get_angle_vel(){

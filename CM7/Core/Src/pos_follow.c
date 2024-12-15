@@ -10,7 +10,7 @@ float angle_I = 0;
 control_params params_dist;
 control_params params_angle;
 
-const float CLOCK_FREQ = 400000000;
+const float DELTA_T = 0.1;
 
 
 float angle_error(float angle, float desired){
@@ -106,25 +106,4 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   *I_prev = I;
   return u;
   // for some time
-}
-
-// === end real code ===
-
-int test_func(){
-  Vec2 want = {0,0};
-  current.X = 10;
-  current.Y = 10;
-  curangle = PI/2;
-
-  set_params();
-
-  for (int i = 0; i < 10; i++){
-    go_to_position(want, 0);
-    printf("== State ==\n");
-    printf("%f\n", current.X);
-    printf("%f\n", current.Y);
-    printf("%f\n", curangle);
-  }
-
-  return 0;
 }

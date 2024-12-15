@@ -218,6 +218,7 @@ void command_move(Command *cmd){
   if (cmd->command_id == ACTION_TYPE__MOVE_ACTION){
     steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
   }
+
 }
 
 void NAV_HandleCommands() {
@@ -246,12 +247,50 @@ void NAV_StopMovement() {
  * Private function implementations
  */
 
+void NAV_GoToAction(Command* cmd){
+    const int32_t nav_x = cmd->dest->x;
+    const int32_t nav_y = cmd->dest->y;
+    const int32_t nav_w = cmd->dest->y;
+
+    const int32_t cam_x = cmd->pos->x;
+    const int32_t cam_y = cmd->pos->y;
+
+    LOG_DEBUG("nav (x,y,z): (%i,%i%i)\r\n", nav_x, nav_y, nav_w);
+    LOG_DEBUG("cam (x,y): (%i,%i)\r\n", cam_x, cam_y);
+
+    // hax to cange to to float meter rep just for testing first time... hehe
+    const float f_nav_x = ((float) nav_x) / 1000.f;
+    const float f_nav_y = ((float) nav_y) / 1000.f;
+    const float f_nav_w = ((float) nav_w) / 1000.f;
+                             
+    const float f_cam_x = ((float)cam_x) / 1000.f;
+    const float f_cam_y = ((float)cam_y) / 1000.f;
+
+    if (kalman_is_initiated() == -1)
+    {
+      initialize_kalman(f_cam_x, f_cam_y);
+    }
+    else
+    {
+      camera_meas(f_cam_x, f_cam_y);
+    }
+
+     Vec2 position = {f_nav_x,f_nav_y};
+     go_to_position(position, f_nav_w);
+
+}
+
 void handle_command(Command* cmd){
   switch (cmd->command_id) {
     case ACTION_TYPE__STOP_ACTION:
       NAV_StopMovement();
       LOG_DEBUG("Stop\r\n");
       break;
+    case ACTION_TYPE__MOVE_TO_ACTION: {
+      NAV_GoToAction(cmd);
+
+      } break;
+
     case ACTION_TYPE__MOVE_ACTION: {
       const int32_t speed = cmd->kick_speed;
       const int32_t x = cmd->direction->x;

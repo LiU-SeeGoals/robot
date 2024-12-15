@@ -93,6 +93,8 @@ list(APPEND CM7_SOURCES
         CM7/Core/Src/com.c
         CM7/Core/Src/stm32h7xx_hal_msp.c
         CM7/Core/Src/stm32h7xx_it.c
+        CM7/Core/Src/state_estimator.c
+        CM7/Core/Src/pos_follow.c
         CM7/Core/Src/ui.c
 )
 

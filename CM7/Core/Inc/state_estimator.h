@@ -1,4 +1,4 @@
-#include "../Inc/HandmadeMath.h"
+#include "HandmadeMath.h"
 #include <stdio.h>
 
 // Each state is for one dimension
@@ -17,6 +17,7 @@
 
 typedef struct {
 
+  int is_initiated;
   Vec2 statex;
   Vec2 statey;
   Vec2 statew;
@@ -49,4 +50,6 @@ float get_posx();
 float get_posy();
 float get_vx();
 float get_vy();
+int kalman_is_initiated();
 
+void initialize_kalman(float x, float y);
