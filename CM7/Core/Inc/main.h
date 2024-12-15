@@ -110,6 +110,8 @@ extern volatile atomic_uint main_tasks;
 #define NRF_IRQ_EXTI_IRQn EXTI15_10_IRQn
 #define MOTOR3_BREAK_Pin GPIO_PIN_12
 #define MOTOR3_BREAK_GPIO_Port GPIOD
+#define OLD_MOTOR2_BREAK_Pin GPIO_PIN_13
+#define OLD_MOTOR2_BREAK_GPIO_Port GPIOD
 #define NRF_CE_Pin GPIO_PIN_6
 #define NRF_CE_GPIO_Port GPIOC
 #define MOTOR2_ENCODER_Pin GPIO_PIN_15

@@ -858,7 +858,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(KICKER_DISCHARGE1_GPIO_Port, KICKER_DISCHARGE1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MOTOR3_BREAK_GPIO_Port, MOTOR3_BREAK_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, MOTOR3_BREAK_Pin|OLD_MOTOR2_BREAK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(NRF_CE_GPIO_Port, NRF_CE_Pin, GPIO_PIN_RESET);
@@ -896,12 +896,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(NRF_IRQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MOTOR3_BREAK_Pin */
-  GPIO_InitStruct.Pin = MOTOR3_BREAK_Pin;
+  /*Configure GPIO pins : MOTOR3_BREAK_Pin OLD_MOTOR2_BREAK_Pin */
+  GPIO_InitStruct.Pin = MOTOR3_BREAK_Pin|OLD_MOTOR2_BREAK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(MOTOR3_BREAK_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pin : NRF_CE_Pin */
   GPIO_InitStruct.Pin = NRF_CE_Pin;
