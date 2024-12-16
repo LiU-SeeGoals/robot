@@ -1,17 +1,23 @@
 #include "HandmadeMath.h"
 #include "pos_follow.h"
+#include "log.h"
 #include "state_estimator.h"
 #include "nav.h"
 
 // Each state has an integration part in the pid controller
-float dist_I = 0;
-float angle_I = 0;
+float dist_I = 0.01;
+float angle_I = 0.01;
 
 control_params params_dist;
 control_params params_angle;
 
 const float DELTA_T = 0.1;
 
+static LOG_Module internal_log_mod;
+
+void POS_Init(){
+  LOG_InitModule(&internal_log_mod, "POS", LOG_LEVEL_TRACE);
+}
 
 float angle_error(float angle, float desired){
 
@@ -38,17 +44,17 @@ float standard_error(float current, float desired) {
 
 void set_params() {
 
-  params_angle.umin = -10.0;
-  params_angle.umax = 10.0;
+  params_angle.umin = -1000.0;
+  params_angle.umax = 1000.0;
   params_angle.Ts = DELTA_T;
   params_angle.Ti = 0.02;
-  params_angle.K = 0.0015;
+  params_angle.K = 0.0015 * 2;
 
-  params_dist.umin = -10.0;
-  params_dist.umax = 10.0;
+  params_dist.umin = -1000.0;
+  params_dist.umax = 1000.0;
   params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.02;
-  params_dist.K = 0.0015;
+  params_dist.K = 0.0015 * 2;
 }
 
 void go_to_position(Vec2 desired_pos, float wantw) {
@@ -59,9 +65,11 @@ void go_to_position(Vec2 desired_pos, float wantw) {
   Vec2 relative_pos = SubV2(current_pos, desired_pos); 
   float euclidian_distance = sqrt(relative_pos.X * relative_pos.X + relative_pos.Y * relative_pos.Y);
   // We want the distance to be zero.
-  float distance_control_signal = PID_it(euclidian_distance, 0.0, &dist_I, standard_error, params_dist);
+  LOG_DEBUG("===============distance================");
+  float distance_control_signal = PID_it(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
   // We want the angle to be the desired
-  float control_w = PID_it(get_robot_angle(), wantw, &angle_I, angle_error, params_angle);
+  LOG_DEBUG("===============angle================");
+  float control_w = PID_it(get_robot_angle(), wantw, &angle_I, angle_error, &params_angle);
 
   // The steering signal is a velocity, so calculate how much of each component we need
   /*printf("== control signals ===\n");*/
@@ -71,30 +79,47 @@ void go_to_position(Vec2 desired_pos, float wantw) {
 
   Vec2 r = {cos(angle), sin(angle)};
   // Project the local coordinate vector unto the relative vector to get the desiered scaled contribute of each x and y axis
+  /*LOG_DEBUG("dist : (%f)\r\n", euclidian_distance);*/
+  /*LOG_DEBUG("rel pos : (%f)\r\n", relative_pos);*/
+  /*LOG_DEBUG("distcondtorl : (%f)\r\n", distance_control_signal);*/
+  /*LOG_DEBUG("angles : (%f,%f)\r\n", cos(angle),sin(angle));*/
   Vec2 projected =  MulV2F(relative_pos, distance_control_signal * DotV2(r, relative_pos) / euclidian_distance);
 
+  LOG_DEBUG("steering with (x,y,z): (%f,%f,%f)\r\n", 100.f * projected.X, 100.f * projected.Y, -control_w);
   // Dont know why minus lol
-  steer(projected.X, projected.Y, -control_w);
+  steer(100.f * projected.X, 100.f * projected.Y, -control_w);
 }
 
 
-float PID_it(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params param){
+float PID_it(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params *param){
+
+  set_params();
 
   float error = error_func(current, desired);
-  float I = *I_prev + param.Ts / param.Ti * error;
-  float v = param.K * (error + I);
+  LOG_DEBUG("error: (%f)\r\n", error);
+  float I = *I_prev + (param->Ts / param->Ti) * error;
+
+  LOG_DEBUG("I.prev: (%f)\r\n", *I_prev);
+  LOG_DEBUG("I: (%f)\r\n", I);
+  LOG_DEBUG("I adding: (%f)\r\n", (param->Ts / param->Ti)* error);
+
+  /*LOG_DEBUG("I: (%f)\r\n", I);*/
+  /*LOG_DEBUG("I prev: (%f)\r\n", *I_prev);*/
+  float v = param->K * (error + I);
+  /*LOG_DEBUG("v (v): (%f)\r\n", v);*/
   float u = 0;
   // integrator windup fix
-  if (v < param.umin || v > param.umin){
+  if (v < param->umin || v > param->umax){
     I = *I_prev;
+    LOG_DEBUG("fixing IIIIIIii");
   }
 
-  if (v > param.umax) {
-    u = param.umax;
+  if (v > param->umax) {
+    u = param->umax;
   }
 
-  else if (v < param.umin) {
-    u = param.umin;
+  else if (v < param->umin) {
+    u = param->umin;
   }
 
   else {
@@ -104,6 +129,9 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   /*LOG_INFO("DATAu:%f;\r\n", u);*/
   // HAL_Delay(1);
   *I_prev = I;
+
+  LOG_DEBUG("v: (%f)\r\n", v);
+  LOG_DEBUG("u: (%f)\r\n", u);
   return u;
   // for some time
 }

@@ -1,6 +1,8 @@
 #ifndef POSFOLLOW_H
 #define POSFOLLOW_H
 
+#include "HandmadeMath.h"
+
 typedef struct{
   float umin;
   float umax;
@@ -10,7 +12,7 @@ typedef struct{
 
 } control_params;
 
-float PID_it(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params param);
+float PID_it(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params *param);
 
 float angle_error(float angle, float desired);
 
@@ -23,7 +25,7 @@ void set_params();
 void go_to_position(Vec2 desired_pos, float wantw);
 
 
+void POS_Init();
 
-float PID_it(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params param);
 
 #endif /* COM_H */

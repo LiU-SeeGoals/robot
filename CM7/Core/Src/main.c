@@ -28,6 +28,7 @@
 #include "log.h"
 #include "kicker.h"
 #include "ui.h"
+#include "pos_follow.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -180,6 +181,7 @@ Error_Handler();
   /* USER CODE BEGIN 2 */
   LOG_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
+  POS_Init();
 #ifdef PCB_MOTOR
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
 #else

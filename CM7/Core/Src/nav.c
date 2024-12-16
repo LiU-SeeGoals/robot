@@ -1,4 +1,5 @@
 #include "nav.h"
+#include "HandmadeMath.h"
 #include "state_estimator.h"
 
 /*
@@ -255,7 +256,7 @@ void NAV_GoToAction(Command* cmd){
     const int32_t cam_x = cmd->pos->x;
     const int32_t cam_y = cmd->pos->y;
 
-    LOG_DEBUG("nav (x,y,z): (%i,%i%i)\r\n", nav_x, nav_y, nav_w);
+    LOG_DEBUG("nav (x,y,z): (%i,%i,%i)\r\n", nav_x, nav_y, nav_w);
     LOG_DEBUG("cam (x,y): (%i,%i)\r\n", cam_x, cam_y);
 
     // hax to cange to to float meter rep just for testing first time... hehe
