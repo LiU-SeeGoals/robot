@@ -72,10 +72,6 @@ void go_to_position(Vec2 desired_pos, float wantw) {
   float control_w = PID_it(get_robot_angle(), wantw, &angle_I, angle_error, &params_angle);
 
   // The steering signal is a velocity, so calculate how much of each component we need
-  /*printf("== control signals ===\n");*/
-  /*printf("%f\n", distance_control_signal * cos(angle));*/
-  /*printf("%f\n", distance_control_signal * sin(angle));*/
-  /*printf("%f\n", control_w);*/
 
   Vec2 r = {cos(angle), sin(angle)};
   // Project the local coordinate vector unto the relative vector to get the desiered scaled contribute of each x and y axis

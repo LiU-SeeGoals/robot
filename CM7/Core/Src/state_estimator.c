@@ -171,10 +171,11 @@ void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
   time_update_vec2(F, Q, P, x, B, u);
 }
 
-void camera_meas(float posx, float posy){
+void camera_meas(float posx, float posy, float angle){
     float R = 1;
     measurement_update_vec2_1d(&robot.Px, R, posx, &robot.statex);
     measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);
+    measurement_update_vec2_1d(&robot.Pw, R, angle, &robot.statew);
 }
 
 void test() {
@@ -237,11 +238,15 @@ float get_robot_angle() {
   return robot.statew.X;
 }
 
-void initialize_kalman(float x, float y){
+void initialize_kalman(float x, float y, float w){
   robot.statex.X = x;
   robot.statey.X = y;
+  robot.statew.X = w;
+
   robot.statex.Y = 0;
   robot.statey.Y = 0;
+  robot.statew.Y = 0;
+
   robot.is_initiated = 1;
 }
 

@@ -1,3 +1,5 @@
+#ifndef STATE_ESTIMATOR_H
+#define STATE_ESTIMATOR_H
 #include "HandmadeMath.h"
 #include <stdio.h>
 
@@ -52,4 +54,6 @@ float get_vx();
 float get_vy();
 int kalman_is_initiated();
 
-void initialize_kalman(float x, float y);
+void camera_meas(float posx, float posy, float angle);
+void initialize_kalman(float x, float y, float w);
+#endif /* STATE_ESTIMATOR_H */

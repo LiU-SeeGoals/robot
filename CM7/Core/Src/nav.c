@@ -255,6 +255,7 @@ void NAV_GoToAction(Command* cmd){
 
     const int32_t cam_x = cmd->pos->x;
     const int32_t cam_y = cmd->pos->y;
+    const int32_t cam_w = cmd->pos->w;
 
     LOG_DEBUG("nav (x,y,z): (%i,%i,%i)\r\n", nav_x, nav_y, nav_w);
     LOG_DEBUG("cam (x,y): (%i,%i)\r\n", cam_x, cam_y);
@@ -266,14 +267,15 @@ void NAV_GoToAction(Command* cmd){
                              
     const float f_cam_x = ((float)cam_x) / 1000.f;
     const float f_cam_y = ((float)cam_y) / 1000.f;
+    const float f_cam_w = ((float)cam_w);
 
     if (kalman_is_initiated() == -1)
     {
-      initialize_kalman(f_cam_x, f_cam_y);
+      initialize_kalman(f_cam_x, f_cam_y, f_cam_w);
     }
     else
     {
-      camera_meas(f_cam_x, f_cam_y);
+      camera_meas(f_cam_x, f_cam_y, f_cam_w);
     }
 
      Vec2 position = {f_nav_x,f_nav_y};
