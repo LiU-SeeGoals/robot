@@ -87,8 +87,12 @@ extern volatile atomic_uint main_tasks;
 #define MOTOR1_BREAK_GPIO_Port GPIOB
 #define MOTOR3_REVERSE_Pin GPIO_PIN_7
 #define MOTOR3_REVERSE_GPIO_Port GPIOE
+#define OLD_MOTOR2_REVERSE_Pin GPIO_PIN_8
+#define OLD_MOTOR2_REVERSE_GPIO_Port GPIOE
 #define MOTOR1_PWM_Pin GPIO_PIN_9
 #define MOTOR1_PWM_GPIO_Port GPIOE
+#define OLD_MOTOR2_PWM_Pin GPIO_PIN_11
+#define OLD_MOTOR2_PWM_GPIO_Port GPIOE
 #define MOTOR3_PWM_Pin GPIO_PIN_13
 #define MOTOR3_PWM_GPIO_Port GPIOE
 #define MOTOR4_PWM_Pin GPIO_PIN_14
@@ -106,6 +110,8 @@ extern volatile atomic_uint main_tasks;
 #define NRF_IRQ_EXTI_IRQn EXTI15_10_IRQn
 #define MOTOR3_BREAK_Pin GPIO_PIN_12
 #define MOTOR3_BREAK_GPIO_Port GPIOD
+#define OLD_MOTOR2_BREAK_Pin GPIO_PIN_13
+#define OLD_MOTOR2_BREAK_GPIO_Port GPIOD
 #define NRF_CE_Pin GPIO_PIN_6
 #define NRF_CE_GPIO_Port GPIOC
 #define MOTOR2_ENCODER_Pin GPIO_PIN_15
@@ -120,6 +126,8 @@ extern volatile atomic_uint main_tasks;
 #define NRF_CSN_GPIO_Port GPIOB
 #define DRIBBLER_Pin GPIO_PIN_9
 #define DRIBBLER_GPIO_Port GPIOB
+#define OLD_MOTOR2_ENCODER_Pin GPIO_PIN_0
+#define OLD_MOTOR2_ENCODER_GPIO_Port GPIOE
 #define LED_YELLOW_Pin GPIO_PIN_1
 #define LED_YELLOW_GPIO_Port GPIOE
 

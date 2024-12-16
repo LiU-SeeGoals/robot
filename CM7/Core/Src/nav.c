@@ -64,6 +64,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[0].encoderPin        = MOTOR1_ENCODER_Pin;
   motors[0].dir               = 1;
 
+#ifdef PCB_MOTOR
   motors[1].pwm_htim          = pwm15_htim;
   motors[1].ticks             = 0;
   motors[1].speed             = 0.f;
@@ -75,6 +76,20 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[1].reversePinPort    = MOTOR2_REVERSE_GPIO_Port;
   motors[1].reversePin        = MOTOR2_REVERSE_Pin;
   motors[1].dir               = 1;
+#else
+  motors[1].pwm_htim          = pwm_htim;
+  motors[1].ticks             = 0;
+  motors[1].speed             = 0.f;
+  motors[1].prev_tick         = 0;
+  motors[1].encoder_htim      = encoder2_htim;
+  motors[1].channel           = TIM_CHANNEL_2;
+  motors[1].breakPinPort      = OLD_MOTOR2_BREAK_GPIO_Port;
+  motors[1].breakPin          = OLD_MOTOR2_BREAK_Pin;
+  motors[1].reversePinPort    = OLD_MOTOR2_REVERSE_GPIO_Port;
+  motors[1].reversePin        = OLD_MOTOR2_REVERSE_Pin;
+  motors[1].dir               = 1;
+#endif
+
 
   motors[2].pwm_htim          = pwm_htim;
   motors[2].ticks             = 0;
