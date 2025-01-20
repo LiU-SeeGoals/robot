@@ -275,6 +275,7 @@ void NAV_GoToAction(Command* cmd){
     }
     else
     {
+      LOG_DEBUG("camera_meas (x,y): (%f,%f)\r\n", f_cam_x, f_cam_y);
       camera_meas(f_cam_x, f_cam_y, f_cam_w);
     }
 
@@ -299,8 +300,8 @@ void handle_command(Command* cmd){
       const int32_t x = cmd->direction->x;
       const int32_t y = cmd->direction->y;
 
-      LOG_DEBUG("(x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
-      LOG_DEBUG("(x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
+      LOG_DEBUG("keyboard control (x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
+      LOG_DEBUG("keyboard control (x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
       // TODO: Should somehow know that we're in remote control mode
       if (0 <= speed && speed <= 10) {
         steer(100.f * speed * x, 100.f * speed * y, 0.f);

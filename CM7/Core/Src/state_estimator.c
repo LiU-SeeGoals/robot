@@ -173,9 +173,12 @@ void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
 
 void camera_meas(float posx, float posy, float angle){
     float R = 1;
-    measurement_update_vec2_1d(&robot.Px, R, posx, &robot.statex);
-    measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);
-    measurement_update_vec2_1d(&robot.Pw, R, angle, &robot.statew);
+    /*measurement_update_vec2_1d(&robot.Px, R, posx, &robot.statex);*/
+    /*measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);*/
+    /*measurement_update_vec2_1d(&robot.Pw, R, angle, &robot.statew);*/
+    robot.statex.X = posx;
+    robot.statey.X = posy;
+    robot.statew.X = angle;
 }
 
 void test() {

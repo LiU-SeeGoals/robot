@@ -63,7 +63,7 @@ void go_to_position(Vec2 desired_pos, float wantw) {
 
   float angle = get_robot_angle();
   Vec2 relative_pos = SubV2(current_pos, desired_pos); 
-  float euclidian_distance = sqrt(relative_pos.X * relative_pos.X + relative_pos.Y * relative_pos.Y);
+  float euclidian_distance = relative_pos.X * relative_pos.X + relative_pos.Y * relative_pos.Y;
   // We want the distance to be zero.
   LOG_DEBUG("===============distance================");
   float distance_control_signal = PID_it(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
@@ -73,17 +73,24 @@ void go_to_position(Vec2 desired_pos, float wantw) {
 
   // The steering signal is a velocity, so calculate how much of each component we need
 
-  Vec2 r = {cos(angle), sin(angle)};
+
+  float x = (relative_pos.X * cos(angle)) - (relative_pos.Y * sin(angle));
+  float y = (relative_pos.X * sin(angle)) + (relative_pos.Y * cos(angle));
+
+
+  /*Vec2 r = {cos(angle), sin(angle)};*/
   // Project the local coordinate vector unto the relative vector to get the desiered scaled contribute of each x and y axis
   /*LOG_DEBUG("dist : (%f)\r\n", euclidian_distance);*/
   /*LOG_DEBUG("rel pos : (%f)\r\n", relative_pos);*/
   /*LOG_DEBUG("distcondtorl : (%f)\r\n", distance_control_signal);*/
   /*LOG_DEBUG("angles : (%f,%f)\r\n", cos(angle),sin(angle));*/
-  Vec2 projected =  MulV2F(relative_pos, distance_control_signal * DotV2(r, relative_pos) / euclidian_distance);
+  /*Vec2 projected =  MulV2F(relative_pos, distance_control_signal * DotV2(r, relative_pos) / euclidian_distance);*/
 
-  LOG_DEBUG("steering with (x,y,z): (%f,%f,%f)\r\n", 100.f * projected.X, 100.f * projected.Y, -control_w);
+  LOG_DEBUG("angle (w): (%f)\r\n", angle);
+  LOG_DEBUG("relative (x,y): (%f,%f)\r\n", relative_pos.X, relative_pos.Y);
+  LOG_DEBUG("steering with (x,y,z): (%f,%f,%f)\r\n", 100.f * x, 100.f * y, -control_w);
   // Dont know why minus lol
-  steer(100.f * projected.X, 100.f * projected.Y, -control_w);
+  steer(100.f * x, 100.f * y, -control_w);
 }
 
 
