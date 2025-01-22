@@ -7,3 +7,6 @@
 [submodule "Libraries/fw-shared-modules"]
 	path = Libraries/fw-shared-modules
 	url = git@github.com:LiU-SeeGoals/fw-shared-modules.git
+[submodule "Libraries/hlindgren_lsm6dsl"]
+	path = Libraries/hlindgren_lsm6dsl
+	url = https://git.lysator.liu.se/hlg/hlindgren_lsm6dsl
