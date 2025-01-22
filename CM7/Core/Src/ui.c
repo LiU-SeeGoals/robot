@@ -4,6 +4,7 @@
 #include "log.h"
 #include "com.h"
 #include "kicker.h"
+#include "nav.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -39,7 +40,9 @@ typedef enum {
   state_kicker_edit,
   state_logs,
   state_logs_mod_configure,
-  state_logs_back_configure,
+  state_rf,
+  state_motors,
+  state_motors_steer,
 } state;
 
 /**
@@ -50,10 +53,11 @@ typedef enum {
  * global commands.
  */
 //!@{
-CommandInfo default_commands[3] = {
+CommandInfo default_commands[4] = {
   {'R', "F"},
   {'K', "icker"},
-  {'L', "ogs"}
+  {'L', "ogs"},
+  {'M', "otors"}
 };
 
 CommandInfo kicker_commands[4] = {
@@ -69,15 +73,33 @@ CommandInfo kicker_edit_commands[3] = {
   {'D', "ischarge wait (us)"},
 };
 
-CommandInfo log_commands[3] = {
+CommandInfo log_commands[4] = {
   {'P', "rint buffer"},
   {'M', "odules"},
   {'S', "how backends"},
+  {'T', "oggle all logging"},
 };
 
 CommandInfo log_mod_conf_commands[2] = {
   {'M', "ute"},
   {'S', "et minimum output level"},
+};
+
+CommandInfo rf_commands[2] = {
+  {'S', "tatus"},
+  {'R', "eset"},
+};
+
+CommandInfo motors_commands[2] = {
+  {'T', "est"},
+  {'S', "teer"},
+};
+
+CommandInfo motors_steer_commands[4] = {
+  {'W', ""},
+  {'A', ""},
+  {'S', ""},
+  {'D', ""},
 };
 //!@}
 
@@ -92,7 +114,7 @@ CommandInfo log_mod_conf_commands[2] = {
  * the user presses B. The name will be printed
  * from the print_help() function.
  */
-StructInfo states[6] = {
+StructInfo states[8] = {
   {
     .name     = "", 
     .cmds     = default_commands,
@@ -123,6 +145,24 @@ StructInfo states[6] = {
     .len_cmds = sizeof(log_mod_conf_commands)/sizeof(CommandInfo),
     .parent   = state_logs,
   },
+  {
+    .name     = "RF",
+    .cmds     = rf_commands,
+    .len_cmds = sizeof(rf_commands)/sizeof(CommandInfo),
+    .parent   = state_default,
+  },
+  {
+    .name     = "Motors",
+    .cmds     = motors_commands,
+    .len_cmds = sizeof(motors_commands)/sizeof(CommandInfo),
+    .parent   = state_default,
+  },
+  {
+    .name     = "Motors->Steer",
+    .cmds     = motors_steer_commands,
+    .len_cmds = sizeof(motors_steer_commands)/sizeof(CommandInfo),
+    .parent   = state_motors,
+  },
 };
 
 /* Private variables */
@@ -136,6 +176,7 @@ static uint8_t rx_buffer[RX_BUFFER_LEN];
 static char* input_text;
 static size_t rx_buffer_loc = 0;
 static LOG_Module internal_log_mod;
+static uint8_t moving = 0;
 
 /* Private functions declarations */
 void print_help();
@@ -162,6 +203,11 @@ void UI_RxCallback() {
     current_state = states[current_state].parent;
     current_command = key;
     print_help();
+
+    if (moving) {
+      NAV_StopMovement();
+      moving = 0;
+    }
   } else {
     current_command = key;
     if (key == 'H') {
@@ -245,7 +291,8 @@ void parse_key() {
   if (current_state == state_default) {
     switch (key) {
       case 'R': // RF
-        COM_RF_PrintInfo();
+        current_state = state_rf;
+        print_help();
         break;
       case 'K': // Kicker
         current_state = state_kicker;
@@ -263,6 +310,10 @@ void parse_key() {
                                                 LOG_LEVEL[modules[i]->min_output_level].name,
                                                 modules[i]->min_output_level);
         }
+        print_help();
+        break;
+      case 'M': // Motors
+        current_state = state_motors;
         print_help();
         break;
       default:
@@ -347,6 +398,10 @@ void parse_key() {
           }
         }
         break;
+      case 'T': // Toggle all logging
+        LOG_ToggleMuteAll();
+        LOG_UI("Toggled mute all.\r\n");
+        break;
     }
   } else if (current_state == state_logs_mod_configure) {
     switch (key) {
@@ -370,6 +425,48 @@ void parse_key() {
           }
           start_reading_to_buffer();
         }
+        break;
+    }
+  } else if (current_state == state_rf) {
+    switch (key) {
+      case 'S': // Status
+        {
+          COM_RF_PrintInfo();
+        }
+        break;
+      case 'R': // Reset
+        {
+          COM_RF_Reset();
+        }
+        break;
+    }
+  } else if (current_state == state_motors) {
+    switch (key) {
+      case 'T': // Test
+        NAV_TireTest();
+        break;
+      case 'S': // Test
+        current_state = state_motors_steer;
+        print_help();
+        break;
+    }
+  } else if (current_state == state_motors_steer) {
+    switch (key) {
+      case 'W':
+        steer(0, 100.f, 0.f);
+        moving = 1;
+        break;
+      case 'A':
+        steer(100.f, 0, 0.f);
+        moving = 1;
+        break;
+      case 'S':
+        steer(0, -100.f, 0.f);
+        moving = 1;
+        break;
+      case 'D':
+        steer(-100.f, 0, 0.f);
+        moving = 1;
         break;
     }
   }

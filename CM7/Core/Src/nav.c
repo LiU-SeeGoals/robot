@@ -64,6 +64,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[0].encoderPin        = MOTOR1_ENCODER_Pin;
   motors[0].dir               = 1;
 
+#ifdef PCB_MOTOR
   motors[1].pwm_htim          = pwm15_htim;
   motors[1].ticks             = 0;
   motors[1].speed             = 0.f;
@@ -75,6 +76,20 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[1].reversePinPort    = MOTOR2_REVERSE_GPIO_Port;
   motors[1].reversePin        = MOTOR2_REVERSE_Pin;
   motors[1].dir               = 1;
+#else
+  motors[1].pwm_htim          = pwm_htim;
+  motors[1].ticks             = 0;
+  motors[1].speed             = 0.f;
+  motors[1].prev_tick         = 0;
+  motors[1].encoder_htim      = encoder2_htim;
+  motors[1].channel           = TIM_CHANNEL_2;
+  motors[1].breakPinPort      = OLD_MOTOR2_BREAK_GPIO_Port;
+  motors[1].breakPin          = OLD_MOTOR2_BREAK_Pin;
+  motors[1].reversePinPort    = OLD_MOTOR2_REVERSE_GPIO_Port;
+  motors[1].reversePin        = OLD_MOTOR2_REVERSE_Pin;
+  motors[1].dir               = 1;
+#endif
+
 
   motors[2].pwm_htim          = pwm_htim;
   motors[2].ticks             = 0;
@@ -147,34 +162,9 @@ void steer(float vx,float vy, float w){
   motors[0].speed = v1;
   motors[1].speed = v2;
   motors[2].speed = v3;
-  // motors[3].speed = v41 + v42;
   motors[3].speed = v4;
-  // LOG_INFO("v1 %f,v2 %f,v3 %f,v4 %f  \r\n", v1,v2,v3,v4);
-  // LOG_INFO("v4 %f \r\n", v4);
-  // LOG_INFO("hej \r\n");
-  // HAL_Delay(10);
 
 }
-
-void test_motor() {
-  /*tire_test();*/
-  /*steer(1.f * 100.f, 0.f * 100.f, 0.f * 100.f);*/
-  /*motors[0].speed = -1.f * 100.f;*/
-  /*motors[1].speed = -1.f * 100.f;*/
-  /*motors[2].speed = 1.f * 100.f;*/
-  /*motors[3].speed = 1.f * 100.f;*/
-
-
-  // float speed = MOTOR_ReadSpeed(&motors[3]);
-  // LOG_INFO("control freq %f\r\n", CONTROL_FREQ);
-  // HAL_Delay(5000);
-  // HAL_GPIO_WritePin(motors[3].reversePinPort, motors[3].reversePin, GPIO_PIN_SET);
-  // MOTOR_SendPWM(&motors[3], 0.5);
-  // MOTOR_SendPWM(&motors[3], 0.15);
-  // HAL_Delay(2000);
-
-}
-
 
 void NAV_Direction(DIRECTION dir) {
   switch (dir) {
@@ -286,24 +276,38 @@ void handle_command(Command* cmd){
   }
 }
 
-void tire_test() {
-  HAL_Delay(2000);
+void NAV_TireTest() {
+  LOG_INFO("Starting tire test...\r\n");
+
+  LOG_INFO("First motor forward...\r\n");
   set_motors(1,0,0,0);
   HAL_Delay(2000);
+  LOG_INFO("First motor backwards...\r\n");
   set_motors(-1,0,0,0);
   HAL_Delay(2000);
+
+  LOG_INFO("Second motor forward...\r\n");
   set_motors(0,1,0,0);
   HAL_Delay(2000);
+  LOG_INFO("Second motor backwards...\r\n");
   set_motors(0,-1,0,0);
   HAL_Delay(2000);
+
+  LOG_INFO("Third motor forward...\r\n");
   set_motors(0,0,1,0);
   HAL_Delay(2000);
+  LOG_INFO("Third motor backwards...\r\n");
   set_motors(0,0,-1,0);
   HAL_Delay(2000);
+
+  LOG_INFO("Fourth motor forward...\r\n");
   set_motors(0,0,0,1);
   HAL_Delay(2000);
+  LOG_INFO("Fourth motor Backwards...\r\n");
   set_motors(0,0,0,-1);
   HAL_Delay(2000);
+
+  LOG_INFO("Finished tire test...\r\n");
 }
 
 void set_motors(float m1, float m2, float m3, float m4){
@@ -311,4 +315,20 @@ void set_motors(float m1, float m2, float m3, float m4){
   motors[1].speed = m2 * 100.f;
   motors[2].speed = m3 * 100.f;
   motors[3].speed = m4 * 100.f;
+}
+
+void NAV_StopDribbler(){
+  HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_RESET);
+}
+
+void NAV_RunDribbler(){
+  HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_SET);
+}
+
+void NAV_TestDribbler(){
+
+  NAV_RunDribbler();
+  HAL_Delay(2000);
+  NAV_StopDribbler();
+
 }
