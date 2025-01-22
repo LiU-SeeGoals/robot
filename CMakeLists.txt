@@ -90,7 +90,7 @@ file(GLOB_RECURSE COMMON_SOURCES "Common/*.*" "Libraries/proto-messages/proto_c/
 file(GLOB NRF_SOURCE "Libraries/nRF24L01P-lib/*.*")
 
 file(GLOB LSM6DSL_SOURCE "Libraries/hlindgren_lsm6dsl/src/HLindgren_LSM6DSL.c")
-add_compile_definitions(LSM6DSL_USE_MEM_READ_AND_WRITE)
+add_compile_definitions(LSM6DSL_USE_I2C_MEM_READ_AND_WRITE)
 
 file(GLOB_RECURSE CM7_SOURCES "Libraries/fw-shared-modules/Src/*.*")
 list(APPEND CM7_SOURCES 
