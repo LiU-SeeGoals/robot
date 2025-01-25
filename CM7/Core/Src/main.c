@@ -205,6 +205,9 @@ int main(void) {
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  uint32_t now = HAL_GetTick();
+  bool on = false;
+
   while (1) {
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
@@ -224,6 +227,16 @@ int main(void) {
     if (!COM_Update() && NRF_AVAILABLE) {
       NAV_StopMovement();
       COM_RF_Reset();
+    }
+
+    if (HAL_GetTick() - now > 1000) {
+      if (on) {
+        HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
+      } else {
+        HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
+      }
+      on = !on;
+      now = HAL_GetTick();
     }
 
     /* USER CODE END WHILE */
