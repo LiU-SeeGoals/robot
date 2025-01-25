@@ -303,6 +303,7 @@ void SystemClock_Config(void) {
   }
 }
 
+/* USER CODE BEGIN I2C4_Init 0 */
 /* Initialize I2C for IMU */
 static void I2C4_Init(void) {
   __HAL_RCC_I2C4_CLK_ENABLE();
@@ -327,6 +328,7 @@ static void I2C4_Init(void) {
     Error_Handler();
   }
 }
+/* USER CODE END I2C4_Init 0 */
 
 /**
  * @brief SPI1 Initialization Function
@@ -913,6 +915,12 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(NRF_CE_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+
   /* Configure IMU_SCL_Pin */
   GPIO_InitStruct.Pin = IMU_SCL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
@@ -928,12 +936,6 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF4_I2C4;
   HAL_GPIO_Init(IMU_SDA_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* USER CODE END MX_GPIO_Init_2 */
 }
