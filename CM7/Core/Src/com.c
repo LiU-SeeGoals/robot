@@ -44,7 +44,7 @@ void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available) {
     LOG_ERROR("Couldn't verify nRF24 SPI communication...\r\n");
     return;
   } else {
-    nrf_available = (uint8_t*) 1;
+    *nrf_available = 1;
   }
 
   nRFon = 1;
@@ -92,8 +92,13 @@ void COM_RF_HandleIRQ() {
 
   if (status & STATUS_MASK_RX_DR) {
     // Received packet
-    uint8_t pipe = (status & STATUS_MASK_RX_P_NO) >> 1;
-    COM_RF_Receive(pipe);
+    while (1) {
+      uint8_t pipe = (NRF_ReadStatus() & STATUS_MASK_RX_P_NO) >> 1;
+      if (pipe >= 6) {
+        break;
+      }
+      COM_RF_Receive(pipe);
+    }
   }
 
   if (status & STATUS_MASK_TX_DS) {

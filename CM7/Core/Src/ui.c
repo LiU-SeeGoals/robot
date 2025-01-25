@@ -73,10 +73,11 @@ CommandInfo kicker_edit_commands[3] = {
   {'D', "ischarge wait (us)"},
 };
 
-CommandInfo log_commands[3] = {
+CommandInfo log_commands[4] = {
   {'P', "rint buffer"},
   {'M', "odules"},
   {'S', "how backends"},
+  {'T', "oggle all logging"},
 };
 
 CommandInfo log_mod_conf_commands[2] = {
@@ -396,6 +397,10 @@ void parse_key() {
                                                 backends[i].min_output_level);
           }
         }
+        break;
+      case 'T': // Toggle all logging
+        LOG_ToggleMuteAll();
+        LOG_UI("Toggled mute all.\r\n");
         break;
     }
   } else if (current_state == state_logs_mod_configure) {

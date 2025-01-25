@@ -51,7 +51,11 @@ else ()
     add_compile_options(-Og -g)
 endif ()
 
-include_directories(Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32H7xx/Include Drivers/CMSIS/Include Drivers/CMSIS/DSP/DSP_Lib_TestSuite/RefLibs/inc Libraries/fw-shared-modules/Inc Libraries/nRF24L01P-lib Libraries/proto-messages/proto_c Libraries/protobuf Drivers/CMSIS/DSP/Include)
+include_directories(Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
+    Drivers/CMSIS/Device/ST/STM32H7xx/Include Drivers/CMSIS/Include
+    Drivers/CMSIS/DSP/DSP_Lib_TestSuite/RefLibs/inc Libraries/fw-shared-modules/Inc
+    Libraries/nRF24L01P-lib Libraries/proto-messages/proto_c Libraries/protobuf
+    Drivers/CMSIS/DSP/Include Libraries/hlindgren_lsm6dsl/include)
 
 add_compile_definitions(DEBUG USE_HAL_DRIVER STM32H755xx)
 
@@ -84,6 +88,10 @@ set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
 
 file(GLOB_RECURSE COMMON_SOURCES "Common/*.*" "Libraries/proto-messages/proto_c/*.*" "Libraries/protobuf/*.*")
 file(GLOB NRF_SOURCE "Libraries/nRF24L01P-lib/*.*")
+
+file(GLOB LSM6DSL_SOURCE "Libraries/hlindgren_lsm6dsl/src/HLindgren_LSM6DSL.c")
+add_compile_definitions(LSM6DSL_USE_I2C_MEM_READ_AND_WRITE)
+
 file(GLOB_RECURSE CM7_SOURCES "Libraries/fw-shared-modules/Src/*.*")
 list(APPEND CM7_SOURCES 
         CM7/Core/Src/main.c
@@ -96,6 +104,7 @@ list(APPEND CM7_SOURCES
         CM7/Core/Src/state_estimator.c
         CM7/Core/Src/pos_follow.c
         CM7/Core/Src/ui.c
+        CM7/Core/Src/imu.c
 )
 
 
@@ -109,7 +118,8 @@ file(GLOB CM4_ASM_SOURCE "Buildfiles/CM4/*.s")
 
 add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork -specs=nano.specs -u _printf_float)
 
-add_executable(robot_CM7.elf ${CM7_SOURCES} ${COMMON_SOURCES} ${DRIVERS_SOURCE} ${NRF_SOURCE} ${CM7_LINKER_SCRIPT} ${CM7_ASM_SOURCE})
+add_executable(robot_CM7.elf ${CM7_SOURCES} ${COMMON_SOURCES} ${DRIVERS_SOURCE} ${NRF_SOURCE}
+    ${LSM6DSL_SOURCE} ${CM7_LINKER_SCRIPT} ${CM7_ASM_SOURCE})
 add_executable(robot_CM4.elf ${CM4_SOURCES} ${COMMON_SOURCES} ${DRIVERS_SOURCE} ${CM4_LINKER_SCRIPT} ${CM4_ASM_SOURCE})
 
 target_include_directories(robot_CM7.elf PUBLIC CM7/Core/Inc)
