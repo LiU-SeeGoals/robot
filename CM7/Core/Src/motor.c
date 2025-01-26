@@ -43,10 +43,10 @@ int setDirection(MotorPWM *motor, float speed)
   if (motor->dir == 0 && speed > 0)
   {
     // if we are to change direction but motor is not stopped, return;
-    if (!(MOTOR_ReadSpeed(motor) == 0))
-    {
-      return HAL_BUSY;
-    }
+    /*if (!(MOTOR_ReadSpeed(motor) == 0))*/
+    /*{*/
+    /*  return HAL_BUSY;*/
+    /*}*/
     motor->dir = 1;
     LOG_DEBUG("changing dir: %d\r\n", motor->dir);
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_RESET);
@@ -55,10 +55,10 @@ int setDirection(MotorPWM *motor, float speed)
   if (motor->dir == 1 && speed < 0)
   {
     // if we are to change direction but motor is not stopped, return;
-    if (!(MOTOR_ReadSpeed(motor) == 0))
-    {
-      return HAL_BUSY;
-    }
+    /*if (!(MOTOR_ReadSpeed(motor) == 0))*/
+    /*{*/
+    /*  return HAL_BUSY;*/
+    /*}*/
     motor->dir = 0;
     /*LOG_DEBUG("going for dir: %d\r\n", motor->dir);*/
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_SET);
@@ -76,9 +76,11 @@ int setDirection(MotorPWM *motor, float speed)
 */
 void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
 
-  if (setDirection(motor, speed) == HAL_BUSY) {
-    MOTOR_SendPWM(motor, 0);
-  }
+  setDirection(motor, speed);
+  /*if (setDirection(motor, speed) == HAL_BUSY) {*/
+    /*MOTOR_SendPWM(motor, 0);*/
+  /*}*/
+
   if (speed < 0) {
     speed = -speed;
   }

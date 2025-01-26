@@ -176,6 +176,7 @@ void camera_meas(float posx, float posy, float angle){
     /*measurement_update_vec2_1d(&robot.Px, R, posx, &robot.statex);*/
     /*measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);*/
     /*measurement_update_vec2_1d(&robot.Pw, R, angle, &robot.statew);*/
+
     robot.statex.X = posx;
     robot.statey.X = posy;
     robot.statew.X = angle;

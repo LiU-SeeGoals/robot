@@ -44,17 +44,17 @@ float standard_error(float current, float desired) {
 
 void set_params() {
 
-  params_angle.umin = -1000.0;
-  params_angle.umax = 1000.0;
+  params_angle.umin = -10.0;
+  params_angle.umax = 10.0;
   params_angle.Ts = DELTA_T;
   params_angle.Ti = 100;
-  params_angle.K = 1.5 * 2;
+  params_angle.K = .005;
 
   params_dist.umin = -1000.0;
   params_dist.umax = 1000.0;
   params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.0015;
-  params_dist.K = 0.0015 * 2;
+  params_dist.K = 0.015 * 2;
 }
 
 void go_to_position(Vec2 desired_pos, float wantw) {
@@ -73,7 +73,9 @@ void go_to_position(Vec2 desired_pos, float wantw) {
 
   // The steering signal is a velocity, so calculate how much of each component we need
 
-
+  // Rotate from robot coordiates Rotation matrix
+  /*[cos(theta), -sin(theta)]*/
+  /*[sin(theta), cos(theta)]*/
   float x = (relative_pos.X * cos(angle)) - (relative_pos.Y * sin(angle));
   float y = (relative_pos.X * sin(angle)) + (relative_pos.Y * cos(angle));
 
@@ -90,8 +92,9 @@ void go_to_position(Vec2 desired_pos, float wantw) {
   LOG_DEBUG("relative (x,y): (%f,%f)\r\n", relative_pos.X, relative_pos.Y);
   LOG_DEBUG("steering with (x,y,z): (%f,%f,%f)\r\n", 100.f * x, 100.f * y, -control_w);
   // Dont know why minus lol
-  /*steer(100.f * x, 100.f * y, -control_w);*/
-  steer(0, 0, -control_w);
+  steer(100.f * x, 100.f * y, -control_w);
+  /*steer(100.f * x, 0, control_w);*/
+  /*steer(0, 0, -control_w);*/
 }
 
 

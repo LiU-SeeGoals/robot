@@ -145,6 +145,8 @@ void NAV_set_motor_ticks(){
 void steer(float vx,float vy, float w){
 
   /*float theta = 31.f * PI / 180.f;*/
+  /*float theta = 31.f;*/
+  /*float psi = 45.f;*/
   float theta = 31.f;
   float psi = 45.f;
   float r = 1.f;
