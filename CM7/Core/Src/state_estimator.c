@@ -1,57 +1,57 @@
 #include "HandmadeMath.h"
 #include "state_estimator.h"
 #include <stdio.h>
-
+#include "log.h"
 
 robot_state robot;
 
-// Constant velocity model
-// state space model
-// x = [px py w vx vy dw]
-//
-//     1 0 T 0 0
-// F = 0 1 0 T 0
-//     0 0 1 0 0
-//     0 0 0 1 0
-//     0 0 0 0 1
+// state vector 
+// x = [px, py, vx, vy, angle, omega]
+// Dont do any constant velocity updates for the angle state, as it does not make sense
+// Some kind of angle model if needed if you want motion model for the angle aswell
+
+// State-transition (constant veloctiy model with angle) 
+// F = [1 0 T 0;
+//      0 1 0 T
+//      0 0 1 T]
+//      0 0 0 1]
+// Measurement matrix
+// H = [1; 1; 0; 0; 1; 0;]
+// For sensor model y = Hx
+
+// Time update with accelerometer
+// B = [T^2/2;
+//      T^2/2;
+//      T;
+//      T;
+//      0;
+//      0]
+// U = [accx, accy, accx, accy, 0, 0]
+
+// Time update with gyro
+// B = [0;
+//      0;
+//      0;
+//      0;
+//      T^2/2;
+//      T]
+// U = [0, 0, 0, 0, gyrx, gyry]
 
 //     T^2/2 0
 // G = 0     T^2/2
 //     T     0
 //     0     T
 //     0     0
+
+// q = [1 0 0 0;
+//      0 1 0 0
+//      0 0 1 0
+//      0 0 0 1]
 // Q = GqG^T
-// q tuning param
+// q is just to make tuning easier
 
-// acc mesasurement
-// y = H x ( + e )
-// y: ax, ay
-//
-//     T^2/2 0     0 0 0
-// H = 0     T^2/2 0 0 0
-//     0     0     T 0 0
-//     0     0     0 T 0
-//     0     0     0 0 0
-
-// gyr mesasurement
-// y = H x ( + e )
-// y: ax, ay
-//
-//     0 0 0 0 0
-// H = 0 0 0 0 0
-//     0 0 0 0 0
-//     0 0 0 0 0
-//     0 0 0 0 T
-
-// cam mesasurement
-// y = H x ( + e )
-// y: ax, ay
-//
-//     1 0 0 0 0
-// H = 0 1 0 0 0
-//     0 0 0 0 0
-//     0 0 0 0 0
-//     0 0 0 0 0
+// This gives motion model x = Fx + Gu + w
+// where w is process noise
 
 
 // The code uses the notation of the course sensor fusion
@@ -61,95 +61,59 @@ robot_state robot;
 // Matrices are coloum major instead of row major
 // This means that matrices act as if they were transposed when multiplying
 // which is why you will see every matrix be transposed before intialization
-// This also means if you wanna visualize a matrix you should transpose it before printing
 
-void init(){
-  Vec2 statex = {2,1};
-  Vec2 statey = {2,1};
-  Vec2 statew = {2,1};
+static LOG_Module internal_log_mod;
 
-  Mat2 Px = {1,0,
-             0,1};
-  Mat2 Py = {1,0,
-             0,1};
-  Mat2 Pw = {1,0,
-             0,1};
+void STATE_Init(){
 
-  robot.statex.X = 2;
-  robot.statex.Y = 1;
+  robot.statex.X = 0;
+  robot.statex.Y = 0;
 
-  robot.statey.X = 2;
-  robot.statey.Y = 1;
+  robot.statey.X = 0;
+  robot.statey.Y = 0;
 
-  robot.statew.X = 2;
-  robot.statew.Y = 1;
-  /*robot.statey = statey;*/
-  /*robot.statew = statew;*/
+  robot.statew.X = 0;
+  robot.statew.Y = 0;
 
-  robot.Px = Px;
-  robot.Py = Py;
-  robot.Pw = Pw;
+  robot.Px.Elements[0][0] = 1;
+  robot.Px.Elements[1][0] = 0;
+  robot.Px.Elements[0][1] = 0;
+  robot.Px.Elements[1][1] = 1;
+
+  robot.Py.Elements[0][0] = 1;
+  robot.Py.Elements[1][0] = 0;
+  robot.Py.Elements[0][1] = 0;
+  robot.Py.Elements[1][1] = 1;
+
+  robot.Pw.Elements[0][0] = 1;
+  robot.Pw.Elements[1][0] = 0;
+  robot.Pw.Elements[0][1] = 0;
+  robot.Pw.Elements[1][1] = 1;
+
   robot.is_initiated = -1;
+
+  LOG_InitModule(&internal_log_mod, "STATE", LOG_LEVEL_TRACE);
 }
 
-
-void measurement_update_vec2_1d(Mat2* P, float R, float mejurement, Vec2* x)
+void measurement_update_vec2_1d(Mat2* P, float R, Vec2 H, float mejure, Vec2* x)
 {
-  /*Vec2 y = SubV2(mejurement, MulV2(H, *x));*/
-  float y = mejurement - x->X;
-
-  /*Vec2 Sxy = Add(MulV2(H, MulM2V2(*P, H)), R);*/
+  float y = mejure - DotV2(H,*x);
 
   float S = P->Columns[0].X + R;
-  /*printf("determinant %f\n", DeterminantM2(S));*/
-  /*Mat2 K = MulM2(*P, MulM2(TransposeM2(H), InvGeneralM2(S)));*/
   Vec2 K = MulV2F(P->Columns[0], 1/S);
-  /**x = AddV2(*x, MulM2V2(K, y));*/
   Mat2 KH = {K.X, 0, 
              K.Y, 0};
+
   KH = TransposeM2(KH);
 
   *x = AddV2(*x, MulV2F(K, y));
   *P = SubM2(*P, MulM2(KH, *P));
 }
 
-void measurement_update_vec2(Mat2 H, Mat2* P, Mat2 R, Vec2 mejurement, Vec2* x)
-{
-  Vec2 y = SubV2(mejurement, MulM2V2(H, *x));
-
-  Mat2 S = AddM2(MulM2(H, MulM2(*P, TransposeM2(H))), R);
-  printf("determinant %f\n", DeterminantM2(S));
-  Mat2 K = MulM2(*P, MulM2(TransposeM2(H), InvGeneralM2(S)));
-  *x = AddV2(*x, MulM2V2(K, y));
-  *P = SubM2(*P, MulM2(K,MulM2(H, *P)));
-}
-
 void time_update_vec2(Mat2 F,  Mat2 Q, Mat2* P, Vec2* x, Mat2 B, Vec2 u)
 {
   *x = AddV2(MulM2V2(F, *x), MulM2V2(B, u));
   *P = AddM2(MulM2(F, MulM2(*P, TransposeM2(F))), Q);
-}
-
-void printm2(Mat2 a){
-
-  printf("----------------\n");
-  printf("%f %f\n", a.Columns[0].X, a.Columns[1].X);
-  printf("%f %f\n", a.Columns[0].Y, a.Columns[1].Y);
-  printf("----------------\n");
-
-}
-void printm3(Mat3 a){
-
-  printf("----------------\n");
-  printf("%f %f %f\n", a.Columns[0].X, a.Columns[1].X, a.Columns[2].X);
-  printf("%f %f %f\n", a.Columns[0].Y, a.Columns[1].Y, a.Columns[2].Y);
-  printf("%f %f %f\n", a.Columns[0].Z, a.Columns[1].Z, a.Columns[2].Z);
-  printf("----------------\n");
-
-}
-
-void printv2(Vec2* a){
-    printf("x %f y %f\n" , a->X, a->Y);
 }
 
 void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
@@ -173,62 +137,14 @@ void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
 
 void camera_meas(float posx, float posy, float angle){
     float R = 1;
-    /*measurement_update_vec2_1d(&robot.Px, R, posx, &robot.statex);*/
-    /*measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);*/
-    /*measurement_update_vec2_1d(&robot.Pw, R, angle, &robot.statew);*/
+    Vec2 H = {1, 0};
+    measurement_update_vec2_1d(&robot.Px, R, H, posx, &robot.statex);
+    measurement_update_vec2_1d(&robot.Py, R, H, posy, &robot.statey);
+    measurement_update_vec2_1d(&robot.Pw, R, H, angle, &robot.statew);
 
     robot.statex.X = posx;
     robot.statey.X = posy;
     robot.statew.X = angle;
-}
-
-void test() {
-    float T = 1;
-
-    init();
-    Mat2 Bnone = {0,0,0,0};
-    Mat2 B = {T*T/2, 0,
-                T,   0};
-    B = TransposeM2(B);
-
-    Vec2 accmejure = {1, 0};
-
-    Mat2 H = {T*T/2, T, 
-                  0, T};
-    H = TransposeM2(H);
-
-    printf("cv update no acceleration\n");
-    cv_update_vec2(&robot.Px, &robot.statex, Bnone, accmejure);
-    printv2(&robot.statex);
-    printf("cv update with acceleration 1\n");
-    cv_update_vec2(&robot.Px, &robot.statex, B, accmejure);
-    printv2(&robot.statex);
-    float posmejure = 8;
-    printf("covariance\n");
-    printm2(robot.Px);
-    float R = 1;
-    /*Mat2 H = {2/(T * T)}*/
-    /*measurement_update_vec2(H, &Px, R, posmejure, &statex);*/
-    accmejure.X = -1;
-    measurement_update_vec2_1d(&robot.Px, R, posmejure, &robot.statex);
-    cv_update_vec2(&robot.Px, &robot.statex, B, accmejure);
-    cv_update_vec2(&robot.Px, &robot.statex, B, accmejure);
-    cv_update_vec2(&robot.Px, &robot.statex, B, accmejure);
-    accmejure.X = -0.4;
-    cv_update_vec2(&robot.Px, &robot.statex, B, accmejure);
-    measurement_update_vec2_1d(&robot.Px, R, posmejure, &robot.statex);
-    accmejure.X = 0.4;
-    cv_update_vec2(&robot.Px, &robot.statex, B, accmejure);
-    printv2(&robot.statex);
-    posmejure = 12;
-    R = 0.1;
-    measurement_update_vec2_1d(&robot.Px, R, posmejure, &robot.statex);
-    printf("measurement update\n");
-    printm2(robot.Px);
-    printv2(&robot.statex);
-    printf("cov\n");
-    printm2(robot.Px);
-    printf("hello world\n");
 }
 
 float get_robot_angle() {
@@ -255,7 +171,7 @@ void initialize_kalman(float x, float y, float w){
 }
 
 /*
-  @Return -1 if not inited 1 
+  @Return -1 if not inited else 1 
 */
 int kalman_is_initiated(){
   return robot.is_initiated;

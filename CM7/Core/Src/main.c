@@ -189,6 +189,7 @@ int main(void) {
   LOG_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
   POS_Init();
+  STATE_Init();
 #ifdef PCB_MOTOR
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
 #else
