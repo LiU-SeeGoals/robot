@@ -44,6 +44,8 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 
+int imu_counter = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -242,6 +244,23 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim8);
   HAL_TIM_IRQHandler(&htim12);
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
+
+  // Assuimg this runs 100hz this will give about 33.3hz
+  if (STATE_is_calibrated() == 1) {
+    /*imu_counter = 0;*/
+    STATE_acc_measure();
+  }
+  /*if (imu_counter == 3 && STATE_is_calibrated() == 1) {*/
+    /*imu_counter = 0;*/
+  /*  STATE_acc_measure();*/
+  /*}*/
+  /*else if (STATE_is_calibrated() == 1)*/
+  /*{*/
+    /*imu_counter += 1;*/
+  /*}*/
+
+  // PID loop runs 100hz
+  NAV_set_motor_ticks();
   NAV_set_motor_ticks();
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }

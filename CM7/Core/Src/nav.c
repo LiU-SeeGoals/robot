@@ -251,6 +251,10 @@ void NAV_StopMovement() {
  * Private function implementations
  */
 
+int32_t prev_nav_x = 0;
+int32_t prev_nav_y = 0;
+int32_t prev_nav_w = 0;
+
 void NAV_GoToAction(Command* cmd){
     const int32_t nav_x = cmd->dest->x;
     const int32_t nav_y = cmd->dest->y;
@@ -271,6 +275,12 @@ void NAV_GoToAction(Command* cmd){
     const float f_cam_x = ((float)cam_x) / 1000.f;
     const float f_cam_y = ((float)cam_y) / 1000.f;
     const float f_cam_w = ((float)cam_w);
+
+    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 10.0)
+    {
+      // If software send us same position then ignore it.
+      return;
+    }
 
     if (kalman_is_initiated() == -1)
     {

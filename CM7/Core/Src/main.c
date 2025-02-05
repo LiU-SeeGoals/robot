@@ -127,6 +127,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { UI_RxCallback(); }
  */
 int main(void) {
   /* USER CODE BEGIN 1 */
+  IMU_AccelVec3 acc;
+  IMU_GyroVec3 gyr;
 
   /* USER CODE END 1 */
   /* USER CODE BEGIN Boot_Mode_Sequence_0 */
@@ -187,7 +189,7 @@ int main(void) {
   I2C4_Init(); // Initialize I2C used for IMU
 
   LOG_Init(&huart3);
-  COM_Init(&hspi1, &NRF_AVAILABLE);
+  /*COM_Init(&hspi1, &NRF_AVAILABLE);*/
   POS_Init();
   STATE_Init();
 #ifdef PCB_MOTOR
@@ -211,7 +213,17 @@ int main(void) {
   uint32_t now = HAL_GetTick();
   bool on = false;
 
+  STATE_calibrate_imu_gyr();
   while (1) {
+    /*gyr = IMU_read_gyro();*/
+
+    /*acc = IMU_read_accel_mps2();*/
+    /*STATE_acc_measure(acc);*/
+    /*LOG_INFO("X=%f Y=%f Z=%f [m/s^2]\r\n", acc.x, acc.y, acc.z);*/
+    /*LOG_INFO("X=%f Y=%f Z=%f [dps]\r\n", gyr.x, gyr.y, gyr.z);*/
+    /*NAV_TireTest();*/
+    /*continue;*/
+
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();

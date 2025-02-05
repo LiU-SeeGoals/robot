@@ -1,6 +1,7 @@
 #ifndef STATE_ESTIMATOR_H
 #define STATE_ESTIMATOR_H
 #include "HandmadeMath.h"
+#include "imu.h"
 #include <stdio.h>
 
 // Each state is for one dimension
@@ -20,6 +21,7 @@
 typedef struct {
 
   int is_initiated;
+  int is_calibrated;
   Vec2 statex;
   Vec2 statey;
   Vec2 statew;
@@ -27,6 +29,9 @@ typedef struct {
   Mat2 Px;
   Mat2 Py;
   Mat2 Pw;
+
+  IMU_AccelVec3 acc_bias;
+  IMU_GyroVec3 gyr_bias;
 
 } robot_state; 
 
@@ -36,6 +41,7 @@ void time_update_vec2(Mat2 F,  Mat2 Q, Mat2* P, Vec2* x, Mat2 B, Vec2 u);
 Vec3 time_update_vec3(Mat3 F, Mat3 Q, Vec3* x);
 void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u);
 void cv_update_vec3(Vec3* x);
+void STATE_acc_measure();
 
 void do_some_kalman();
 
