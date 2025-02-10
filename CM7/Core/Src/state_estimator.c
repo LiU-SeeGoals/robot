@@ -63,7 +63,7 @@
 // which is why you will see every matrix be transposed before intialization
 
 static robot_state robot;
-const float imu_hz = 100;
+const float imu_hz = 333.33;
 
 static LOG_Module internal_log_mod;
 
@@ -150,7 +150,7 @@ void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u) {
 
 void STATE_calibrate_imu_gyr()
 {
-  const int calib_size = 1000;
+  const int calib_size = 1;
 
   float acc_bias_x = 0;
   float acc_bias_y = 0;
@@ -160,25 +160,11 @@ void STATE_calibrate_imu_gyr()
   float gyr_bias_y = 0;
   float gyr_bias_z = 0;
   
-  const int buf_size = 500;
-  Lsm6dsl_Data_t imu_buf[buf_size];
-  int32_t blocks_read = IMU_read_fifo_raw(imu_buf, buf_size);
-  LOG_INFO("emptying shit\r\n");
-
-  while(blocks_read > 10)
-  {
-    // Empty buffer
-    blocks_read = IMU_read_fifo_raw(imu_buf, buf_size);
-  }
-  LOG_INFO("emptied shit\r\n");
-
-  blocks_read = 0;
-
   IMU_AccelVec3 acc;
   IMU_GyroVec3 gyr;
   for (int i = 0; i < calib_size; i++)
   {
-    HAL_Delay(10);
+    HAL_Delay(3);
     /*while(blocks_read == 0)*/
     /*{*/
     /*blocks_read = IMU_read_fifo_raw(imu_buf, buf_size);*/
@@ -262,10 +248,10 @@ void STATE_acc_measure()
     cv_update_vec2(&robot.Px, &robot.statex, B, accmejure_x);
     cv_update_vec2(&robot.Py, &robot.statey, B, accmejure_y);
 
-    LOG_INFO("acc x=%f y=%f\r\n", accmejure_x.X, accmejure_y.X);
-    LOG_INFO("real acc x=%f y=%f\r\n", acc.x, acc.y);
+    /*LOG_INFO("acc x=%f y=%f\r\n", accmejure_x.X, accmejure_y.X);*/
+    /*LOG_INFO("real acc x=%f y=%f\r\n", acc.x, acc.y);*/
     /*LOG_INFO("bias_acc x=%f y=%f\r\n", robot.acc_bias.x, robot.acc_bias.y);*/
-    LOG_INFO("x=%f y=%f w=%f\r\n", robot.statex.X, robot.statey.X, robot.statew.X);
+    /*LOG_INFO("x=%f y=%f w=%f\r\n", robot.statex.X, robot.statey.X, robot.statew.X);*/
 }
 
 

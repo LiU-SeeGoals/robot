@@ -23,7 +23,7 @@ RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
 static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
-float CLOCK_FREQ = 400000000;
+const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
 Command_buf queue;
 static int queued = 0;
@@ -129,6 +129,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 }
 
 void NAV_set_motor_ticks(){
+
   for (int i = 0; i < 4; i++){
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;

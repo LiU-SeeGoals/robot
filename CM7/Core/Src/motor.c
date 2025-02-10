@@ -5,7 +5,7 @@
 
 /* Private variables */
 static LOG_Module internal_log_mod;
-extern float CONTROL_FREQ;
+extern const float CONTROL_FREQ;
 
 void MOTOR_Init(TIM_HandleTypeDef* pwm_htim)
 {
@@ -146,6 +146,7 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
 {
 
   float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
+  /*LOG_INFO("speed_s:%f;\r\n", speed_s);*/
 
   return speed_s;
 }

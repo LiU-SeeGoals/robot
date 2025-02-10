@@ -33,6 +33,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+/*#define IMU_COUNTER_MAX 4*/
+/*extern float CONTROL_FREQ; // set in init*/
+const int IMU_COUNTER_MAX = 3;
+const int ENCODER_COUNTER_MAX = 1;
+/*#define IMU_HZ = CONTROL_FREQ / IMU_COUNTER_MAX;*/
 
 /* USER CODE END PD */
 
@@ -45,6 +50,7 @@
 /* USER CODE BEGIN PV */
 
 int imu_counter = 0;
+int encoder_counter = 0;
 
 /* USER CODE END PV */
 
@@ -246,22 +252,29 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
 
   // Assuimg this runs 100hz this will give about 33.3hz
-  if (STATE_is_calibrated() == 1) {
-    /*imu_counter = 0;*/
-    STATE_acc_measure();
-  }
-  /*if (imu_counter == 3 && STATE_is_calibrated() == 1) {*/
-    /*imu_counter = 0;*/
+  /*if (STATE_is_calibrated() == 1) {*/
+  /*  imu_counter += 1;*/
   /*  STATE_acc_measure();*/
   /*}*/
-  /*else if (STATE_is_calibrated() == 1)*/
-  /*{*/
-    /*imu_counter += 1;*/
-  /*}*/
+  // IMU loop 333.33hz
+  if (imu_counter == IMU_COUNTER_MAX && STATE_is_calibrated() == 1) {
+    imu_counter = 0;
+    STATE_acc_measure();
+  }
+  else if (STATE_is_calibrated() == 1)
+  {
+    imu_counter += 1;
+  }
 
   // PID loop runs 100hz
-  NAV_set_motor_ticks();
-  NAV_set_motor_ticks();
+  
+  /*if (encoder_counter == ENCODER_COUNTER_MAX) {*/
+    /*encoder_counter = 0;*/
+    NAV_set_motor_ticks();
+  /*}*/
+  /*else{*/
+    /*encoder_counter += 1;*/
+  /*}*/
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }
 
