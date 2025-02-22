@@ -24,6 +24,7 @@
 #include "com.h"
 #include "imu.h"
 #include "kicker.h"
+#include "state_estimator2.h"
 #include "log.h"
 #include "motor.h"
 #include "nav.h"
@@ -200,6 +201,7 @@ int main(void) {
   HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
   LOG_INFO("Startup finished...\r\n");
   UI_Init(&huart3);
+  STATE_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -209,6 +211,10 @@ int main(void) {
   bool on = false;
 
   while (1) {
+
+    STATE_Test();
+    continue;
+
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();

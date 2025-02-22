@@ -1,5 +1,7 @@
-#include "../Inc/HandmadeMath.h"
+#include "HandmadeMath.h"
 #include <stdio.h>
+
+#include "arm_math.h"
 
 // Each state is for one dimension
 // statex is vx position and velocity
@@ -26,6 +28,8 @@ typedef struct {
   Mat2 Pw;
 
 } robot_state; 
+
+void STATE_Init();
 
 void measurement_update_vec2(Mat2 H, Mat2* P, Mat2 R, Vec2 mejurement, Vec2* x);
 void measurement_update_vec3(Mat3 H, Mat3 P, Mat3 R, Vec3 mejurement, Vec3 x);

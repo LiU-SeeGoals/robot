@@ -1,5 +1,5 @@
-#include "../Inc/HandmadeMath.h"
-#include "../Inc/state_estimator.h"
+#include "HandmadeMath.h"
+#include "state_estimator.h"
 #include <stdio.h>
 
 
@@ -176,7 +176,7 @@ void camera_meas(float posx, float posy){
     measurement_update_vec2_1d(&robot.Py, R, posy, &robot.statey);
 }
 
-void main() {
+void old_state_test() {
     float T = 1;
 
     init();
