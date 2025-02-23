@@ -53,15 +53,15 @@ void set_params() {
 
 void go_to_position(Vec2 desired_pos, float wantw) {
 
-  Vec2 current_pos = {get_posx(), get_posy()};
+  Vec2 current_pos = {STATE_get_posx(), STATE_get_posy()};
 
-  float angle = get_robot_angle();
+  float angle = STATE_get_robot_angle();
   Vec2 relative_pos = SubV2(current_pos, desired_pos); 
   float euclidian_distance = sqrt(relative_pos.X * relative_pos.X + relative_pos.Y * relative_pos.Y);
   // We want the distance to be zero.
   float distance_control_signal = PID_it(euclidian_distance, 0.0, &dist_I, standard_error, params_dist);
   // We want the angle to be the desired
-  float control_w = PID_it(get_robot_angle(), wantw, &angle_I, angle_error, params_angle);
+  float control_w = PID_it(STATE_get_robot_angle(), wantw, &angle_I, angle_error, params_angle);
 
   // The steering signal is a velocity, so calculate how much of each component we need
   /*printf("== control signals ===\n");*/

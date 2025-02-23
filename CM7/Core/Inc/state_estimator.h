@@ -15,7 +15,7 @@
 
   GLOBAL FRAME COORDINATES (Football field): px, py, pw
   ROBOT FRAME COORDINATES (Center of robot seen from above): vx, vy
-  IMU FRAME COORDINATES: (Center of imu seen from above) gyr_w, acc_x, acc_y
+  IMU FRAME COORDINATES: (Center of imu seen from above) gyr_z, acc_x, acc_y
   // NOTE: IMU might not be perfectly aligned with the robot,
   // estimating the orientation of IMU will likely improve estimates
 

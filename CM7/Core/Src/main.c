@@ -24,7 +24,7 @@
 #include "com.h"
 #include "imu.h"
 #include "kicker.h"
-#include "state_estimator2.h"
+#include "state_estimator.h"
 #include "log.h"
 #include "motor.h"
 #include "nav.h"
@@ -211,9 +211,6 @@ int main(void) {
   bool on = false;
 
   while (1) {
-
-    STATE_Test();
-    continue;
 
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;

@@ -107,7 +107,7 @@ list(APPEND CM7_SOURCES
         CM7/Core/Src/stm32h7xx_it.c
         CM7/Core/Src/ui.c
         CM7/Core/Src/imu.c
-        CM7/Core/Src/state_estimator2.c
+        CM7/Core/Src/state_estimator.c
         CM7/Core/Src/lag_element.c
         CM7/Core/Src/arm_mat_util_f32.c
 )
