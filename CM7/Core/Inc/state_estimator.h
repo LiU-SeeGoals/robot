@@ -1,65 +1,166 @@
-#ifndef STATE_ESTIMATOR_H
-#define STATE_ESTIMATOR_H
-#include "HandmadeMath.h"
+#ifndef STATE_ESTIMATOR2_H
+#define STATE_ESTIMATOR2_H
+
+#include "arm_math.h"
 #include "imu.h"
-#include <stdio.h>
+#include "lag_element.h"
 
-// Each state is for one dimension
-// statex is vx position and velocity
-// statey is vy position and velocity
-// statew is angle and angle-velocity
-// This might seem counter intuivative but
-// The reason is that x is dependant on vx 
-// and each dimension is independant of each other
-// So ordering it this way makes it easier to handle
-// Each matrix
+/*
+	// EKF state vector: [ px py pw vx vy ]
+	// input vector: [ gyr_w acc_x acc_y ]
+	// measurement vector: [ px py pw ]
+  
+  Input enters through the prediction update and
+  measurements enter via measurement update.
 
-// NOTE: maybe replace matrices with simple structs?
-// will be annoying having to handroll all matrix mults
-// but will be more intiuative and more effiecient
+  GLOBAL FRAME COORDINATES (Football field): px, py, pw
+  ROBOT FRAME COORDINATES (Center of robot seen from above): vx, vy
+  IMU FRAME COORDINATES: (Center of imu seen from above) gyr_z, acc_x, acc_y
+  // NOTE: IMU might not be perfectly aligned with the robot,
+  // estimating the orientation of IMU will likely improve estimates
 
-typedef struct {
+*/
 
-  int is_initiated;
-  int is_calibrated;
-  Vec2 statex;
-  Vec2 statey;
-  Vec2 statew;
+#define EKF_SIZE_A(f)		(f*f)
+#define EKF_SIZE_C(h,f)		(h*f)
+#define EKF_SIZE_EX(f)		(f*f)
+#define EKF_SIZE_EZ(h)		(h*h)
+#define EKF_SIZE_X(f)		(f)
+#define EKF_SIZE_SIGMA(f)	(f*f)
+#define EKF_SIZE_K(f,h)		(f*h)
+#define EKF_SIZE_U(g)		(g)
+#define EKF_SIZE_Z(h)		(h)
+#define EKF_SIZE_MAX(max)	(max*max)
 
-  Mat2 Px;
-  Mat2 Py;
-  Mat2 Pw;
+// state vector (x) rows: f
+// control vector (u) rows: g
+// sensor vector (z) rows: h
+#define EKF_DATA_SIZE(f,g,h,max) \
+	(EKF_SIZE_A(f)+EKF_SIZE_C(h,f)+EKF_SIZE_EX(f) \
+	+EKF_SIZE_EZ(h)+EKF_SIZE_X(f)+EKF_SIZE_SIGMA(f)+EKF_SIZE_K(f,h)+EKF_SIZE_U(g) \
+	+EKF_SIZE_Z(h)+EKF_SIZE_MAX(max)*3)
 
-  IMU_AccelVec3 acc_bias;
-  IMU_GyroVec3 gyr_bias;
+#define MAT_ELEMENT(mat,r,c) ((mat).pData[(mat).numCols*(r)+(c)])
 
-} robot_state; 
+typedef void(*EKFStateFunc)(arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU);
+typedef void(*EKFStateJacobianFunc)(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF);
+typedef void(*EKFMeasFunc)(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pY);
+typedef void(*EKFMeasJacobianFunc)(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pH);
 
-void measurement_update_vec2(Mat2 H, Mat2* P, Mat2 R, Vec2 mejurement, Vec2* x);
-void measurement_update_vec3(Mat3 H, Mat3 P, Mat3 R, Vec3 mejurement, Vec3 x);
-void time_update_vec2(Mat2 F,  Mat2 Q, Mat2* P, Vec2* x, Mat2 B, Vec2 u);
-Vec3 time_update_vec3(Mat3 F, Mat3 Q, Vec3* x);
-void cv_update_vec2(Mat2* P, Vec2* x, Mat2 B, Vec2 u);
-void cv_update_vec3(Vec3* x);
-void STATE_acc_measure();
+// This EKF struct is stolen so dont change it
+typedef struct _EKF
 
-void do_some_kalman();
+{
+	uint16_t f;
+	uint16_t g;
+	uint16_t h;
 
-void printm2(Mat2 a);
-void printm3(Mat3 a);
-void printv2(Vec2* a);
-void printv3(Vec3* a);
+	// state and measurement functions
+	EKFStateFunc pState;
+	EKFStateJacobianFunc pStateJacobian;
+	EKFMeasFunc pMeas;
+	EKFMeasJacobianFunc pMeasJacobian;
 
-// Return different states,
-// Consider each state variable private to the state_estimator
-float get_robot_angle();
-float get_angle_vel();
-float get_posx();
-float get_posy();
-float get_vx();
-float get_vy();
-int kalman_is_initiated();
+	// user matrices
+	arm_matrix_instance_f32 A;		// (f x f)
+	arm_matrix_instance_f32 C;		// (h x f)
+	arm_matrix_instance_f32 Ex;		// (f x f)
+	arm_matrix_instance_f32 Ez;		// (h x h)
 
-void camera_meas(float posx, float posy, float angle);
-void initialize_kalman(float x, float y, float w);
-#endif /* STATE_ESTIMATOR_H */
+	// internal matrices
+	arm_matrix_instance_f32 x;		// state (f x 1)
+	arm_matrix_instance_f32 Sigma;	// uncertainty (f x f)
+	arm_matrix_instance_f32 K;		// Kalman gain (f x h)
+
+	// command input
+	arm_matrix_instance_f32 u;		// (g x 1)
+
+	// sensor input
+	arm_matrix_instance_f32 z;		// (h x 1)
+
+	// temporary calculation matrices
+	arm_matrix_instance_f32 tmp1;
+	arm_matrix_instance_f32 tmp2;
+	arm_matrix_instance_f32 tmp3;
+} EKF;
+
+typedef struct _FusionEKF
+{
+	// EKF state vector: [ px py pw vx vy ]
+	// input vector: [ gyr_w acc_x acc_y ]
+	// measurement vector: [ px py pw ]
+	EKF ekf;
+	float ekfData[EKF_DATA_SIZE(5, 3, 3, 5)];
+	/*float imu_dt;*/
+
+  struct
+  {
+    float acc_x;
+    float acc_y;
+    float acc_z;
+    float gyr_x;
+    float gyr_y;
+    float gyr_z;
+    uint16_t is_calibrated;
+
+  } bias;
+
+	/*float encGyrPos[3];*/
+
+	struct
+	{
+		uint16_t online;
+		/*uint32_t timeLastValidSample;*/
+		/*int32_t turns;*/
+		/*float lastOrient;*/
+		/*uint32_t numLateMeasurements;*/
+	} vision;
+
+	/*FusionEKFConfig* pConfig;*/
+
+	/*FusionEKFTimeSlot timeSlots[FUSION_EKF_MAX_DELAY];*/
+	/*uint32_t timeSlotNow;*/
+
+	/*ModelEnc modelEnc;*/
+
+	LagElementPT1 lagAccel[2];
+
+	/*struct*/
+	/*{*/
+	/*	LagElementPT1 lagCurrent;*/
+	/**/
+	/*	uint8_t isStrongDribbling;*/
+	/*	uint32_t strongTicks;*/
+	/**/
+	/*	FusionEKFDribblerIdleCurTable idleCurrentTable;*/
+	/*	FlashFile* pIdleCurrentFile;*/
+	/*} dribbler;*/
+
+	/*float ballPosGlobal[2];*/
+	/*float ballVelGlobal[2];*/
+	/*uint32_t ballLastDetectedTimestamp;*/
+} FusionEKF;
+
+
+// Public functions
+void STATE_Init();
+void STATE_Test();
+void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw);
+void STATE_FusionEKFIntertialUpdate(IMU_AccelVec3 acc, IMU_GyroVec3 gyr);
+void STATE_calibrate_imu_gyr();
+uint16_t STATE_is_calibrated();
+float STATE_get_robot_angle();
+float STATE_get_posx();
+float STATE_get_posy();
+float STATE_get_vx();
+float STATE_get_vy();
+
+// Private functions
+static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF);
+static void ekfMeasFunc(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pY);
+static void ekfStateFunc(arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU);
+static void ekfMeasJacobianFunc(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pH);
+static void EKFInit(EKF* pKF, uint16_t numStates, uint16_t numCtrl, uint16_t numSensors, float* pData);
+static void initEKF();
+
+#endif

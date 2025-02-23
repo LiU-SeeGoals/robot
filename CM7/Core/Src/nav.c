@@ -280,21 +280,17 @@ void NAV_GoToAction(Command* cmd){
     if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 10.0)
     {
       // If software send us same position then ignore it.
+      // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez
       return;
     }
 
-    if (kalman_is_initiated() == -1)
-    {
-      initialize_kalman(f_cam_x, f_cam_y, f_cam_w);
-    }
-    else
-    {
-      LOG_DEBUG("camera_meas (x,y): (%f,%f)\r\n", f_cam_x, f_cam_y);
-      camera_meas(f_cam_x, f_cam_y, f_cam_w);
-    }
+    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
 
-     Vec2 position = {f_nav_x,f_nav_y};
-     go_to_position(position, f_nav_w);
+    prev_nav_x = f_cam_x;
+    prev_nav_y = f_cam_y;
+    prev_nav_w = f_cam_w;
+    Vec2 position = {f_nav_x,f_nav_y};
+    go_to_position(position, f_nav_w);
 
 }
 

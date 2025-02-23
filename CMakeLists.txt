@@ -60,6 +60,7 @@ include_directories(Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_HAL_Drive
 add_compile_definitions(DEBUG USE_HAL_DRIVER STM32H755xx)
 
 set(DRIVERS_ROOT Drivers/STM32H7xx_HAL_Driver/Src)
+set(DSP_ROOT Drivers/CMSIS/DSP/Source)
 set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_tim.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_tim_ex.c
@@ -82,8 +83,11 @@ set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_uart_ex.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_spi.c
        ${DRIVERS_ROOT}/stm32h7xx_hal_spi_ex.c
-       Drivers/CMSIS/DSP/Source/ControllerFunctions/arm_sin_cos_f32.c
-       Drivers/CMSIS/DSP/Source/CommonTables/arm_common_tables.c 
+       ${DSP_ROOT}/ControllerFunctions/arm_sin_cos_f32.c
+       ${DSP_ROOT}/CommonTables/arm_common_tables.c 
+       ${DSP_ROOT}/MatrixFunctions/MatrixFunctions.c
+       ${DSP_ROOT}/FilteringFunctions/FilteringFunctions.c
+       ${DSP_ROOT}/FastMathFunctions/FastMathFunctions.c
 )
 
 file(GLOB_RECURSE COMMON_SOURCES "Common/*.*" "Libraries/proto-messages/proto_c/*.*" "Libraries/protobuf/*.*")
@@ -105,6 +109,9 @@ list(APPEND CM7_SOURCES
         CM7/Core/Src/pos_follow.c
         CM7/Core/Src/ui.c
         CM7/Core/Src/imu.c
+        CM7/Core/Src/state_estimator.c
+        CM7/Core/Src/lag_element.c
+        CM7/Core/Src/arm_mat_util_f32.c
 )
 
 

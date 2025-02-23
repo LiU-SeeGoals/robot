@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -132,6 +132,10 @@ extern volatile atomic_uint main_tasks;
 #define LED_YELLOW_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
+#define IMU_SCL_Pin GPIO_PIN_14
+#define IMU_SCL_GPIO_Port GPIOF
+#define IMU_SDA_Pin GPIO_PIN_15
+#define IMU_SDA_GPIO_Port GPIOF
 #define MOTOR1_TIM_CHANNEL TIM_CHANNEL_1
 #define MOTOR2_TIM_CHANNEL TIM_CHANNEL_1
 #define MOTOR3_TIM_CHANNEL TIM_CHANNEL_3

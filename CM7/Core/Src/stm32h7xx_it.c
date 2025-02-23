@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "log.h"
+#include "imu.h"
 #include "nav.h"
 /* USER CODE END Includes */
 
@@ -259,7 +260,10 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   // IMU loop 333.33hz
   if (imu_counter == IMU_COUNTER_MAX && STATE_is_calibrated() == 1) {
     imu_counter = 0;
-    STATE_acc_measure();
+    IMU_AccelVec3 acc = IMU_read_accel_mps2();
+    IMU_GyroVec3 gyr = IMU_read_gyro();
+
+    STATE_FusionEKFIntertialUpdate(acc, gyr);
   }
   else if (STATE_is_calibrated() == 1)
   {
