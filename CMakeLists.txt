@@ -86,6 +86,8 @@ set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
        ${DSP_ROOT}/ControllerFunctions/arm_sin_cos_f32.c
        ${DSP_ROOT}/CommonTables/arm_common_tables.c 
        ${DSP_ROOT}/MatrixFunctions/MatrixFunctions.c
+       ${DSP_ROOT}/FilteringFunctions/FilteringFunctions.c
+       ${DSP_ROOT}/FastMathFunctions/FastMathFunctions.c
 )
 
 file(GLOB_RECURSE COMMON_SOURCES "Common/*.*" "Libraries/proto-messages/proto_c/*.*" "Libraries/protobuf/*.*")
@@ -106,6 +108,8 @@ list(APPEND CM7_SOURCES
         CM7/Core/Src/ui.c
         CM7/Core/Src/imu.c
         CM7/Core/Src/state_estimator2.c
+        CM7/Core/Src/lag_element.c
+        CM7/Core/Src/arm_mat_util_f32.c
 )
 
 
