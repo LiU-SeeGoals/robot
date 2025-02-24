@@ -7,6 +7,23 @@
 static LOG_Module internal_log_mod;
 extern const float CONTROL_FREQ;
 
+void MOTOR_set_motor_tick_per_second(MotorPWM *motor, float val)
+{
+  motor->cur_tick_idx = (1 + motor->cur_tick_idx) % (motor_tick_buf_size);
+  motor->motor_ticks[motor->cur_tick_idx] = val;
+}
+
+float MOTOR_get_motor_tick_per_second(MotorPWM *motor)
+{
+  // Can be made faster keeping a moving average and removing the last adding the new?
+  float cur = 0;
+  for (int i = 0; i < motor_tick_buf_size; i++)
+  {
+    cur += motor->motor_ticks[i];
+  }
+  return cur / ((float) motor_tick_buf_size);
+}
+
 void MOTOR_Init(TIM_HandleTypeDef* pwm_htim)
 {
   LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_TRACE);
@@ -145,7 +162,8 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
 
-  float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second
+  float speed_s = MOTOR_get_motor_tick_per_second(motor);
+  /*float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second*/
   /*LOG_INFO("speed_s:%f;\r\n", speed_s);*/
 
   return speed_s;

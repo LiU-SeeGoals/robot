@@ -154,6 +154,7 @@ float STATE_get_posx();
 float STATE_get_posy();
 float STATE_get_vx();
 float STATE_get_vy();
+void STATE_log_states();
 
 // Private functions
 static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF);

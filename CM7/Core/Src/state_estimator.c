@@ -238,8 +238,8 @@ void STATE_Init(){
 	/*LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, fusionEKF.pConfig->emaAccelT, CTRL_DELTA_T);*/
 	/*LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, fusionEKF.pConfig->emaAccelT, CTRL_DELTA_T);*/
 
-	LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, 0.001, CTRL_DELTA_T);
-	LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, 0.001, CTRL_DELTA_T);
+	LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, 0.01, CTRL_DELTA_T);
+	LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, 0.01, CTRL_DELTA_T);
 
   fusionEKF.bias.is_calibrated = -1;
 	/*LagElementPT1Init(&fusionEKF.dribbler.lagCurrent, 1.0f, 0.005f, CTRL_DELTA_T);*/
@@ -458,8 +458,6 @@ void STATE_Test(){
 
   LOG_DEBUG("Got from fusion (px,py,pw,vx,vy) %f %f %f %f %f\r\n", posx, posy, posw, velx, vely);
 
-  
-  
   if (test_status == ARM_MATH_SUCCESS){
     LOG_DEBUG("Tjoho all test passed\r\n");
   }
@@ -497,9 +495,19 @@ float STATE_get_vy(){
   return MAT_ELEMENT(fusionEKF.ekf.x, 4, 0);
 }
 
+void STATE_log_states()
+{
+  LOG_DEBUG("px: %f py: %f pw: %f vx: %f vy: %f\r\n",
+      STATE_get_posx(),
+      STATE_get_posy(),
+      STATE_get_robot_angle(),
+      STATE_get_vx(),
+      STATE_get_vy());
+}
+
 void STATE_calibrate_imu_gyr()
 {
-  const int calib_size = 1;
+  const int calib_size = 1000;
 
   float acc_bias_x = 0;
   float acc_bias_y = 0;
@@ -534,9 +542,9 @@ void STATE_calibrate_imu_gyr()
 
   }
 
-  fusionEKF.bias.gyr_x = acc_bias_x / ((float) calib_size);
-  fusionEKF.bias.gyr_y = acc_bias_y / ((float) calib_size);
-  fusionEKF.bias.gyr_z = acc_bias_z / ((float) calib_size);
+  fusionEKF.bias.acc_x = acc_bias_x / ((float) calib_size);
+  fusionEKF.bias.acc_y = acc_bias_y / ((float) calib_size);
+  fusionEKF.bias.acc_z = acc_bias_z / ((float) calib_size);
 
   fusionEKF.bias.gyr_x = gyr_bias_x / ((float) calib_size);
   fusionEKF.bias.gyr_y = gyr_bias_y / ((float) calib_size);
@@ -545,6 +553,7 @@ void STATE_calibrate_imu_gyr()
   fusionEKF.bias.is_calibrated = 1;
   LOG_INFO("Done calibrating\r\n");
 }
+
 
 uint16_t STATE_is_calibrated()
 {

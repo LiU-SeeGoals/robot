@@ -25,6 +25,7 @@
 #include "log.h"
 #include "imu.h"
 #include "nav.h"
+#include "state_estimator.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -272,13 +273,15 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 
   // PID loop runs 100hz
   
-  /*if (encoder_counter == ENCODER_COUNTER_MAX) {*/
-    /*encoder_counter = 0;*/
+  if (encoder_counter == ENCODER_COUNTER_MAX)
+  {
+    encoder_counter = 0;
     NAV_set_motor_ticks();
-  /*}*/
-  /*else{*/
-    /*encoder_counter += 1;*/
-  /*}*/
+  }
+  else
+  {
+    encoder_counter += 1;
+  }
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }
 

@@ -22,6 +22,7 @@ RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
  */
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
+
 static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
 const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
@@ -31,6 +32,7 @@ static int queued = 0;
 /* Private functions declarations */
 void handle_command(Command* cmd);
 void set_motors(float m1, float m2, float m3, float m4);
+
 
 /*
  * Public function implementations
@@ -122,6 +124,18 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   MOTOR_PWMStart(&motors[2]);
   MOTOR_PWMStart(&motors[3]);
 
+  // memset did not work, idc
+  for (int i = 0; i < 4; i++)
+  {
+    motors[i].cur_tick_idx = 0;
+    for (int j = 0; j < motor_tick_buf_size; j ++)
+    {
+      motors[i].motor_ticks[j] = 0;
+    }
+  }
+  float motor_ticks[200];
+  int cur_tick_idx;
+
   float control_clock_prescaler = motor_tick_itr->Init.Prescaler + 1; 
   float control_clock_period = motor_tick_itr->Init.Period + 1;
   CONTROL_FREQ = CLOCK_FREQ / (control_clock_prescaler * control_clock_period);
@@ -133,6 +147,7 @@ void NAV_set_motor_ticks(){
   for (int i = 0; i < 4; i++){
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;
+    MOTOR_set_motor_tick_per_second(&motors[i], new_ticks - ticks_before);
     motors[i].ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
@@ -141,6 +156,14 @@ void NAV_set_motor_ticks(){
     MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
   }
 
+}
+
+void NAV_log_speed()
+{
+  LOG_INFO("Got speed m1 %f m2 %f m3 %f m4 %f\r\n", MOTOR_ReadSpeed(&motors[0]),
+      MOTOR_ReadSpeed(&motors[1]),
+      MOTOR_ReadSpeed(&motors[2]),
+      MOTOR_ReadSpeed(&motors[3]));
 }
 
 void steer(float vx,float vy, float w){

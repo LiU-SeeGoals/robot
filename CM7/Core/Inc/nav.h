@@ -7,6 +7,16 @@
 #include "main.h"
 #include <robot_action/robot_action.pb-c.h>
 
+
+
+// Assuming 100
+/*const int motor_tick_buf_size = 200;*/
+
+/*typedef struct {*/
+/*  float motors[4][motor_tick_buf_size];*/
+/*  int cur_idx[4];*/
+/*} tick_buffer;*/
+
 typedef enum {
   UP,
   DOWN,
@@ -57,6 +67,7 @@ void NAV_RunDribbler();
 
 void NAV_TestDribbler();
 
+void NAV_log_speed();
 void NAV_TireTest();
 
 void NAV_GoToAction(Command* command);

@@ -220,8 +220,13 @@ int main(void)
   uint32_t now = HAL_GetTick();
   bool on = false;
 
-  /*STATE_calibrate_imu_gyr();*/
+  STATE_calibrate_imu_gyr();
   while (1) {
+
+    /*STATE_log_states();*/
+    /*STATE_log_states();*/
+    NAV_log_speed();
+    continue;
 
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;

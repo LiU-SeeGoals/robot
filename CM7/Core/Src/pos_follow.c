@@ -74,7 +74,7 @@ void go_to_position(Vec2 desired_pos, float wantw) {
 
   // The steering signal is a velocity, so calculate how much of each component we need
 
-  // Rotate from robot coordiates Rotation matrix
+  // Rotate from football field to robot coordinates
   /*[cos(theta), -sin(theta)]*/
   /*[sin(theta), cos(theta)]*/
   float x = (relative_pos.X * cos(angle)) - (relative_pos.Y * sin(angle));
