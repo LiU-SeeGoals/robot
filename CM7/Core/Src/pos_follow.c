@@ -11,7 +11,7 @@ float angle_I = 0.01;
 control_params params_dist;
 control_params params_angle;
 
-const float DELTA_T = 0.001;
+const float DELTA_T = 0.0033;
 
 static LOG_Module internal_log_mod;
 
@@ -48,21 +48,23 @@ void set_params() {
   params_angle.umax = 100.0;
   params_angle.Ts = DELTA_T;
   params_angle.Ti = 0.1;
-  params_angle.K = 2;
+  params_angle.Td = 0.1;
+  params_angle.K = 4;
 
   params_dist.umin = -1000.0;
   params_dist.umax = 1000.0;
   params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.0015;
   params_dist.K = 0.015 * 2;
+  params_dist.Td = 0.1;
 }
 
 
-/*void TEST_vy(Vec2 desired_pos, Vec2 at_position, float wantw) {*/
-/**/
-/*  float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);*/
-/*  steer(0, 100.f, -control_w);*/
-/*}*/
+void TEST_vy(float ref_angle) {
+
+  float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);
+  steer(0, 100.f, -control_w);
+}
 /**/
 /*// Test if robot can go straight*/
 /*void TEST_vx(Vec2 desired_pos, Vec2 at_position, float wantw) {*/
@@ -119,6 +121,7 @@ void go_to_position(Vec2 desired_pos, float wantw) {
   /*steer(0, 0, -control_w);*/
 }
 
+float prev_error = 0;
 
 float PID_it(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params *param){
 
@@ -127,6 +130,7 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   float error = error_func(current, desired);
   /*LOG_DEBUG("error: (%f)\r\n", error);*/
   float I = *I_prev + (param->Ts / param->Ti) * error;
+  float d = param->Td*(error - prev_error)/DELTA_T;
 
   /*LOG_DEBUG("I.prev: (%f)\r\n", *I_prev);*/
   /*LOG_DEBUG("I: (%f)\r\n", I);*/
@@ -134,7 +138,7 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
 
   /*LOG_DEBUG("I: (%f)\r\n", I);*/
   /*LOG_DEBUG("I prev: (%f)\r\n", *I_prev);*/
-  float v = param->K * (error + I);
+  float v = param->K * (error + I + d);
   /*LOG_DEBUG("v (v): (%f)\r\n", v);*/
   float u = 0;
   // integrator windup fix
@@ -155,6 +159,7 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
     u = v;
   }
 
+  prev_error = error;
   /*LOG_INFO("DATAu:%f;\r\n", u);*/
   // HAL_Delay(1);
   *I_prev = I;

@@ -475,16 +475,15 @@ float STATE_get_posy(){
 
 float STATE_get_robot_angle() {
 
-  // Might not need ?
-  /*if (robot.statew.X < 0){*/
-  /*  robot.statew.X += 2 * PI;*/
+  float angle = MAT_ELEMENT(fusionEKF.ekf.x, 2, 0);
+  /*// Might not need ?*/
+  /*if (angle < 0){*/
+  /*  angle += 2 * PI;*/
   /*}*/
-  /*if (robot.statew.X > 2 * PI){*/
-  /*  robot.statew.X -= 2 * PI;*/
+  /*if (angle > 2 * PI){*/
+  /*  angle -= 2 * PI;*/
   /*}*/
-  /*return robot.statew.X;*/
-
-  return MAT_ELEMENT(fusionEKF.ekf.x, 2, 0);
+  return angle;
 }
 
 float STATE_get_vx(){

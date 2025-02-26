@@ -8,6 +8,7 @@ typedef struct{
   float umax;
   float Ts;
   float Ti;
+  float Td;
   float K;
 
 } control_params;

@@ -277,10 +277,12 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   // PID loop runs 1000hz
   
   NAV_set_motor_ticks();
-  angle_counter = (1 + angle_counter) % 1;
-  if (angle_counter == 0)
+  angle_counter = (1 + angle_counter) % 3;
+  if (angle_counter == 0 && STATE_is_calibrated() == 1)
   {
-    TEST_angle_control(0);
+    /*TEST_vy(0);*/
+    TEST_vy(0);
+    /*TEST_angle_control(0);*/
   }
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }
