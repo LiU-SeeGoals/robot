@@ -225,9 +225,10 @@ int main(void)
 
     /*STATE_log_states();*/
     /*STATE_log_states();*/
-    NAV_log_speed();
-    continue;
+    /*NAV_log_speed();*/
 
+    NAV_TireTest();
+    continue;
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();

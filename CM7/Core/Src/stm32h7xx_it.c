@@ -38,7 +38,7 @@
 /*#define IMU_COUNTER_MAX 4*/
 /*extern float CONTROL_FREQ; // set in init*/
 const int IMU_COUNTER_MAX = 3;
-const int ENCODER_COUNTER_MAX = 1;
+const int ENCODER_COUNTER_MAX = 10;
 /*#define IMU_HZ = CONTROL_FREQ / IMU_COUNTER_MAX;*/
 
 /* USER CODE END PD */

@@ -133,8 +133,6 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
       motors[i].motor_ticks[j] = 0;
     }
   }
-  float motor_ticks[200];
-  int cur_tick_idx;
 
   float control_clock_prescaler = motor_tick_itr->Init.Prescaler + 1; 
   float control_clock_period = motor_tick_itr->Init.Period + 1;
