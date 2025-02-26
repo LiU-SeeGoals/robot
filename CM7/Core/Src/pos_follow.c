@@ -11,7 +11,7 @@ float angle_I = 0.01;
 control_params params_dist;
 control_params params_angle;
 
-const float DELTA_T = 0.1;
+const float DELTA_T = 0.001;
 
 static LOG_Module internal_log_mod;
 
@@ -44,11 +44,11 @@ float standard_error(float current, float desired) {
 
 void set_params() {
 
-  params_angle.umin = -10.0;
-  params_angle.umax = 10.0;
+  params_angle.umin = -100.0;
+  params_angle.umax = 100.0;
   params_angle.Ts = DELTA_T;
-  params_angle.Ti = 100;
-  params_angle.K = .005;
+  params_angle.Ti = 0.1;
+  params_angle.K = 2;
 
   params_dist.umin = -1000.0;
   params_dist.umax = 1000.0;
@@ -74,8 +74,8 @@ void set_params() {
 void TEST_angle_control(float ref_angle)
 {
   float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);
-  LOG_DEBUG("Sending control sig %f\r\n", control_w);
-  steer(0, 0, -control_w);
+  /*LOG_DEBUG("cw %f pw %f\r\n", control_w, STATE_get_robot_angle());*/
+  steer(0, 0, control_w);
 }
 
 void go_to_position(Vec2 desired_pos, float wantw) {

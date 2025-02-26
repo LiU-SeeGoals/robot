@@ -227,9 +227,9 @@ int main(void)
     /*STATE_log_states();*/
     /*NAV_log_speed();*/
 
-    TEST_angle_control(0);
+    /*TEST_angle_control(0);*/
     /*NAV_TireTest();*/
-    continue;
+    /*continue;*/
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();

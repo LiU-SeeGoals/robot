@@ -19,6 +19,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "pos_follow.h"
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -39,6 +40,7 @@
 /*extern float CONTROL_FREQ; // set in init*/
 const int IMU_COUNTER_MAX = 3;
 const int ENCODER_COUNTER_MAX = 10;
+const int PID_ANGLE = 100;
 /*#define IMU_HZ = CONTROL_FREQ / IMU_COUNTER_MAX;*/
 
 /* USER CODE END PD */
@@ -53,6 +55,7 @@ const int ENCODER_COUNTER_MAX = 10;
 
 int imu_counter = 0;
 int encoder_counter = 0;
+int angle_counter = 0;
 
 /* USER CODE END PV */
 
@@ -273,15 +276,12 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 
   // PID loop runs 1000hz
   
-  /*if (encoder_counter == ENCODER_COUNTER_MAX)*/
-  /*{*/
-  /*  encoder_counter = 0;*/
   NAV_set_motor_ticks();
-  /*}*/
-  /*else*/
-  /*{*/
-  /*  encoder_counter += 1;*/
-  /*}*/
+  angle_counter = (1 + angle_counter) % 1;
+  if (angle_counter == 0)
+  {
+    TEST_angle_control(0);
+  }
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }
 
