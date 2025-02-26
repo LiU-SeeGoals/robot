@@ -2,7 +2,7 @@
 #define __MOTOR_H
 
 #include "stm32h7xx_hal.h"
-#define motor_tick_buf_size 200
+#define motor_tick_buf_size 100
 typedef struct
 {
   TIM_HandleTypeDef *encoder_htim;

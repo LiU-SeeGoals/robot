@@ -227,7 +227,8 @@ int main(void)
     /*STATE_log_states();*/
     /*NAV_log_speed();*/
 
-    NAV_TireTest();
+    TEST_angle_control(0);
+    /*NAV_TireTest();*/
     continue;
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
@@ -319,14 +320,22 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
     Error_Handler();
   }
 }
 
-/* USER CODE BEGIN I2C4_Init 0 */
+/**
+  * @brief I2C4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C4_Init(void)
+{
+
+  /* USER CODE BEGIN I2C4_Init 0 */
 /* Initialize I2C for IMU */
-static void I2C4_Init(void) {
   __HAL_RCC_I2C4_CLK_ENABLE();
 
   hi2c4.Instance = I2C4;
@@ -348,19 +357,6 @@ static void I2C4_Init(void) {
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c4, 0) != HAL_OK) {
     Error_Handler();
   }
-}
-/* USER CODE END I2C4_Init 0 */
-
-/**
-  * @brief I2C4 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C4_Init(void)
-{
-
-  /* USER CODE BEGIN I2C4_Init 0 */
-
   /* USER CODE END I2C4_Init 0 */
 
   /* USER CODE BEGIN I2C4_Init 1 */
@@ -1024,7 +1020,7 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* Configure IMU_SCL_Pin */
   GPIO_InitStruct.Pin = IMU_SCL_Pin;
@@ -1042,7 +1038,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF4_I2C4;
   HAL_GPIO_Init(IMU_SDA_GPIO_Port, &GPIO_InitStruct);
 
-  /* USER CODE END MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */

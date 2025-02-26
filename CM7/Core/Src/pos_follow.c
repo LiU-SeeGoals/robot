@@ -57,6 +57,27 @@ void set_params() {
   params_dist.K = 0.015 * 2;
 }
 
+
+/*void TEST_vy(Vec2 desired_pos, Vec2 at_position, float wantw) {*/
+/**/
+/*  float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);*/
+/*  steer(0, 100.f, -control_w);*/
+/*}*/
+/**/
+/*// Test if robot can go straight*/
+/*void TEST_vx(Vec2 desired_pos, Vec2 at_position, float wantw) {*/
+/**/
+/*  float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);*/
+/*  steer(100.f, 0, -control_w);*/
+/*}*/
+
+void TEST_angle_control(float ref_angle)
+{
+  float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);
+  LOG_DEBUG("Sending control sig %f\r\n", control_w);
+  steer(0, 0, -control_w);
+}
+
 void go_to_position(Vec2 desired_pos, float wantw) {
 
   Vec2 current_pos = {STATE_get_posx(), STATE_get_posy()};
@@ -104,12 +125,12 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   set_params();
 
   float error = error_func(current, desired);
-  LOG_DEBUG("error: (%f)\r\n", error);
+  /*LOG_DEBUG("error: (%f)\r\n", error);*/
   float I = *I_prev + (param->Ts / param->Ti) * error;
 
-  LOG_DEBUG("I.prev: (%f)\r\n", *I_prev);
-  LOG_DEBUG("I: (%f)\r\n", I);
-  LOG_DEBUG("I adding: (%f)\r\n", (param->Ts / param->Ti)* error);
+  /*LOG_DEBUG("I.prev: (%f)\r\n", *I_prev);*/
+  /*LOG_DEBUG("I: (%f)\r\n", I);*/
+  /*LOG_DEBUG("I adding: (%f)\r\n", (param->Ts / param->Ti)* error);*/
 
   /*LOG_DEBUG("I: (%f)\r\n", I);*/
   /*LOG_DEBUG("I prev: (%f)\r\n", *I_prev);*/
@@ -119,7 +140,7 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   // integrator windup fix
   if (v < param->umin || v > param->umax){
     I = *I_prev;
-    LOG_DEBUG("fixing IIIIIIii");
+    /*LOG_DEBUG("fixing IIIIIIii");*/
   }
 
   if (v > param->umax) {
@@ -138,8 +159,8 @@ float PID_it(float current, float desired, float* I_prev, float (*error_func)(fl
   // HAL_Delay(1);
   *I_prev = I;
 
-  LOG_DEBUG("v: (%f)\r\n", v);
-  LOG_DEBUG("u: (%f)\r\n", u);
+  /*LOG_DEBUG("v: (%f)\r\n", v);*/
+  /*LOG_DEBUG("u: (%f)\r\n", u);*/
   return u;
   // for some time
 }

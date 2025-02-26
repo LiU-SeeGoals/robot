@@ -5,7 +5,7 @@
 
 /* Private variables */
 static LOG_Module internal_log_mod;
-extern const float CONTROL_FREQ;
+extern float CONTROL_FREQ;
 
 void MOTOR_set_motor_tick_per_second(MotorPWM *motor, float val)
 {
@@ -95,7 +95,7 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
 
   setDirection(motor, speed);
   /*if (setDirection(motor, speed) == HAL_BUSY) {*/
-    /*MOTOR_SendPWM(motor, 0);*/
+  /*  MOTOR_SendPWM(motor, 0);*/
   /*}*/
 
   if (speed < 0) {
@@ -162,7 +162,7 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
 
-  float speed_s = MOTOR_get_motor_tick_per_second(motor);
+  float speed_s = MOTOR_get_motor_tick_per_second(motor) * CONTROL_FREQ;
   /*float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second*/
   /*LOG_INFO("speed_s:%f;\r\n", speed_s);*/
 

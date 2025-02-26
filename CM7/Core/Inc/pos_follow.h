@@ -24,6 +24,7 @@ void set_params();
 
 void go_to_position(Vec2 desired_pos, float wantw);
 
+void TEST_angle_control(float ref_angle);
 
 void POS_Init();
 
