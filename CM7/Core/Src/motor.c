@@ -7,12 +7,18 @@
 static LOG_Module internal_log_mod;
 extern float CONTROL_FREQ;
 
+/*
+ Averages motor speed ticks
+*/
 void MOTOR_set_motor_tick_per_second(MotorPWM *motor, float val)
 {
   motor->cur_tick_idx = (1 + motor->cur_tick_idx) % (motor_tick_buf_size);
   motor->motor_ticks[motor->cur_tick_idx] = val;
 }
 
+/*
+ Get motor speed
+*/
 float MOTOR_get_motor_tick_per_second(MotorPWM *motor)
 {
   // Can be made faster keeping a moving average and removing the last adding the new?
@@ -56,31 +62,21 @@ void MOTOR_Break(MotorPWM *motor)
 */
 int setDirection(MotorPWM *motor, float speed)
 {
+  // In theory we should have saftey checks to not reverse motor
+  // if it is running... fukit
+
   // If going backward and speed is positive, change direction
   if (motor->dir == 0 && speed > 0)
   {
-    // if we are to change direction but motor is not stopped, return;
-    /*if (!(MOTOR_ReadSpeed(motor) == 0))*/
-    /*{*/
-    /*  return HAL_BUSY;*/
-    /*}*/
     motor->dir = 1;
-    LOG_DEBUG("changing dir: %d\r\n", motor->dir);
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_RESET);
   }
   // If going forward and speed is negative, change direction
   if (motor->dir == 1 && speed < 0)
   {
-    // if we are to change direction but motor is not stopped, return;
-    /*if (!(MOTOR_ReadSpeed(motor) == 0))*/
-    /*{*/
-    /*  return HAL_BUSY;*/
-    /*}*/
     motor->dir = 0;
-    /*LOG_DEBUG("going for dir: %d\r\n", motor->dir);*/
     HAL_GPIO_WritePin(motor->reversePinPort, motor->reversePin, GPIO_PIN_SET);
   }
-
   return HAL_OK;
 }
 
@@ -126,8 +122,6 @@ void MOTOR_SetSpeed(MotorPWM *motor, float speed, float* I_prev){
   else{
     u = v;
   }
-  /*LOG_INFO("DATAu:%f;\r\n", u);*/
-  // HAL_Delay(1);
   MOTOR_SendPWM(motor, u);
   *I_prev = I;
   // for some time
@@ -163,8 +157,6 @@ float MOTOR_ReadSpeed(MotorPWM *motor)
 {
 
   float speed_s = MOTOR_get_motor_tick_per_second(motor) * CONTROL_FREQ;
-  /*float speed_s = (float)(motor->ticks) *  CONTROL_FREQ; // 10ms update * 10 gives tick/second*/
-  /*LOG_INFO("speed_s:%f;\r\n", speed_s);*/
 
   return speed_s;
 }

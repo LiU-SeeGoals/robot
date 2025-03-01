@@ -36,12 +36,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-/*#define IMU_COUNTER_MAX 4*/
-/*extern float CONTROL_FREQ; // set in init*/
-const int IMU_COUNTER_MAX = 3;
-const int ENCODER_COUNTER_MAX = 10;
-const int PID_ANGLE = 100;
-/*#define IMU_HZ = CONTROL_FREQ / IMU_COUNTER_MAX;*/
 
 /* USER CODE END PD */
 
@@ -52,10 +46,6 @@ const int PID_ANGLE = 100;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
-int imu_counter = 0;
-int encoder_counter = 0;
-int angle_counter = 0;
 
 /* USER CODE END PV */
 
@@ -256,34 +246,21 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim12);
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
 
-  // Assuimg this runs 100hz this will give about 33.3hz
-  /*if (STATE_is_calibrated() == 1) {*/
-  /*  imu_counter += 1;*/
-  /*  STATE_acc_measure();*/
-  /*}*/
-  // IMU loop 333.33hz
-  if (imu_counter == IMU_COUNTER_MAX && STATE_is_calibrated() == 1) {
-    imu_counter = 0;
+  // This interrupt runs 1000HZ
+
+  if (STATE_is_calibrated() == 1) {
     IMU_AccelVec3 acc = IMU_read_accel_mps2();
     IMU_GyroVec3 gyr = IMU_read_gyro();
 
     STATE_FusionEKFIntertialUpdate(acc, gyr);
-  }
-  else if (STATE_is_calibrated() == 1)
-  {
-    imu_counter += 1;
-  }
-
-  // PID loop runs 1000hz
-  
-  NAV_set_motor_ticks();
-  angle_counter = (1 + angle_counter) % 3;
-  if (angle_counter == 0 && STATE_is_calibrated() == 1)
-  {
-    TEST_vx(0,200.f);
-    /*TEST_vy(0);*/
+    /*TEST_vx(0,100.f);*/
+    /*TEST_vy(0,100.f);*/
     /*TEST_angle_control(0);*/
+    robot_nav_command cmd = NAV_GetNavCommand();
+    POS_go_to_position(cmd.x, cmd.y, cmd.w);
+    NAV_set_motor_ticks();
   }
+  
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }
 

@@ -19,11 +19,9 @@ float angle_error(float angle, float desired);
 
 float standard_error(float current, float desired);
 
+void POS_set_params();
 
-void set_params();
-
-
-void go_to_position(Vec2 desired_pos, float wantw);
+void POS_go_to_position(float dest_x, float dest_y, float wantw);
 
 void TEST_angle_control(float ref_angle);
 
@@ -32,5 +30,4 @@ void POS_Init();
 void TEST_vy(float ref_angle, float speed);
 void TEST_vx(float ref_angle, float speed);
 void TEST_angle_control(float ref_angle);
-
 #endif /* COM_H */

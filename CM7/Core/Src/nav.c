@@ -22,7 +22,7 @@ RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
  */
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
-
+static robot_nav_command robot_cmd;
 static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
 const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
@@ -133,6 +133,10 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
       motors[i].motor_ticks[j] = 0;
     }
   }
+
+  robot_cmd.x = 0;
+  robot_cmd.y = 0;
+  robot_cmd.w = 0;
 
   float control_clock_prescaler = motor_tick_itr->Init.Prescaler + 1; 
   float control_clock_period = motor_tick_itr->Init.Period + 1;
@@ -305,9 +309,6 @@ void NAV_GoToAction(Command* cmd){
     const int32_t cam_y = cmd->pos->y;
     const int32_t cam_w = cmd->pos->w;
 
-    LOG_DEBUG("nav (x,y,z): (%i,%i,%i)\r\n", nav_x, nav_y, nav_w);
-    LOG_DEBUG("cam (x,y): (%i,%i)\r\n", cam_x, cam_y);
-
     // hax to cange to to float meter rep just for testing first time... hehe
     const float f_nav_x = ((float) nav_x) / 1000.f;
     const float f_nav_y = ((float) nav_y) / 1000.f;
@@ -330,8 +331,11 @@ void NAV_GoToAction(Command* cmd){
     prev_nav_y = f_cam_y;
     prev_nav_w = f_cam_w;
     Vec2 position = {f_nav_x,f_nav_y};
-    go_to_position(position, f_nav_w);
-
+    // Set desiered position, this position is followed in interrupts
+    robot_cmd.x = f_nav_x;
+    robot_cmd.y = f_nav_y;
+    robot_cmd.w = f_nav_w;
+    /*POS_go_to_position(position, f_nav_w);*/
 }
 
 void handle_command(Command* cmd){
@@ -424,4 +428,8 @@ void NAV_TestDribbler(){
   HAL_Delay(2000);
   NAV_StopDribbler();
 
+}
+
+robot_nav_command NAV_GetNavCommand(){
+  return robot_cmd;
 }

@@ -7,7 +7,7 @@
 #include <string.h>
 #include "log.h"
 
-#define CTRL_DELTA_T 1.0/333.33
+#define CTRL_DELTA_T 1.0f/1000.0f
 
 static LOG_Module internal_log_mod;
 
