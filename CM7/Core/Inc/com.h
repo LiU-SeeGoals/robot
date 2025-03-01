@@ -40,7 +40,6 @@ void COM_RF_Init();
  */
 void COM_RF_Receive(uint8_t pipe);
 
-
 /**
  * Verifies nRF communication (through SPI) and resets nRF.
  */
@@ -55,5 +54,16 @@ void COM_RF_HandleIRQ(void);
  * Printf:s status and FIFO status registers from the NRF.
  */
 void COM_RF_PrintInfo(void);
+
+/**
+ * Transmits msg with specified length and waits for ACK.
+ */
+void COM_RF_Send(uint8_t *msg, uint8_t length);
+
+/**
+ * Maps the 96 bit Unique device identifier into a robot id 0-15.
+ * Returns -1 if this device has no mapping.
+ */
+uint8_t COM_Get_ID();
 
 #endif /* COM_H */

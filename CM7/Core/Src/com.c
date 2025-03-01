@@ -13,23 +13,18 @@
 /* Private defines */
 #define MSG_PING       0
 #define MSG_ACTION     1
-
-
-#define CONNECT_MAGIC 0x4d, 0xf8, 0x42, 0x79
-
+#define CONNECT_MAGIC   0x4d, 0xf8, 0x42, 0x79
 #define CONTROLLER_ADDR {2, 255, 255, 255, 255}
 #define ROBOT_ACTION_ADDR(id) {1, 255, 255, id, 255}
 
-
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
-static int find_id();
 
 /* Private variables */
 static LOG_Module internal_log_mod;
 static int nRFon = 0;
-
 static volatile uint8_t ping_ack;
+
 
 /*
  * Public functions implementations
@@ -57,7 +52,7 @@ void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available) {
 }
 
 void COM_RF_Init() {
-  int id = find_id();
+  int id = COM_Get_ID();
   uint8_t controllerAddress[5]  = CONTROLLER_ADDR;
   uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
 
@@ -226,7 +221,7 @@ void COM_RF_Reset() {
 }
 
 void COM_Ping() {
-  int id = find_id();
+  int id = COM_Get_ID();
 
   if (id >= 0) {
     HAL_Delay(100);
@@ -267,14 +262,18 @@ bool COM_Update() {
   return false;
 }
 
+// TODO: use this for sending ping as well
+void COM_RF_Send(uint8_t *msg, uint8_t length) {
+  NRF_EnterMode(NRF_MODE_STANDBY1);
 
-/*
- * Private function implementations
- */
+  if (NRF_TransmitAndWait(msg, length) != NRF_OK) {
+    LOG_ERROR("Failed sending message...\r\n");
+  }
 
-// Maps the 96 bit Unique device identifier into a robot id 0-15.
-// Returns -1 if this device has no mapping.
-static int find_id() {
+  NRF_EnterMode(NRF_MODE_RX);
+}
+
+uint8_t COM_Get_ID() {
   uint32_t w0 = HAL_GetUIDw0();
   uint32_t w1 = HAL_GetUIDw1();
   uint32_t w2 = HAL_GetUIDw2();
@@ -290,8 +289,15 @@ static int find_id() {
   if (w0 == 4259883  && w1 == 892490001 && w2 == 842217265) {
     return 3;
   }
+  if (w0 == 4522020 && w1 == 892490001 && w2 == 842217265) {
+    return 4;
+  }
   return -1;
 }
+
+/*
+ * Private function implementations
+ */
 
 static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   Command* cmd = NULL;

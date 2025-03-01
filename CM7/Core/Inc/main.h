@@ -132,6 +132,7 @@ extern volatile atomic_uint main_tasks;
 #define LED_YELLOW_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
+#define IS_ROBOT 1
 #define IMU_SCL_Pin GPIO_PIN_14
 #define IMU_SCL_GPIO_Port GPIOF
 #define IMU_SDA_Pin GPIO_PIN_15

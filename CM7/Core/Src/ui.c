@@ -420,7 +420,7 @@ void parse_key() {
       case 'S': // Set minimum output level
         {
           LOG_UI("Levels:\r\n");
-          for (int i = LOG_LEVEL_TRACE; i < LOG_LEVEL_EMERGENCY; i++) {
+          for (int i = LOG_LEVEL_TRACE; i < LOG_LEVEL_BASESTATION; i++) {
             LOG_UI("   [%i] %s\r\n", i, LOG_LEVEL[i].name);
           }
           start_reading_to_buffer();
@@ -514,7 +514,7 @@ void finished_reading_to_buffer() {
         {
           LOG_Module *mod = LOG_GetModule(memory);
           int level = atoi(rx_buffer);
-          if (mod == NULL || level < 0 || level > LOG_LEVEL_EMERGENCY) {
+          if (mod == NULL || level < 0 || level > LOG_LEVEL_BASESTATION) {
             LOG_WARNING("No log module with index %i or level %i\r\n", memory, level);
             return;
           }

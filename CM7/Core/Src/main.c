@@ -226,6 +226,7 @@ int main(void) {
     // Failsafe for when communication fails.
     if (!COM_Update() && NRF_AVAILABLE) {
       NAV_StopMovement();
+      LOG_BASESTATION("TEST\r\n");
       COM_RF_Reset();
     }
 
