@@ -165,30 +165,49 @@ void NAV_log_speed()
 }
 
 void steer(float vx,float vy, float w){
+  // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
+  // wheels RF, RB, LB, LF
+  // wheel direction is RF forward vector toward dribbler
+  // y forward toward dribbler
+  // x to the sides
+  // w angle from LF to LB to RB to RF
 
   /*float theta = 31.f * PI / 180.f;*/
+  float psi = 31.f;
+  float theta = 45.f;
+  // r is wheel radius, R is chasis radius, currently 1 because idc and 
+  // our speeds are currently not a real unit i.e. ticks/second and not meter/second
+  float r = 1.f;
+  float R = 1.f;
+
+
+  float wrf = 1 / r * ( vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
+  float wrb = 1 / r * ( vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
+  float wlb = 1 / r * ( -vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
+  float wlf = 1 / r * ( -vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
+
+
+
   /*float theta = 31.f;*/
   /*float psi = 45.f;*/
-  float theta = 31.f;
-  float psi = 45.f;
-  float r = 1.f;
-  float th_sin, th_cos;
-  float psi_sin, psi_cos;
-
-  arm_sin_cos_f32(theta, &th_sin, &th_cos);
-  arm_sin_cos_f32(psi, &psi_sin, &psi_cos);
-
-  float v1 = th_sin * vx +  th_cos * vy + -r * w;
-  float v2 = th_sin * vx + -th_cos * vy + -r * w;
-  float v3 = -psi_sin  * vx +  -psi_cos *  vy+  -r * w;
-  float v4 = -psi_sin  * vx +  psi_cos *  vy + -r * w;
-
-  // float v4 = -th_cos;
-  // v1 = sin(vx * theta * PI / 180.f);
-  motors[0].speed = v1;
-  motors[1].speed = v2;
-  motors[2].speed = v3;
-  motors[3].speed = v4;
+  /*float r = 1.f;*/
+  /*float th_sin, th_cos;*/
+  /*float psi_sin, psi_cos;*/
+  /**/
+  /*arm_sin_cos_f32(theta, &th_sin, &th_cos);*/
+  /*arm_sin_cos_f32(psi, &psi_sin, &psi_cos);*/
+  /**/
+  /*float v1 = th_sin * vx +  th_cos * vy + -r * w;*/
+  /*float v2 = th_sin * vx + -th_cos * vy + -r * w;*/
+  /*float v3 = -psi_sin  * vx +  -psi_cos *  vy+  -r * w;*/
+  /*float v4 = -psi_sin  * vx +  psi_cos *  vy + -r * w;*/
+  /**/
+  /*// float v4 = -th_cos;*/
+  /*// v1 = sin(vx * theta * PI / 180.f);*/
+  motors[0].speed = wrf;
+  motors[1].speed = wrb;
+  motors[2].speed = wlb;
+  motors[3].speed = wlf;
 
 }
 

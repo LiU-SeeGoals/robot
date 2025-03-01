@@ -29,5 +29,8 @@ void TEST_angle_control(float ref_angle);
 
 void POS_Init();
 
+void TEST_vy(float ref_angle, float speed);
+void TEST_vx(float ref_angle, float speed);
+void TEST_angle_control(float ref_angle);
 
 #endif /* COM_H */

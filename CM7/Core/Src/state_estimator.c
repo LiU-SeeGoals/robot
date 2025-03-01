@@ -397,8 +397,11 @@ void STATE_FusionEKFIntertialUpdate(IMU_AccelVec3 acc, IMU_GyroVec3 gyr)
 {
 
 	// GYRO + ACCELEROMETER
-  const float linear_acc_x = acc.x - fusionEKF.bias.acc_x;
-  const float linear_acc_y = acc.y - fusionEKF.bias.acc_y;
+  float linear_acc_x = acc.x - fusionEKF.bias.acc_x;
+  float linear_acc_y = acc.y - fusionEKF.bias.acc_y;
+  // Turn off acc for now.. to hard to handle
+  linear_acc_x = 0;
+  linear_acc_y = 0;
 
   float gyrAcc[3];
 	gyrAcc[0] = gyr.z - fusionEKF.bias.gyr_z;

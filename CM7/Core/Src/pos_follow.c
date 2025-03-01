@@ -44,12 +44,12 @@ float standard_error(float current, float desired) {
 
 void set_params() {
 
-  params_angle.umin = -100.0;
-  params_angle.umax = 100.0;
+  params_angle.umin = -1000.0;
+  params_angle.umax = 1000.0;
   params_angle.Ts = DELTA_T;
-  params_angle.Ti = 0.1;
-  params_angle.Td = 0.1;
-  params_angle.K = 4;
+  params_angle.Ti = 10000000;
+  params_angle.Td = 0;
+  params_angle.K = 12;
 
   params_dist.umin = -1000.0;
   params_dist.umax = 1000.0;
@@ -60,24 +60,24 @@ void set_params() {
 }
 
 
-void TEST_vy(float ref_angle) {
+void TEST_vy(float ref_angle, float speed) {
 
   float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);
-  steer(0, 100.f, -control_w);
+  steer(0, speed, -control_w);
 }
 /**/
 /*// Test if robot can go straight*/
-/*void TEST_vx(Vec2 desired_pos, Vec2 at_position, float wantw) {*/
-/**/
-/*  float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);*/
-/*  steer(100.f, 0, -control_w);*/
-/*}*/
+void TEST_vx(float ref_angle, float speed) {
+
+  float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);
+  steer(speed, 0.0f, -control_w);
+}
 
 void TEST_angle_control(float ref_angle)
 {
   float control_w = PID_it(STATE_get_robot_angle(), ref_angle, &angle_I, angle_error, &params_angle);
   /*LOG_DEBUG("cw %f pw %f\r\n", control_w, STATE_get_robot_angle());*/
-  steer(0, 0, control_w);
+  steer(0, 0, -control_w);
 }
 
 void go_to_position(Vec2 desired_pos, float wantw) {
