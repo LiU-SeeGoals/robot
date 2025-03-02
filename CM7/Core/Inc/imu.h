@@ -20,12 +20,12 @@ typedef IMU_AccelVec3 IMU_GyroVec3;
 
 /* Public constants */
 #define IMU_I2C_DEV_ADDR         0x6B
-#define IMU_DATA_RATE            Lsm6dsl_DataRate_416Hz
+#define IMU_DATA_RATE            Lsm6dsl_DataRate_1_66kHz
 #define IMU_ACCEL_FULL_SCALE     Lsm6dsl_FullScaleXl_16g
 #define IMU_ACCEL_FULL_SCALE_VAL 16.0f
 #define IMU_GYRO_FULL_SCALE      Lsm6dsl_FullScaleGyro_2000dps
 #define IMU_GYRO_FULL_SCALE_VAL  2000.0f
-#define IMU_GRAVITY_CONSTANT     9.80665f
+#define IMU_GRAVITY_CONSTANT     9.820665f
 
 /* Public macros */
 #define IMU_RAW_TO_DPS(raw_gyro_val) ((float)raw_gyro_val * IMU_GYRO_FULL_SCALE_VAL / (float)INT16_MAX)

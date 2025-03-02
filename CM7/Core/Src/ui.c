@@ -2,6 +2,7 @@
 
 /* Private includes */
 #include "log.h"
+#include "pos_follow.h"
 #include "com.h"
 #include "kicker.h"
 #include "nav.h"

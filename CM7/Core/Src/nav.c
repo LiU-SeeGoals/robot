@@ -1,5 +1,7 @@
 #include "nav.h"
+#include "HandmadeMath.h"
 #include "state_estimator.h"
+#include "pos_follow.h"
 
 /*
  * Private includes
@@ -20,8 +22,9 @@ RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
  */
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
+static robot_nav_command robot_cmd;
 static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
-float CLOCK_FREQ = 400000000;
+const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
 Command_buf queue;
 static int queued = 0;
@@ -29,6 +32,7 @@ static int queued = 0;
 /* Private functions declarations */
 void handle_command(Command* cmd);
 void set_motors(float m1, float m2, float m3, float m4);
+
 
 /*
  * Public function implementations
@@ -83,8 +87,8 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   motors[1].prev_tick         = 0;
   motors[1].encoder_htim      = encoder2_htim;
   motors[1].channel           = TIM_CHANNEL_2;
-  motors[1].breakPinPort      = OLD_MOTOR2_BREAK_GPIO_Port;
-  motors[1].breakPin          = OLD_MOTOR2_BREAK_Pin;
+  //motors[1].breakPinPort      = OLD_MOTOR2_BREAK_GPIO_Port;
+  //motors[1].breakPin          = OLD_MOTOR2_BREAK_Pin;
   motors[1].reversePinPort    = OLD_MOTOR2_REVERSE_GPIO_Port;
   motors[1].reversePin        = OLD_MOTOR2_REVERSE_Pin;
   motors[1].dir               = 1;
@@ -120,6 +124,20 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   MOTOR_PWMStart(&motors[2]);
   MOTOR_PWMStart(&motors[3]);
 
+  // memset did not work, idc
+  for (int i = 0; i < 4; i++)
+  {
+    motors[i].cur_tick_idx = 0;
+    for (int j = 0; j < motor_tick_buf_size; j ++)
+    {
+      motors[i].motor_ticks[j] = 0;
+    }
+  }
+
+  robot_cmd.x = 0;
+  robot_cmd.y = 0;
+  robot_cmd.w = 0;
+
   float control_clock_prescaler = motor_tick_itr->Init.Prescaler + 1; 
   float control_clock_period = motor_tick_itr->Init.Period + 1;
   CONTROL_FREQ = CLOCK_FREQ / (control_clock_prescaler * control_clock_period);
@@ -127,9 +145,11 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 }
 
 void NAV_set_motor_ticks(){
+
   for (int i = 0; i < 4; i++){
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;
+    MOTOR_set_motor_tick_per_second(&motors[i], new_ticks - ticks_before);
     motors[i].ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
@@ -140,29 +160,58 @@ void NAV_set_motor_ticks(){
 
 }
 
+void NAV_log_speed()
+{
+  LOG_INFO("Got speed m1 %f m2 %f m3 %f m4 %f\r\n", MOTOR_ReadSpeed(&motors[0]),
+      MOTOR_ReadSpeed(&motors[1]),
+      MOTOR_ReadSpeed(&motors[2]),
+      MOTOR_ReadSpeed(&motors[3]));
+}
+
 void steer(float vx,float vy, float w){
+  // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
+  // wheels RF, RB, LB, LF
+  // wheel direction is RF forward vector toward dribbler
+  // y forward toward dribbler
+  // x to the sides
+  // w angle from LF to LB to RB to RF
 
   /*float theta = 31.f * PI / 180.f;*/
-  float theta = 31.f;
-  float psi = 45.f;
+  float psi = 31.f;
+  float theta = 45.f;
+  // r is wheel radius, R is chasis radius, currently 1 because idc and 
+  // our speeds are currently not a real unit i.e. ticks/second and not meter/second
   float r = 1.f;
-  float th_sin, th_cos;
-  float psi_sin, psi_cos;
+  float R = 1.f;
 
-  arm_sin_cos_f32(theta, &th_sin, &th_cos);
-  arm_sin_cos_f32(psi, &psi_sin, &psi_cos);
 
-  float v1 = th_sin * vx +  th_cos * vy + -r * w;
-  float v2 = th_sin * vx + -th_cos * vy + -r * w;
-  float v3 = -psi_sin  * vx +  -psi_cos *  vy+  -r * w;
-  float v4 = -psi_sin  * vx +  psi_cos *  vy + -r * w;
+  float wrf = 1 / r * ( vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
+  float wrb = 1 / r * ( vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
+  float wlb = 1 / r * ( -vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
+  float wlf = 1 / r * ( -vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
 
-  // float v4 = -th_cos;
-  // v1 = sin(vx * theta * PI / 180.f);
-  motors[0].speed = v1;
-  motors[1].speed = v2;
-  motors[2].speed = v3;
-  motors[3].speed = v4;
+
+
+  /*float theta = 31.f;*/
+  /*float psi = 45.f;*/
+  /*float r = 1.f;*/
+  /*float th_sin, th_cos;*/
+  /*float psi_sin, psi_cos;*/
+  /**/
+  /*arm_sin_cos_f32(theta, &th_sin, &th_cos);*/
+  /*arm_sin_cos_f32(psi, &psi_sin, &psi_cos);*/
+  /**/
+  /*float v1 = th_sin * vx +  th_cos * vy + -r * w;*/
+  /*float v2 = th_sin * vx + -th_cos * vy + -r * w;*/
+  /*float v3 = -psi_sin  * vx +  -psi_cos *  vy+  -r * w;*/
+  /*float v4 = -psi_sin  * vx +  psi_cos *  vy + -r * w;*/
+  /**/
+  /*// float v4 = -th_cos;*/
+  /*// v1 = sin(vx * theta * PI / 180.f);*/
+  motors[0].speed = wrf;
+  motors[1].speed = wrb;
+  motors[2].speed = wlb;
+  motors[3].speed = wlf;
 
 }
 
@@ -218,6 +267,7 @@ void command_move(Command *cmd){
   if (cmd->command_id == ACTION_TYPE__MOVE_ACTION){
     steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
   }
+
 }
 
 void NAV_HandleCommands() {
@@ -246,19 +296,66 @@ void NAV_StopMovement() {
  * Private function implementations
  */
 
+int32_t prev_nav_x = 0;
+int32_t prev_nav_y = 0;
+int32_t prev_nav_w = 0;
+
+void NAV_GoToAction(Command* cmd){
+    const int32_t nav_x = cmd->dest->x;
+    const int32_t nav_y = cmd->dest->y;
+    const int32_t nav_w = cmd->dest->y;
+
+    const int32_t cam_x = cmd->pos->x;
+    const int32_t cam_y = cmd->pos->y;
+    const int32_t cam_w = cmd->pos->w;
+
+    // hax to cange to to float meter rep just for testing first time... hehe
+    const float f_nav_x = ((float) nav_x) / 1000.f;
+    const float f_nav_y = ((float) nav_y) / 1000.f;
+    const float f_nav_w = ((float) nav_w) / 1000.f;
+                             
+    const float f_cam_x = ((float)cam_x) / 1000.f;
+    const float f_cam_y = ((float)cam_y) / 1000.f;
+    const float f_cam_w = ((float)cam_w);
+
+    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 10.0)
+    {
+      // If software send us same position then ignore it.
+      // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez
+      return;
+    }
+
+    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
+
+    prev_nav_x = f_cam_x;
+    prev_nav_y = f_cam_y;
+    prev_nav_w = f_cam_w;
+    Vec2 position = {f_nav_x,f_nav_y};
+    // Set desiered position, this position is followed in interrupts
+    robot_cmd.x = f_nav_x;
+    robot_cmd.y = f_nav_y;
+    robot_cmd.w = f_nav_w;
+    /*POS_go_to_position(position, f_nav_w);*/
+}
+
 void handle_command(Command* cmd){
   switch (cmd->command_id) {
     case ACTION_TYPE__STOP_ACTION:
       NAV_StopMovement();
       LOG_DEBUG("Stop\r\n");
       break;
+    case ACTION_TYPE__MOVE_TO_ACTION: {
+      NAV_GoToAction(cmd);
+
+      } break;
+
     case ACTION_TYPE__MOVE_ACTION: {
       const int32_t speed = cmd->kick_speed;
       const int32_t x = cmd->direction->x;
       const int32_t y = cmd->direction->y;
 
-      LOG_DEBUG("(x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
-      LOG_DEBUG("(x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
+      LOG_DEBUG("keyboard control (x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
+      LOG_DEBUG("keyboard control (x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
       // TODO: Should somehow know that we're in remote control mode
       if (0 <= speed && speed <= 10) {
         steer(100.f * speed * x, 100.f * speed * y, 0.f);
@@ -331,4 +428,8 @@ void NAV_TestDribbler(){
   HAL_Delay(2000);
   NAV_StopDribbler();
 
+}
+
+robot_nav_command NAV_GetNavCommand(){
+  return robot_cmd;
 }

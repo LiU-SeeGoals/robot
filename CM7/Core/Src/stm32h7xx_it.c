@@ -19,11 +19,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "pos_follow.h"
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "log.h"
+#include "imu.h"
 #include "nav.h"
+#include "state_estimator.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -242,7 +245,22 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim8);
   HAL_TIM_IRQHandler(&htim12);
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
-  NAV_set_motor_ticks();
+
+  // This interrupt runs 1000HZ
+
+  if (STATE_is_calibrated() == 1) {
+    IMU_AccelVec3 acc = IMU_read_accel_mps2();
+    IMU_GyroVec3 gyr = IMU_read_gyro();
+
+    STATE_FusionEKFIntertialUpdate(acc, gyr);
+    /*TEST_vx(0,100.f);*/
+    /*TEST_vy(0,100.f);*/
+    /*TEST_angle_control(0);*/
+    robot_nav_command cmd = NAV_GetNavCommand();
+    POS_go_to_position(cmd.x, cmd.y, cmd.w);
+    NAV_set_motor_ticks();
+  }
+  
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }
 

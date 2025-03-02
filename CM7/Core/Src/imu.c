@@ -34,10 +34,10 @@ void lsm6dsl_i2c_master_read_mem(Lsm6dsl_I2cPortHandle_t *port_handle,
   HAL_StatusTypeDef status = HAL_I2C_Mem_Read(port_handle, device_address << 1, mem_address, I2C_MEMADD_SIZE_8BIT, inbuf, size, HAL_MAX_DELAY);
   
   if (status != HAL_OK) {
-    LOG_ERROR("Failed to read %u byte(s) from IMU register address 0x%X\n", size, mem_address);
+    LOG_ERROR("Failed to read %u byte(s) from IMU register address 0x%X\r\n", size, mem_address);
 
   } else {
-    LOG_TRACE("Read %u byte(s) from IMU register address 0x%X\n", size, mem_address);
+    LOG_TRACE("Read %u byte(s) from IMU register address 0x%X\r\n", size, mem_address);
   }
 }
 
@@ -50,10 +50,10 @@ void lsm6dsl_i2c_master_write_mem(Lsm6dsl_I2cPortHandle_t *port_handle,
   HAL_StatusTypeDef status = HAL_I2C_Mem_Write(port_handle, device_address << 1, mem_address, I2C_MEMADD_SIZE_8BIT, outbuf, size, HAL_MAX_DELAY);
   
   if (status != HAL_OK) {
-    LOG_ERROR("Failed to write %u byte(s) to IMU register address 0x%X\n", size, mem_address);
+    LOG_ERROR("Failed to write %u byte(s) to IMU register address 0x%X\r\n", size, mem_address);
 
   } else {
-    LOG_TRACE("Wrote %u byte(s) from IMU register address 0x%X\n", size, mem_address);
+    LOG_TRACE("Wrote %u byte(s) from IMU register address 0x%X\r\n", size, mem_address);
   }
 }
 
@@ -79,42 +79,42 @@ void IMU_Init(I2C_HandleTypeDef* hi2c) {
   {
     uint8_t who_am_i = 0;
 
-    LOG_DEBUG("Polling WHO_AM_I register...\n");
+    LOG_DEBUG("Polling WHO_AM_I register...\r\n");
     lsm6dsl_read_register(&imu_device_handle, LSM6DSL_REG_WHO_AM_I, &who_am_i, 1);
 
-    LOG_DEBUG("WHO_AM_I: 0x%X\n", who_am_i);
+    LOG_DEBUG("WHO_AM_I: 0x%X\r\n", who_am_i);
 
     if (who_am_i == 0x6A) {
-      LOG_INFO("IMU is responding\n");
+      LOG_INFO("IMU is responding\r\n");
       break;
 
     } else {
-      LOG_DEBUG("No or incorrect response from IMU, retrying in 1s...\n");
+      LOG_DEBUG("No or incorrect response from IMU, retrying in 1s...\r\n");
       HAL_Delay(1000);
     }
   }
 
-  LOG_INFO("Configuring IMU...\n");
+  LOG_INFO("Configuring IMU...\r\n");
   lsm6dsl_accel_init(&imu_device_handle, IMU_DATA_RATE, IMU_ACCEL_FULL_SCALE);
   lsm6dsl_gyro_init(&imu_device_handle, IMU_DATA_RATE, IMU_GYRO_FULL_SCALE);
   lsm6dsl_fifo_init(&imu_device_handle, Lsm6dsl_FifoMode_Continuous, IMU_DATA_RATE);
   lsm6dsl_fifo_set_decimation(&imu_device_handle, Lsm6dsl_DecFifoGyro_NoDec, Lsm6dsl_DecFifoXl_NoDec);
   
-  LOG_INFO("Done initializing IMU\n");
+  LOG_INFO("Done initializing IMU\r\n");
 }
 
 
 int32_t IMU_read_fifo_raw(Lsm6dsl_Data_t *buf, uint16_t n_blocks_to_read) {
-    LOG_DEBUG("Reading %u blocks from FIFO...\n", n_blocks_to_read);
+    LOG_DEBUG("Reading %u blocks from FIFO...\r\n", n_blocks_to_read);
     int32_t blocks_read = lsm6dsl_fifo_read_to_end(&imu_device_handle, buf, n_blocks_to_read);
 
     if (blocks_read >= 0) {
-      LOG_DEBUG("Read %u blocks from FIFO\n", blocks_read);
+      LOG_DEBUG("Read %u blocks from FIFO\r\n", blocks_read);
       
       return blocks_read;
     
     } else {
-      LOG_ERROR("Got error code %d when reading FIFO\n", blocks_read);
+      LOG_ERROR("Got error code %d when reading FIFO\r\n", blocks_read);
 
       return blocks_read;
     }
@@ -162,7 +162,6 @@ IMU_GyroVec3 IMU_read_gyro() {
     .z = IMU_RAW_TO_DPS(gyro_data.z)
   };
 }
-
 
 void IMU_test()
 {

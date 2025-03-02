@@ -27,8 +27,6 @@ void steer(float vx, float vy, float vw) {
   curangle += vw * DELTA_T;
 };
 
-// === "mocked" functions ====
-
 // === start real code ===
 // Each state has an integration part in the pid controller
 float dist_I = 0;
@@ -38,7 +36,6 @@ control_params params_dist;
 control_params params_angle;
 
 const float CLOCK_FREQ = 400000000;
-
 
 float angle_error(float angle, float desired){
 
@@ -63,7 +60,7 @@ float standard_error(float current, float desired) {
   return desired - current;
 }
 
-void set_params() {
+void POS_set_params() {
 
   params_angle.umin = -10.0;
   params_angle.umax = 10.0;

@@ -2,7 +2,8 @@
 #define __MOTOR_H
 
 #include "stm32h7xx_hal.h"
-
+// Tick buffer of 100 with 1000hz update is 0.1 second filter on motor
+#define motor_tick_buf_size 50
 typedef struct
 {
   TIM_HandleTypeDef *encoder_htim;
@@ -18,6 +19,8 @@ typedef struct
   GPIO_TypeDef *encoderPinPort;
   uint16_t encoderPin;
   uint16_t dir;
+  float motor_ticks[motor_tick_buf_size];
+  int cur_tick_idx;
 } MotorPWM;
 
 
@@ -26,6 +29,8 @@ typedef struct
  */
 void MOTOR_Init(TIM_HandleTypeDef* htim);
 
+float MOTOR_get_motor_tick_per_second(MotorPWM *motor);
+void MOTOR_set_motor_tick_per_second(MotorPWM *motor, float val);
 /**
  * Sets the break pin LOW
  */

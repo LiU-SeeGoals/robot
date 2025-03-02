@@ -7,6 +7,15 @@
 #include "main.h"
 #include <robot_action/robot_action.pb-c.h>
 
+// Which positions robot should go to, sent by AI dudes
+
+typedef struct
+{
+  float x;
+  float y;
+  float w;
+} robot_nav_command;
+
 typedef enum {
   UP,
   DOWN,
@@ -46,9 +55,6 @@ void NAV_HandleCommands();
  */
 void NAV_StopMovement();
 
-/**
- *
- */
 void NAV_TestMovement();
 
 void NAV_StopDribbler();
@@ -57,7 +63,13 @@ void NAV_RunDribbler();
 
 void NAV_TestDribbler();
 
+void NAV_log_speed();
+
 void NAV_TireTest();
+
+robot_nav_command NAV_GetNavCommand();
+
+void NAV_GoToAction(Command* command);
 
 #endif /* NAV_H */
 
