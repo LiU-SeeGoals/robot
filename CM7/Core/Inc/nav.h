@@ -14,6 +14,7 @@ typedef struct
   float x;
   float y;
   float w;
+  uint8_t panic;
 } robot_nav_command;
 
 typedef enum {
@@ -70,6 +71,14 @@ void NAV_TireTest();
 robot_nav_command NAV_GetNavCommand();
 
 void NAV_GoToAction(Command* command);
+
+uint8_t NAV_IsPanic();
+void NAV_SetRobotPanic();
+void NAV_ClearRobotPanic();
+
+float NAV_GetNavX();
+float NAV_GetNavY();
+float NAV_GetNavW();
 
 #endif /* NAV_H */
 

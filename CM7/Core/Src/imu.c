@@ -1,5 +1,6 @@
 /* Private includes */
 #include "imu.h"
+#include "arm_math.h"
 
 #include <stdint.h>
 
@@ -153,7 +154,27 @@ IMU_AccelVec3 IMU_read_accel_mps2() {
 }
 
 
-IMU_GyroVec3 IMU_read_gyro() {
+IMU_GyroVec3 IMU_read_gyro_radps_robot_coords() {
+  Lsm6dsl_GyroData_t gyro_data = IMU_read_gyro_raw();
+  
+  return (IMU_GyroVec3){
+    .x = IMU_RAW_TO_RADPS(gyro_data.x),
+    .y = IMU_RAW_TO_RADPS(gyro_data.y),
+    .z = -IMU_RAW_TO_RADPS(gyro_data.z)
+  };
+}
+
+IMU_GyroVec3 IMU_read_gyro_radps() {
+  Lsm6dsl_GyroData_t gyro_data = IMU_read_gyro_raw();
+  
+  return (IMU_GyroVec3){
+    .x = IMU_RAW_TO_RADPS(gyro_data.x),
+    .y = IMU_RAW_TO_RADPS(gyro_data.y),
+    .z = IMU_RAW_TO_RADPS(gyro_data.z)
+  };
+}
+
+IMU_GyroVec3 IMU_read_gyro_dps() {
   Lsm6dsl_GyroData_t gyro_data = IMU_read_gyro_raw();
   
   return (IMU_GyroVec3){
@@ -174,7 +195,7 @@ void IMU_test()
 
   LOG_INFO("Reading gyroscope value ...\n");
 
-  IMU_GyroVec3 gyr = IMU_read_gyro();
+  IMU_GyroVec3 gyr = IMU_read_gyro_dps();
   LOG_INFO("X=%f Y=%f Z=%f [dps]\n", acc.x, acc.y, acc.z);
   
   Lsm6dsl_Data_t imu_buf[200];

@@ -13,8 +13,6 @@ typedef struct{
 
 } control_params;
 
-float PID_it(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params *param);
-
 float angle_error(float angle, float desired);
 
 float standard_error(float current, float desired);
@@ -30,4 +28,7 @@ void POS_Init();
 void TEST_vy(float ref_angle, float speed);
 void TEST_vx(float ref_angle, float speed);
 void TEST_angle_control(float ref_angle);
+
+float PID_pi(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params *param);
+float PID_p(float current, float desired, float (*error_func)(float,float), control_params *param);
 #endif /* COM_H */

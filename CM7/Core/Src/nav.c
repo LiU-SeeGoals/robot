@@ -23,7 +23,7 @@ RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
 static LOG_Module internal_log_mod;
 static MotorPWM motors[4];
 static robot_nav_command robot_cmd;
-static float I_prevs[4] = {0.f, 0.f, 0.f, 0.f}; // PI control I-parts
+static float I_prevs[4]; // PI control I-parts
 const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
 Command_buf queue;
@@ -128,6 +128,8 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   for (int i = 0; i < 4; i++)
   {
     motors[i].cur_tick_idx = 0;
+    motors[i].cur_tick_idx = 0;
+    I_prevs[i] = 0.0f;
     for (int j = 0; j < motor_tick_buf_size; j ++)
     {
       motors[i].motor_ticks[j] = 0;
@@ -146,14 +148,25 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
 
 void NAV_set_motor_ticks(){
 
-  for (int i = 0; i < 4; i++){
+  for (int i = 0; i < 4; i++)
+  {
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;
     MOTOR_set_motor_tick_per_second(&motors[i], new_ticks - ticks_before);
     motors[i].ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
+
   // Dont move this into the other for loop !!
+  /*if (robot_cmd.panic == 1)*/
+  /*{*/
+  /*  for (int i = 0; i < 4; i++){ // do for all motor*/
+  /*    MOTOR_SetSpeed(&motors[i], 0.0, &I_prevs[i]);*/
+  /*  }*/
+  /*  return;*/
+  /*}*/
+
+  // If robot is in bad state, turn off motors
   for (int i = 0; i < 4; i++){ // do for all motor
     MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
   }
@@ -296,9 +309,9 @@ void NAV_StopMovement() {
  * Private function implementations
  */
 
-int32_t prev_nav_x = 0;
-int32_t prev_nav_y = 0;
-int32_t prev_nav_w = 0;
+int32_t prev_nav_x = 2147483647;
+int32_t prev_nav_y = 2147483647;
+int32_t prev_nav_w = 2147483647;
 
 void NAV_GoToAction(Command* cmd){
     const int32_t nav_x = cmd->dest->x;
@@ -318,23 +331,32 @@ void NAV_GoToAction(Command* cmd){
     const float f_cam_y = ((float)cam_y) / 1000.f;
     const float f_cam_w = ((float)cam_w);
 
-    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 10.0)
+    /*LOG_DEBUG("Got at %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);*/
+    /*LOG_DEBUG("Got move to %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);*/
+
+    /*STATE_log_states();*/
+    /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
+    /*LOG_DEBUG("Got move to %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
+    robot_cmd.x = f_nav_x;
+    robot_cmd.y = f_nav_y;
+    robot_cmd.w = f_nav_w;
+
+    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 1.0)
     {
       // If software send us same position then ignore it.
       // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez
       return;
     }
 
-    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
+    /*STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);*/
 
     prev_nav_x = f_cam_x;
     prev_nav_y = f_cam_y;
     prev_nav_w = f_cam_w;
-    Vec2 position = {f_nav_x,f_nav_y};
+
+    /*Vec2 position = {f_nav_x,f_nav_y};*/
     // Set desiered position, this position is followed in interrupts
-    robot_cmd.x = f_nav_x;
-    robot_cmd.y = f_nav_y;
-    robot_cmd.w = f_nav_w;
+
     /*POS_go_to_position(position, f_nav_w);*/
 }
 
@@ -345,8 +367,8 @@ void handle_command(Command* cmd){
       LOG_DEBUG("Stop\r\n");
       break;
     case ACTION_TYPE__MOVE_TO_ACTION: {
+      LOG_DEBUG("Got move to ID: %d\r\n", cmd->command_id);
       NAV_GoToAction(cmd);
-
       } break;
 
     case ACTION_TYPE__MOVE_ACTION: {
@@ -418,6 +440,26 @@ void NAV_StopDribbler(){
   HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_RESET);
 }
 
+uint8_t NAV_IsPanic(){
+  return robot_cmd.panic;
+}
+
+/*
+   Someone thinks something has gone terribly wrong...
+   Disable motors and everyhting going forward
+ */
+void NAV_SetRobotPanic()
+{
+  robot_cmd.panic = 1;
+}
+
+/*
+  Someone solved the panic
+*/
+void NAV_ClearRobotPanic(){
+  robot_cmd.panic = 1;
+}
+
 void NAV_RunDribbler(){
   HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_SET);
 }
@@ -430,6 +472,15 @@ void NAV_TestDribbler(){
 
 }
 
+float NAV_GetNavX(){
+  return robot_cmd.x;
+}
+float NAV_GetNavY(){
+  return robot_cmd.y;
+}
+float NAV_GetNavW(){
+  return robot_cmd.w;
+}
 robot_nav_command NAV_GetNavCommand(){
   return robot_cmd;
 }

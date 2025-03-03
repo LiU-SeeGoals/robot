@@ -250,14 +250,18 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 
   if (STATE_is_calibrated() == 1) {
     IMU_AccelVec3 acc = IMU_read_accel_mps2();
-    IMU_GyroVec3 gyr = IMU_read_gyro();
+    IMU_GyroVec3 gyr = IMU_read_gyro_radps_robot_coords();
 
     STATE_FusionEKFIntertialUpdate(acc, gyr);
-    /*TEST_vx(0,100.f);*/
-    /*TEST_vy(0,100.f);*/
-    /*TEST_angle_control(0);*/
-    robot_nav_command cmd = NAV_GetNavCommand();
-    POS_go_to_position(cmd.x, cmd.y, cmd.w);
+    TEST_vx(0,100.f);
+    TEST_vy(0,100.f);
+    TEST_angle_control(0);
+    float x = NAV_GetNavX();
+    float y = NAV_GetNavY();
+    float w = NAV_GetNavW();
+    LOG_DEBUG("Got at %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
+    LOG_DEBUG("Got move to %f %f %f:\r\n", cmd.x, cmd.y, cmd.w);
+    POS_go_to_position(x, y, w);
     NAV_set_motor_ticks();
   }
   
