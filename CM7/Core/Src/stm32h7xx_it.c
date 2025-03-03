@@ -19,13 +19,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "pos_follow.h"
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "log.h"
 #include "imu.h"
 #include "nav.h"
+#include "pos_follow.h"
 #include "state_estimator.h"
 /* USER CODE END Includes */
 
@@ -259,8 +259,6 @@ void TIM8_BRK_TIM12_IRQHandler(void)
     float x = NAV_GetNavX();
     float y = NAV_GetNavY();
     float w = NAV_GetNavW();
-    LOG_DEBUG("Got at %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
-    LOG_DEBUG("Got move to %f %f %f:\r\n", cmd.x, cmd.y, cmd.w);
     POS_go_to_position(x, y, w);
     NAV_set_motor_ticks();
   }

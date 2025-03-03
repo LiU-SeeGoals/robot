@@ -1,5 +1,4 @@
 #include "nav.h"
-#include "HandmadeMath.h"
 #include "state_estimator.h"
 #include "pos_follow.h"
 

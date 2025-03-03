@@ -1,8 +1,6 @@
 #ifndef POSFOLLOW_H
 #define POSFOLLOW_H
 
-#include "HandmadeMath.h"
-
 typedef struct{
   float umin;
   float umax;

@@ -1,4 +1,3 @@
-#include "HandmadeMath.h"
 #include "pos_follow.h"
 #include "log.h"
 #include "state_estimator.h"
@@ -84,26 +83,21 @@ void TEST_angle_control(float ref_angle)
 int debug_print = 0;
 void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
-  Vec2 current_pos = {STATE_get_posx(), STATE_get_posy()};
-  Vec2 desired_pos = {dest_x, dest_y};
-
+  float cur_x = STATE_get_posx();
+  float cur_y = STATE_get_posy();
   float angle = STATE_get_robot_angle();
-  Vec2 relative_pos = SubV2(current_pos, desired_pos); 
-  float euclidian_distance = relative_pos.X * relative_pos.X + relative_pos.Y * relative_pos.Y;
+
+  float euclidian_distance = (dest_x - cur_x) * (dest_x - cur_x) + (dest_y - cur_y) * (dest_y - cur_y);
 
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
-
   float control_w = PID_p(STATE_get_robot_angle(), wantw, angle_error, &params_angle);
 
-  // The steering signal is a velocity, so calculate how much of each component we need
-
-  /*LOG_DEBUG("Got move to %f %f %f:\r\n", dest_x, dest_y, wantw);*/
   // Rotate from football field to robot coordinates
   /*[cos(theta), -sin(theta)]*/
   /*[sin(theta), cos(theta)]*/
   float x = (relative_pos.X * cos(angle)) - (relative_pos.Y * sin(angle));
   float y = (relative_pos.X * sin(angle)) + (relative_pos.Y * cos(angle));
-  /*LOG_DEBUG("x: %f y: %f w %f\r\n", 0.0,0.0, -control_w);*/
+
   // Threshhold to make it less "shaky"
   if (fabs(control_w) < 0.5f)
   {

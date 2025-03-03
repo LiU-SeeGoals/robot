@@ -3,6 +3,7 @@
 
 /* Public includes */
 #include "stm32h7xx_hal.h"
+#include "arm_math.h"
 #include <HLindgren_LSM6DSL.h>
 #include <stdint.h>
 
