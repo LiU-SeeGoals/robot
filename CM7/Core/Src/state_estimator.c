@@ -530,7 +530,7 @@ void STATE_calibrate_imu_gyr()
     /*blocks_read = IMU_read_fifo_raw(imu_buf, buf_size);*/
     /*}*/
 
-    gyr = IMU_read_gyro_radps_robot_coords();
+    gyr = IMU_read_gyro_radps();
     acc = IMU_read_accel_mps2();
 
     // Read one block and extract gyro and accelerometer

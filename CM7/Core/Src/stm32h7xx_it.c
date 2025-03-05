@@ -248,9 +248,10 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 
   // This interrupt runs 1000HZ
 
-  if (STATE_is_calibrated() == 1) {
+  if (STATE_is_calibrated() == 1) 
+  {
     IMU_AccelVec3 acc = IMU_read_accel_mps2();
-    IMU_GyroVec3 gyr = IMU_read_gyro_radps_robot_coords();
+    IMU_GyroVec3 gyr = IMU_read_gyro_radps();
 
     STATE_FusionEKFIntertialUpdate(acc, gyr);
     TEST_vx(0,100.f);

@@ -247,8 +247,9 @@ int main(void)
     // Failsafe for when communication fails.
     if (!COM_Update() && NRF_AVAILABLE) {
       /*NAV_SetRobotPanic();*/
-      NAV_StopMovement();
-      HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
+      /*NAV_StopMovement();*/
+      /*HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);*/
+
       COM_RF_Reset();
     }
 

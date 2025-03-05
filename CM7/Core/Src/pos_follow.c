@@ -87,7 +87,9 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   float cur_y = STATE_get_posy();
   float angle = STATE_get_robot_angle();
 
-  float euclidian_distance = (dest_x - cur_x) * (dest_x - cur_x) + (dest_y - cur_y) * (dest_y - cur_y);
+  float rel_x = dest_x - cur_x;
+  float rel_y = dest_y - cur_y;
+  float euclidian_distance = rel_x * rel_x + rel_x*rel_x;
 
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
   float control_w = PID_p(STATE_get_robot_angle(), wantw, angle_error, &params_angle);
@@ -95,8 +97,8 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   // Rotate from football field to robot coordinates
   /*[cos(theta), -sin(theta)]*/
   /*[sin(theta), cos(theta)]*/
-  float x = (relative_pos.X * cos(angle)) - (relative_pos.Y * sin(angle));
-  float y = (relative_pos.X * sin(angle)) + (relative_pos.Y * cos(angle));
+  float x = (rel_x * cos(angle)) - (rel_y * sin(angle));
+  float y = (rel_x * sin(angle)) + (rel_y * cos(angle));
 
   // Threshhold to make it less "shaky"
   if (fabs(control_w) < 0.5f)

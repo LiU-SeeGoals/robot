@@ -45,7 +45,6 @@ Lsm6dsl_GyroData_t IMU_read_gyro_raw();
 IMU_AccelVec3 IMU_read_accel_g();    // Scaled to g-force units
 IMU_AccelVec3 IMU_read_accel_mps2(); // Scaled to m/s^2
 IMU_GyroVec3  IMU_read_gyro_radps();
-IMU_GyroVec3 IMU_read_gyro_radps_robot_coords();
 IMU_GyroVec3 IMU_read_gyro_dps();
 
 void IMU_test();
