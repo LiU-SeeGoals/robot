@@ -22,7 +22,7 @@ static void wait(uint64_t us);
  * Public functions implementations
  */
 void KICKER_Init() {
-  LOG_InitModule(&internal_log_mod, "KICKER", LOG_LEVEL_DEBUG);
+  LOG_InitModule(&internal_log_mod, "KICKER", LOG_LEVEL_DEBUG, 0);
 }
 
 void KICKER_Charge() {

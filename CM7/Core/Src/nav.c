@@ -46,7 +46,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* encoder3_htim,
               TIM_HandleTypeDef* encoder4_htim) {
 
-  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE);
+  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE, 0);
   HAL_TIM_Base_Start(pwm_htim);
   HAL_TIM_Base_Start(pwm15_htim);
   HAL_TIM_Base_Start(encoder1_htim);

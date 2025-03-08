@@ -32,7 +32,7 @@ float MOTOR_get_motor_tick_per_second(MotorPWM *motor)
 
 void MOTOR_Init(TIM_HandleTypeDef* pwm_htim)
 {
-  LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_TRACE);
+  LOG_InitModule(&internal_log_mod, "MOTOR", LOG_LEVEL_TRACE, 0);
   HAL_TIM_Base_Start(pwm_htim);
 }
 

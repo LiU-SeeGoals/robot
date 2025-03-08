@@ -195,7 +195,7 @@ int main(void)
   MX_I2C4_Init(); // Initialize I2C used for IMU
 
   LOG_Init(&huart3);
-  /*COM_Init(&hspi1, &NRF_AVAILABLE);*/
+  COM_Init(&hspi1, &NRF_AVAILABLE);
   POS_Init();
   STATE_Init();
 #ifdef PCB_MOTOR
@@ -206,12 +206,11 @@ int main(void)
   MOTOR_Init(&htim1);
   KICKER_Init();
   IMU_Init(&hi2c4);
-  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO, 0);
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
-  LOG_INFO("Startup finished...\r\n");
   UI_Init(&huart3);
-  STATE_Init();
+  LOG_INFO("Startup finished...\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -245,10 +244,10 @@ int main(void)
     }
 
     // Failsafe for when communication fails.
-    if (!COM_Update() && NRF_AVAILABLE) {
+    /*if (!COM_Update() && NRF_AVAILABLE) {
       NAV_StopMovement();
       COM_RF_Reset();
-    }
+    }*/
 
     if (HAL_GetTick() - now > 1000) {
       if (on) {
