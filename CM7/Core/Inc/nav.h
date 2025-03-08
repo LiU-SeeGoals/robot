@@ -54,6 +54,7 @@ void NAV_HandleCommands();
 /**
  * Stops all movement
  */
+void NAV_Stop();
 void NAV_StopMovement();
 
 void NAV_TestMovement();
@@ -76,7 +77,7 @@ uint8_t NAV_IsPanic();
 void NAV_SetRobotPanic();
 void NAV_ClearRobotPanic();
 
-float NAV_GetNavX(int counting);
+float NAV_GetNavX();
 float NAV_GetNavY();
 float NAV_GetNavW();
 

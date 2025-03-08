@@ -238,7 +238,7 @@ void EXTI15_10_IRQHandler(void)
 /**
   * @brief This function handles TIM8 break interrupt and TIM12 global interrupt.
   */
-int counting = 0;
+
 void TIM8_BRK_TIM12_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 0 */
@@ -249,7 +249,6 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 
   // This interrupt runs 1000HZ
 
-  counting += 1;
   if (STATE_is_calibrated() == 1) 
   {
     IMU_AccelVec3 acc = IMU_read_accel_mps2();
@@ -258,11 +257,11 @@ void TIM8_BRK_TIM12_IRQHandler(void)
     STATE_FusionEKFIntertialUpdate(acc, gyr);
     /*TEST_vx(0,100.f);*/
     /*TEST_vy(0,100.f);*/
-    /*TEST_angle_control(0);*/
-    float x = NAV_GetNavX(counting);
+    TEST_angle_control(0);
+    float x = NAV_GetNavX();
     float y = NAV_GetNavY();
     float w = NAV_GetNavW();
-    POS_go_to_position(x, y, w);
+    /*POS_go_to_position(x, y, w);*/
     NAV_set_motor_ticks();
   }
 

@@ -471,37 +471,7 @@ void NAV_TestDribbler(){
 
 }
 
-float NAV_GetNavX(int counting){
-  if (counting == 10000)
-  {
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-    LOG_DEBUG("Reached 1000\r\n");
-  }
+float NAV_GetNavX(){
   return robot_cmd.x;
 }
 float NAV_GetNavY(){

@@ -248,7 +248,7 @@ int main(void)
     if (!COM_Update() && NRF_AVAILABLE) {
       /*NAV_SetRobotPanic();*/
       /*NAV_StopMovement();*/
-      NAV_Stop();
+      /*NAV_Stop();*/
       /*HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);*/
 
       COM_RF_Reset();
