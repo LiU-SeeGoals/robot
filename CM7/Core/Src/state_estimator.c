@@ -371,8 +371,10 @@ void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
 
   float pos[3] = {posx, posy, posw};
 
+  LOG_DEBUG("vision update\r\n");
   if(!fusionEKF.vision.online)
   {
+    LOG_DEBUG("vision not online\r\n");
     fusionEKF.vision.online = 1;
 
     // Make sure EKF jumps immediately to new position in first measurement.
@@ -384,6 +386,7 @@ void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
   else
   {
     // Move vision data to ekf measurement vector and do the measurement update
+    LOG_DEBUG("vision online\r\n");
     memcpy(fusionEKF.ekf.z.pData, pos, sizeof(float)*3);
     EKFUpdate(&fusionEKF.ekf);
   }
@@ -507,6 +510,7 @@ void STATE_log_states()
       STATE_get_vy());
 }
 
+
 void STATE_calibrate_imu_gyr()
 {
   const int calib_size = 1000;
@@ -554,6 +558,7 @@ void STATE_calibrate_imu_gyr()
 
   fusionEKF.bias.is_calibrated = 1;
   LOG_INFO("Done calibrating\r\n");
+
 }
 
 

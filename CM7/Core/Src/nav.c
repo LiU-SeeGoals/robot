@@ -347,7 +347,7 @@ void NAV_GoToAction(Command* cmd){
       return;
     }
 
-    /*STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);*/
+    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
 
     prev_nav_x = f_cam_x;
     prev_nav_y = f_cam_y;
@@ -471,7 +471,37 @@ void NAV_TestDribbler(){
 
 }
 
-float NAV_GetNavX(){
+float NAV_GetNavX(int counting){
+  if (counting == 10000)
+  {
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+    LOG_DEBUG("Reached 1000\r\n");
+  }
   return robot_cmd.x;
 }
 float NAV_GetNavY(){

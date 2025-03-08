@@ -65,22 +65,22 @@ void set_params() {
 void TEST_vy(float ref_angle, float speed) 
 {
   float control_w = PID_p(STATE_get_robot_angle(), ref_angle, angle_error, &params_angle);
-  steer(0, speed, -control_w);
+  steer(0, speed, control_w);
 }
 
 void TEST_vx(float ref_angle, float speed) 
 {
   float control_w = PID_p(STATE_get_robot_angle(), ref_angle, angle_error, &params_angle);
-  steer(speed, 0.0f, -control_w);
+  steer(speed, 0.0f, control_w);
 }
 
 void TEST_angle_control(float ref_angle)
 {
   float control_w = PID_p(STATE_get_robot_angle(), ref_angle, angle_error, &params_angle);
-  steer(0, 0, -control_w);
+  steer(0, 0, control_w);
 }
 
-int debug_print = 0;
+int cur_w = 0;
 void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
   float cur_x = STATE_get_posx();
@@ -101,23 +101,24 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   float y = (rel_x * sin(angle)) + (rel_y * cos(angle));
 
   // Threshhold to make it less "shaky"
-  if (fabs(control_w) < 0.5f)
-  {
+  /*cur_w += (1 + cur_w % 100);*/
+  /*if (cur_w == 0)*/
+  /*{*/
+  /*  STATE_log_states();*/
+  /*}*/
+  /*if (fabs(control_w) < 0.5f)*/
+  /*{*/
     /*steer(100.f * x, 100.f * y, 0.0f);*/
-    steer(0.0f, 0.0f, -control_w);
-  }
-  else 
-  {
-    /*steer(100.f * x, 100.f * y, -control_w);*/
-    steer(0.0f, 0.0f, 0.0f);
-  }
+  /*  steer(0.0f, 0.0f, control_w);*/
+  /*}*/
+  /*else */
+  /*{*/
+    /*steer(0.0f, 0.0f, control_w);*/
+    steer(100.f * x, 0, control_w);
+    /*steer(0.0f, 0.0f, 0.0f);*/
+  /*}*/
   // Robot coordinates to world coordinates are reverse
   // so minus on the control signal
-  debug_print += (1 % 100);
-  if (debug_print == 0)
-  {
-    /*LOG_DEBUG("w %f\r\n", -control_w);*/
-  }
   /*steer(100.f * x, 100.f * y, -control_w);*/
 
 }
