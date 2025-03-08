@@ -18,7 +18,7 @@ const float DELTA_T = 0.001;
 static LOG_Module internal_log_mod;
 
 void POS_Init(){
-  LOG_InitModule(&internal_log_mod, "POS", LOG_LEVEL_TRACE);
+  LOG_InitModule(&internal_log_mod, "POS", LOG_LEVEL_TRACE, 0);
 }
 
 float angle_error(float angle, float desired){

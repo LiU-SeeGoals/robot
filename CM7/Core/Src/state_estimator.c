@@ -231,18 +231,17 @@ void EKFInit(EKF* pKF, uint16_t numStates, uint16_t numCtrl, uint16_t numSensors
 
 
 void STATE_Init(){
+  LOG_InitModule(&internal_log_mod, "STATE", LOG_LEVEL_TRACE, 0);
+  initEKF();
 
-  LOG_InitModule(&internal_log_mod, "STATE", LOG_LEVEL_TRACE);
-	initEKF();
+  /*LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, fusionEKF.pConfig->emaAccelT, CTRL_DELTA_T);*/
+  /*LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, fusionEKF.pConfig->emaAccelT, CTRL_DELTA_T);*/
 
-	/*LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, fusionEKF.pConfig->emaAccelT, CTRL_DELTA_T);*/
-	/*LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, fusionEKF.pConfig->emaAccelT, CTRL_DELTA_T);*/
-
-	LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, 0.01, CTRL_DELTA_T);
-	LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, 0.01, CTRL_DELTA_T);
+  LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, 0.01, CTRL_DELTA_T);
+  LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, 0.01, CTRL_DELTA_T);
 
   fusionEKF.bias.is_calibrated = -1;
-	/*LagElementPT1Init(&fusionEKF.dribbler.lagCurrent, 1.0f, 0.005f, CTRL_DELTA_T);*/
+  /*LagElementPT1Init(&fusionEKF.dribbler.lagCurrent, 1.0f, 0.005f, CTRL_DELTA_T);*/
 }
 
 /*
