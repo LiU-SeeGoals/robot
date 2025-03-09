@@ -163,3 +163,11 @@ add_custom_command(TARGET robot_CM4.elf POST_BUILD
 
 add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND STM32_Programmer_CLI -c port=SWD -w ${CM7_BIN_FILE} 0x08000000 -rst)
 add_custom_target(flash_cm7_st DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)
+
+add_custom_target(gdb_cm7 COMMAND st-util & gdb-multiarch -q -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf")
+add_custom_target(gdb_cm7_st COMMAND st-util & gdb-multiarch -q -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf")
+add_custom_target(lldb_cm7_st COMMAND st-util & lldb robot_CM7.elf -o "gdb-remote localhost:4242")
+
+add_dependencies(gdb_cm7 flash_cm7)
+add_dependencies(gdb_cm7_st flash_cm7_st)
+add_dependencies(lldb_cm7_st flash_cm7_st)
