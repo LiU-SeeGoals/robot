@@ -32,7 +32,7 @@ void lsm6dsl_i2c_master_read_mem(Lsm6dsl_I2cPortHandle_t *port_handle,
                                  uint8_t *inbuf,
                                  uint8_t size){
 
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Read(port_handle, device_address << 1, mem_address, I2C_MEMADD_SIZE_8BIT, inbuf, size, HAL_MAX_DELAY);
+  HAL_StatusTypeDef status = HAL_I2C_Mem_Read(port_handle, device_address << 1, mem_address, I2C_MEMADD_SIZE_8BIT, inbuf, size, 500);
   
   if (status != HAL_OK) {
     LOG_ERROR("Failed to read %u byte(s) from IMU register address 0x%X\r\n", size, mem_address);
@@ -48,7 +48,7 @@ void lsm6dsl_i2c_master_write_mem(Lsm6dsl_I2cPortHandle_t *port_handle,
                                  uint8_t *outbuf,
                                  uint8_t size) {
 
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(port_handle, device_address << 1, mem_address, I2C_MEMADD_SIZE_8BIT, outbuf, size, HAL_MAX_DELAY);
+  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(port_handle, device_address << 1, mem_address, I2C_MEMADD_SIZE_8BIT, outbuf, size, 500);
   
   if (status != HAL_OK) {
     LOG_ERROR("Failed to write %u byte(s) to IMU register address 0x%X\r\n", size, mem_address);

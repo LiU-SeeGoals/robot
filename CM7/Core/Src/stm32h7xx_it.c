@@ -247,6 +247,7 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim12);
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
 
+  __disable_irq();
   // This interrupt runs 1000HZ
 
   if (STATE_is_calibrated() == 1) 
@@ -255,15 +256,16 @@ void TIM8_BRK_TIM12_IRQHandler(void)
     IMU_GyroVec3 gyr = IMU_read_gyro_radps();
 
     STATE_FusionEKFIntertialUpdate(acc, gyr);
-    /*TEST_vx(0,100.f);*/
-    /*TEST_vy(0,100.f);*/
+    TEST_vx(0,100.f);
+    TEST_vy(0,100.f);
     TEST_angle_control(0);
     float x = NAV_GetNavX();
     float y = NAV_GetNavY();
     float w = NAV_GetNavW();
-    /*POS_go_to_position(x, y, w);*/
+    POS_go_to_position(x, y, w);
     NAV_set_motor_ticks();
   }
+  __enable_irq();
 
   
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */

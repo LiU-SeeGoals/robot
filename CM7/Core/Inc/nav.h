@@ -80,6 +80,7 @@ void NAV_ClearRobotPanic();
 float NAV_GetNavX();
 float NAV_GetNavY();
 float NAV_GetNavW();
-
+// hack
+void handle_command();
 #endif /* NAV_H */
 

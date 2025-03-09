@@ -126,16 +126,26 @@ void COM_RF_Receive(uint8_t pipe) {
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
 
   uint8_t len = 0;
-  NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
-
-  uint8_t payload[len];
-  NRF_ReadPayload(payload, len);
-
-  NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
-
+  NRF_Status status;
+  status = NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
   if (len == 0 || pipe == 0) {
     return;
   }
+  /**/
+  /*if (status != NRF_OK)*/
+  /*{*/
+  /*  return;*/
+  /*}*/
+
+  uint8_t payload[100];
+  status = NRF_ReadPayload(payload, len);
+  /*if (status != NRF_OK)*/
+  /*{*/
+  /*  return;*/
+  /*}*/
+
+  NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
+
   main_tasks |= TASK_DATA;
   uint8_t msg_type = payload[0] & 0xf;
   uint8_t order = payload[0] & 0xf0;
@@ -164,6 +174,7 @@ void COM_RF_Receive(uint8_t pipe) {
   //NRF_WriteAckPayload(pipe, &txMsg, 1);
 
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
+  NRF_SendCommand(NRF_CMD_FLUSH_RX);
 }
 
 void COM_RF_PrintInfo(void) {
@@ -317,6 +328,8 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
     LOG_WARNING("Decoding PB failed\r\n");
     return;
   }
-  NAV_QueueCommandIRQ(cmd);
+  handle_command(cmd);
+  /*NAV_QueueCommandIRQ(cmd);*/
+  protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
   main_tasks |= TASK_NAV_COMMAND;
 }

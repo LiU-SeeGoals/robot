@@ -110,6 +110,8 @@ static void I2C4_Init(void);
 /* USER CODE BEGIN 0 */
 // Handle callbacks
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  /*HAL_NVIC_DisableIRQ(TIM8_BRK_TIM12_IRQn); */
+  __disable_irq();
   switch (GPIO_Pin) {
   case BTN_USER_Pin:
     COM_RF_PrintInfo();
@@ -121,6 +123,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     LOG_WARNING("Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
     break;
   }
+  __enable_irq();
+  /*HAL_NVIC_EnableIRQ(TIM8_BRK_TIM12_IRQn);*/
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { UI_RxCallback(); }
@@ -192,7 +196,7 @@ int main(void)
   MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 
-  MX_I2C4_Init(); // Initialize I2C used for IMU
+  /*MX_I2C4_Init(); // Initialize I2C used for IMU*/
 
   LOG_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
@@ -219,10 +223,10 @@ int main(void)
   uint32_t now = HAL_GetTick();
   bool on = false;
 
-  STATE_calibrate_imu_gyr();
+  /*STATE_calibrate_imu_gyr();*/
   while (1) {
 
-    /*STATE_log_states();*/
+    STATE_log_states();
     /*STATE_log_states();*/
     /*NAV_log_speed();*/
 
@@ -235,10 +239,10 @@ int main(void)
       COM_Ping();
     }
 
-    if (main_tasks & TASK_NAV_COMMAND) {
-      main_tasks &= ~TASK_NAV_COMMAND;
-      NAV_HandleCommands();
-    }
+    /*if (main_tasks & TASK_NAV_COMMAND) {*/
+    /*  main_tasks &= ~TASK_NAV_COMMAND;*/
+    /*  NAV_HandleCommands();*/
+    /*}*/
 
     if (main_tasks & TASK_DATA) {
       main_tasks &= ~TASK_DATA;

@@ -351,7 +351,7 @@ void NAV_GoToAction(Command* cmd){
       return;
     }
 
-    /*STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);*/
+    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
 
     prev_nav_x = f_cam_x;
     prev_nav_y = f_cam_y;
