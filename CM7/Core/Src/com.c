@@ -24,7 +24,8 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len);
 static LOG_Module internal_log_mod;
 static int nRFon = 0;
 static volatile uint8_t ping_ack;
-
+volatile uint8_t last_rec_id = 0xff;
+volatile uint32_t last_rec_time = 0;
 
 /*
  * Public functions implementations
@@ -87,7 +88,7 @@ void COM_RF_HandleIRQ() {
 
   if (status & STATUS_MASK_RX_DR) {
     // Received packet
-    while (1) {
+    for (;;) {
       uint8_t pipe = (NRF_ReadStatus() & STATUS_MASK_RX_P_NO) >> 1;
       if (pipe >= 6) {
         break;
@@ -113,38 +114,34 @@ void COM_RF_HandleIRQ() {
   }
 }
 
-/* The id of last message.
- * The value is contained in the upper 4 bits. Sequential ids should be: 0x00, 0x10, 0x20, etc.
- * 0xff is used for no last message, 0xfe for connection timed out.
- * This field is used to remove duplicate messages.
-*/
-volatile uint8_t last_rec_id = 0xff;
-// Timestamp of last message.
-volatile uint32_t last_rec_time = 0;
-
 void COM_RF_Receive(uint8_t pipe) {
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
 
   uint8_t len = 0;
   NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
 
+  if (len == 0 || pipe == 0) {
+    return;
+  }
+
   uint8_t payload[len];
   NRF_ReadPayload(payload, len);
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
-
-  if (len == 0 || pipe == 0) {
-    return;
-  }
   main_tasks |= TASK_DATA;
-  uint8_t msg_type = payload[0] & 0xf;
+
+  uint8_t msg_type = payload[0] & 0x0f;
   uint8_t order = payload[0] & 0xf0;
-  last_rec_time = HAL_GetTick();
+  last_rec_time = HAL_GetTick(); // Timestamp of last received message
   if (order == last_rec_id) {
     return;
   }
+
+  /* The id of last message.
+   * The value is contained in the upper 4 bits. Sequential ids should be: 0x00, 0x10, 0x20, etc.
+   * 0xff is used for no last message, 0xfe for connection timed out.
+   * This field is used to remove duplicate messages. */
   last_rec_id = order;
-  //LOG_INFO("Payload of length %i of type %i\r\n", len, msg_type);
 
   switch (msg_type) {
     case MSG_ACTION:
@@ -158,10 +155,6 @@ void COM_RF_Receive(uint8_t pipe) {
       HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
       break;
   }
-
-  // What we're sending back on next receive
-  //uint8_t txMsg = 'W';
-  //NRF_WriteAckPayload(pipe, &txMsg, 1);
 
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
 }
@@ -262,7 +255,6 @@ bool COM_Update() {
   return false;
 }
 
-// TODO: use this for sending ping as well
 void COM_RF_Send(uint8_t *msg, uint8_t length) {
   NRF_EnterMode(NRF_MODE_STANDBY1);
 

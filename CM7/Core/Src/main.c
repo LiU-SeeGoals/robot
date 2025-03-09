@@ -221,15 +221,6 @@ int main(void)
 
   STATE_calibrate_imu_gyr();
   while (1) {
-
-    /*STATE_log_states();*/
-    /*STATE_log_states();*/
-    /*NAV_log_speed();*/
-
-    /*TEST_angle_control(0);*/
-    /*NAV_TireTest();*/
-    /*STATE_log_states();*/
-    /*continue;*/
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();
@@ -244,13 +235,9 @@ int main(void)
       main_tasks &= ~TASK_DATA;
     }
 
-    // Failsafe for when communication fails.
+    // If communication dies, we want to stop moving and
+    // reset the RF to start up comms again.
     if (!COM_Update() && NRF_AVAILABLE) {
-      /*NAV_SetRobotPanic();*/
-      /*NAV_StopMovement();*/
-      /*NAV_Stop();*/
-      /*HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);*/
-
       COM_RF_Reset();
     }
 
