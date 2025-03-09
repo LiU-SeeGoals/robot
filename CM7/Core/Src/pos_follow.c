@@ -51,13 +51,13 @@ void set_params() {
   params_angle.Ts = DELTA_T;
   params_angle.Ti = 1000000000000;
   params_angle.Td = 0;
-  params_angle.K = 8 * 180 / PI;
+  params_angle.K = 30;
 
   params_dist.umin = -100.0;
   params_dist.umax = 100.0;
   params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.0015;
-  params_dist.K = 0.015 * 2;
+  params_dist.K = 50.0f;
   params_dist.Td = 0.1;
 }
 
@@ -89,16 +89,22 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
   float rel_x = dest_x - cur_x;
   float rel_y = dest_y - cur_y;
-  float euclidian_distance = rel_x * rel_x + rel_x*rel_x;
+  float euclidian_distance = rel_x * rel_x + rel_y*rel_y;
+  /*float err_y = rel_y;*/
+  /*float err_x = rel_x;*/
 
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
+  /*float x_ctrl = PID_p(err_x, 0.0, standard_error, &params_dist);*/
+  /*float y_ctrl = PID_p(err_y, 0.0, standard_error, &params_dist);*/
   float control_w = PID_p(STATE_get_robot_angle(), wantw, angle_error, &params_angle);
 
   // Rotate from football field to robot coordinates
   /*[cos(theta), -sin(theta)]*/
   /*[sin(theta), cos(theta)]*/
-  float x = (rel_x * cos(angle)) - (rel_y * sin(angle));
-  float y = (rel_x * sin(angle)) + (rel_y * cos(angle));
+  /*float x = (distance_control_signal * arm_cos_f32(angle));*/
+  /*float y = (distance_control_signal * arm_sin_f32(angle));*/
+  float x = distance_control_signal * ((rel_x * arm_cos_f32(angle)) - (rel_y * arm_sin_f32(angle)));
+  float y = distance_control_signal * ((rel_x * arm_sin_f32(angle)) + (rel_y * arm_cos_f32(angle)));
 
   // Threshhold to make it less "shaky"
   /*cur_w += (1 + cur_w % 100);*/
@@ -114,7 +120,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   /*else */
   /*{*/
     /*steer(0.0f, 0.0f, control_w);*/
-    steer(100.f * x, 0, control_w);
+  steer(-y, -x, control_w);
     /*steer(0.0f, 0.0f, 0.0f);*/
   /*}*/
   // Robot coordinates to world coordinates are reverse

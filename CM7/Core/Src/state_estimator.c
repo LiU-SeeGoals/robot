@@ -278,6 +278,11 @@ void STATE_logm44(const float32_t* m44){
 
 static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF)
 {
+  // [1 0 0 0 0]
+  // [0 1 0 0 0]
+  // [0 0 1 0 0]
+  // [0 0 0 1 0]
+  // [0 0 0 0 1]
 
 
   const float dt = CTRL_DELTA_T;
@@ -301,17 +306,17 @@ static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_ma
 
 	arm_mat_identity_f32(pF);
 
-	MAT_ELEMENT(*pF, 0, 2) = - (SF5*SF6)*(dt*dt*0.5f) - (v_x*SF4)*dt - (v_y*SF6)*dt - (SF4*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);
-	MAT_ELEMENT(*pF, 0, 3) = SF2;
-	MAT_ELEMENT(*pF, 0, 4) = SF3 - SF4*dt;
-
-	MAT_ELEMENT(*pF, 1, 2) = (v_x*SF6)*(dt*dt*0.5f) - (SF4*SF5)*(dt*dt*0.5f) - (v_y*SF4)*dt + (SF6*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);
-	MAT_ELEMENT(*pF, 1, 3) = SF4*dt - SF3;
-	MAT_ELEMENT(*pF, 1, 4) = SF2;
-
-	MAT_ELEMENT(*pF, 3, 4) = SF7;
-
-	MAT_ELEMENT(*pF, 4, 3) = -SF7;
+	/*MAT_ELEMENT(*pF, 0, 2) = - (SF5*SF6)*(dt*dt*0.5f) - (v_x*SF4)*dt - (v_y*SF6)*dt - (SF4*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);*/
+	/*MAT_ELEMENT(*pF, 0, 3) = SF2;*/
+	/*MAT_ELEMENT(*pF, 0, 4) = SF3 - SF4*dt;*/
+	/**/
+	/*MAT_ELEMENT(*pF, 1, 2) = (v_x*SF6)*(dt*dt*0.5f) - (SF4*SF5)*(dt*dt*0.5f) - (v_y*SF4)*dt + (SF6*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);*/
+	/*MAT_ELEMENT(*pF, 1, 3) = SF4*dt - SF3;*/
+	/*MAT_ELEMENT(*pF, 1, 4) = SF2;*/
+	/**/
+	/*MAT_ELEMENT(*pF, 3, 4) = SF7;*/
+	/**/
+	/*MAT_ELEMENT(*pF, 4, 3) = -SF7;*/
 }
 
 static void ekfMeasFunc(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pY)
@@ -431,10 +436,10 @@ void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
 
   float pos[3] = {posx, posy, posw};
 
-  LOG_DEBUG("vision update\r\n");
+  /*LOG_DEBUG("vision update\r\n");*/
   if(!fusionEKF.vision.online)
   {
-    LOG_DEBUG("vision not online\r\n");
+    /*LOG_DEBUG("vision not online\r\n");*/
     fusionEKF.vision.online = 1;
 
     // Make sure EKF jumps immediately to new position in first measurement.
@@ -446,7 +451,7 @@ void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
   else
   {
     // Move vision data to ekf measurement vector and do the measurement update
-    LOG_DEBUG("vision online\r\n");
+    /*LOG_DEBUG("vision online\r\n");*/
     set_ekf_lock();
     memcpy(fusionEKF.ekf.z.pData, pos, sizeof(float)*3);
     EKFUpdate(&fusionEKF.ekf);
