@@ -196,7 +196,6 @@ int main(void)
   LOG_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
   POS_Init();
-  STATE_Init();
 #ifdef PCB_MOTOR
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
 #else
@@ -228,6 +227,7 @@ int main(void)
 
     /*TEST_angle_control(0);*/
     /*NAV_TireTest();*/
+    /*STATE_log_states();*/
     /*continue;*/
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
@@ -245,7 +245,11 @@ int main(void)
 
     // Failsafe for when communication fails.
     if (!COM_Update() && NRF_AVAILABLE) {
-      NAV_StopMovement();
+      /*NAV_SetRobotPanic();*/
+      /*NAV_StopMovement();*/
+      /*NAV_Stop();*/
+      /*HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);*/
+
       COM_RF_Reset();
     }
 
@@ -786,7 +790,7 @@ static void MX_TIM12_Init(void)
 
   /* USER CODE END TIM12_Init 1 */
   htim12.Instance = TIM12;
-  htim12.Init.Prescaler = 39;
+  htim12.Init.Prescaler = 19;
   htim12.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim12.Init.Period = 9999;
   htim12.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;

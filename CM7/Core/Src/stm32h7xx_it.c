@@ -19,13 +19,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "pos_follow.h"
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "log.h"
 #include "imu.h"
 #include "nav.h"
+#include "pos_follow.h"
 #include "state_estimator.h"
 /* USER CODE END Includes */
 
@@ -238,6 +238,7 @@ void EXTI15_10_IRQHandler(void)
 /**
   * @brief This function handles TIM8 break interrupt and TIM12 global interrupt.
   */
+
 void TIM8_BRK_TIM12_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 0 */
@@ -248,18 +249,22 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 
   // This interrupt runs 1000HZ
 
-  if (STATE_is_calibrated() == 1) {
+  if (STATE_is_calibrated() == 1) 
+  {
     IMU_AccelVec3 acc = IMU_read_accel_mps2();
-    IMU_GyroVec3 gyr = IMU_read_gyro();
+    IMU_GyroVec3 gyr = IMU_read_gyro_radps();
 
     STATE_FusionEKFIntertialUpdate(acc, gyr);
     /*TEST_vx(0,100.f);*/
     /*TEST_vy(0,100.f);*/
-    /*TEST_angle_control(0);*/
-    robot_nav_command cmd = NAV_GetNavCommand();
-    POS_go_to_position(cmd.x, cmd.y, cmd.w);
+    TEST_angle_control(0);
+    float x = NAV_GetNavX();
+    float y = NAV_GetNavY();
+    float w = NAV_GetNavW();
+    /*POS_go_to_position(x, y, w);*/
     NAV_set_motor_ticks();
   }
+
   
   /* USER CODE END TIM8_BRK_TIM12_IRQn 1 */
 }

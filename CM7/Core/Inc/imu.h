@@ -3,6 +3,7 @@
 
 /* Public includes */
 #include "stm32h7xx_hal.h"
+#include "arm_math.h"
 #include <HLindgren_LSM6DSL.h>
 #include <stdint.h>
 
@@ -28,6 +29,7 @@ typedef IMU_AccelVec3 IMU_GyroVec3;
 #define IMU_GRAVITY_CONSTANT     9.820665f
 
 /* Public macros */
+#define IMU_RAW_TO_RADPS(raw_gyro_val) (PI * ((float)raw_gyro_val * IMU_GYRO_FULL_SCALE_VAL / (float)INT16_MAX) / 180.0f)
 #define IMU_RAW_TO_DPS(raw_gyro_val) ((float)raw_gyro_val * IMU_GYRO_FULL_SCALE_VAL / (float)INT16_MAX)
 #define IMU_RAW_TO_G(raw_accel_val)  ((float)raw_accel_val * IMU_ACCEL_FULL_SCALE_VAL / (float)INT16_MAX)
 #define IMU_RAW_TO_MPS2(raw_accel_val)  ((float)raw_accel_val * IMU_ACCEL_FULL_SCALE_VAL * IMU_GRAVITY_CONSTANT / (float)INT16_MAX)
@@ -42,7 +44,8 @@ Lsm6dsl_GyroData_t IMU_read_gyro_raw();
 
 IMU_AccelVec3 IMU_read_accel_g();    // Scaled to g-force units
 IMU_AccelVec3 IMU_read_accel_mps2(); // Scaled to m/s^2
-IMU_GyroVec3  IMU_read_gyro();
+IMU_GyroVec3  IMU_read_gyro_radps();
+IMU_GyroVec3 IMU_read_gyro_dps();
 
 void IMU_test();
 
