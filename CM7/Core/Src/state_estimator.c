@@ -374,6 +374,10 @@ static void initEKF()
 
 	arm_mat_identity_f32(&fusionEKF.ekf.Ex);
 	arm_mat_identity_f32(&fusionEKF.ekf.Ez);
+  // Trust vision to cm accuracy
+  fusionEKF.ekf.Ez.pData[0] = 0.01;
+  fusionEKF.ekf.Ez.pData[4] = 0.01;
+  fusionEKF.ekf.Ez.pData[8] = 0.05;
 
   // TODO: Load some covariance values for process and measurement noise
   // Instead of having idenity matrix

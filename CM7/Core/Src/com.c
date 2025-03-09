@@ -16,6 +16,7 @@
 #define CONNECT_MAGIC   0x4d, 0xf8, 0x42, 0x79
 #define CONTROLLER_ADDR {2, 255, 255, 255, 255}
 #define ROBOT_ACTION_ADDR(id) {1, 255, 255, id, 255}
+#define RF_CONTROLLER_PIPE 0
 
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
@@ -118,17 +119,23 @@ void COM_RF_Receive(uint8_t pipe) {
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
 
   uint8_t len = 0;
-  NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
+  NRF_Status status;
+  status = NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
+  if (status != NRF_OK) {
+    LOG_ERROR("Couldn't read length of RF packet...\r\n");
+  }
 
-  if (len == 0 || pipe == 0) {
+  if (len == 0 || pipe == RF_CONTROLLER_PIPE) {
     return;
   }
 
   uint8_t payload[len];
-  NRF_ReadPayload(payload, len);
+  status = NRF_ReadPayload(payload, len);
+  if (status != NRF_OK) {
+    LOG_ERROR("Couldn't read RF packet payload...\r\n");
+  }
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
-  main_tasks |= TASK_DATA;
 
   uint8_t msg_type = payload[0] & 0x0f;
   uint8_t order = payload[0] & 0xf0;
@@ -157,6 +164,7 @@ void COM_RF_Receive(uint8_t pipe) {
   }
 
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
+  NRF_SendCommand(NRF_CMD_FLUSH_RX);
 }
 
 void COM_RF_PrintInfo(void) {
@@ -304,11 +312,10 @@ uint8_t COM_Get_ID() {
 static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   Command* cmd = NULL;
   cmd = command__unpack(NULL, len, payload);
-
   if (!cmd) {
     LOG_WARNING("Decoding PB failed\r\n");
     return;
   }
-  NAV_QueueCommandIRQ(cmd);
-  main_tasks |= TASK_NAV_COMMAND;
+  NAV_HandleCommand(cmd);
+  protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
 }

@@ -10,12 +10,6 @@
 #include "log.h"
 #include "arm_math.h"
 
-#include <ringbuffer.h>
-
-#define BUFFER_SIZE 64
-RINGBUFFER_DEF(Command*, BUFFER_SIZE, Command_buf);
-RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
-
 /*
  * Private variables
  */
@@ -25,11 +19,9 @@ static robot_nav_command robot_cmd;
 static float I_prevs[4]; // PI control I-parts
 const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
-Command_buf queue;
 static int queued = 0;
 
 /* Private functions declarations */
-void handle_command(Command* cmd);
 void set_motors(float m1, float m2, float m3, float m4);
 
 
@@ -244,13 +236,6 @@ void NAV_Direction(DIRECTION dir) {
   }
 }
 
-void NAV_QueueCommandIRQ(Command* command) {
-  if (!Command_buf_write(&queue, command)) {
-    LOG_WARNING("Command buffer full\n\r");
-  }
-  ++queued;
-}
-
 void NAV_Stop() {
   MOTOR_PWMStop(&motors[0]);
   MOTOR_PWMStop(&motors[1]);
@@ -282,25 +267,47 @@ void command_move(Command *cmd){
 
 }
 
-void NAV_HandleCommands() {
-  static int handled = 0;
-  while (1) {
-    Command *cmd;
-    if (!Command_buf_read(&queue, &cmd)) {
-      return;
-    }
-    ++handled;
-    handle_command(cmd);
-    protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
-  }
-}
-
 void NAV_TestMovement() {
   steer(0, 1, 0);
 }
 
 void NAV_StopMovement() {
   steer(0, 0, 0);
+}
+
+void NAV_HandleCommand(Command* cmd) {
+  switch (cmd->command_id) {
+    case ACTION_TYPE__STOP_ACTION:
+      NAV_StopMovement();
+      LOG_DEBUG("Stop\r\n");
+      break;
+    case ACTION_TYPE__MOVE_TO_ACTION: {
+      LOG_DEBUG("Got move to ID: %d\r\n", cmd->command_id);
+      NAV_GoToAction(cmd);
+      } break;
+
+    case ACTION_TYPE__MOVE_ACTION: {
+      const int32_t speed = cmd->kick_speed;
+      const int32_t x = cmd->direction->x;
+      const int32_t y = cmd->direction->y;
+
+      LOG_DEBUG("keyboard control (x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
+      LOG_DEBUG("keyboard control (x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
+      // TODO: Should somehow know that we're in remote control mode
+      if (0 <= speed && speed <= 10) {
+        steer(100.f * speed * x, 100.f * speed * y, 0.f);
+      }
+      } break;
+    case ACTION_TYPE__PING:
+      break;
+    case ACTION_TYPE__ROTATE_ACTION:
+      break;
+    case ACTION_TYPE__KICK_ACTION:
+      break;
+    default:
+      LOG_WARNING("Not known command: %i\r\n", cmd->command_id);
+      break;
+  }
 }
 
 
@@ -313,7 +320,6 @@ int32_t prev_nav_y = 2147483647;
 int32_t prev_nav_w = 2147483647;
 
 void NAV_GoToAction(Command* cmd){
-    
     const int32_t nav_x = cmd->dest->x;
     const int32_t nav_y = cmd->dest->y;
     const int32_t nav_w = cmd->dest->w;
@@ -351,7 +357,7 @@ void NAV_GoToAction(Command* cmd){
       return;
     }
 
-    /*STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);*/
+    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
 
     prev_nav_x = f_cam_x;
     prev_nav_y = f_cam_y;
@@ -361,41 +367,6 @@ void NAV_GoToAction(Command* cmd){
     // Set desiered position, this position is followed in interrupts
 
     /*POS_go_to_position(position, f_nav_w);*/
-}
-
-void handle_command(Command* cmd){
-  switch (cmd->command_id) {
-    case ACTION_TYPE__STOP_ACTION:
-      NAV_StopMovement();
-      LOG_DEBUG("Stop\r\n");
-      break;
-    case ACTION_TYPE__MOVE_TO_ACTION: {
-      LOG_DEBUG("Got move to ID: %d\r\n", cmd->command_id);
-      NAV_GoToAction(cmd);
-      } break;
-
-    case ACTION_TYPE__MOVE_ACTION: {
-      const int32_t speed = cmd->kick_speed;
-      const int32_t x = cmd->direction->x;
-      const int32_t y = cmd->direction->y;
-
-      LOG_DEBUG("keyboard control (x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
-      LOG_DEBUG("keyboard control (x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
-      // TODO: Should somehow know that we're in remote control mode
-      if (0 <= speed && speed <= 10) {
-        steer(100.f * speed * x, 100.f * speed * y, 0.f);
-      }
-      } break;
-    case ACTION_TYPE__PING:
-      break;
-    case ACTION_TYPE__ROTATE_ACTION:
-      break;
-    case ACTION_TYPE__KICK_ACTION:
-      break;
-    default:
-      LOG_WARNING("Not known command: %i\r\n", cmd->command_id);
-      break;
-  }
 }
 
 void NAV_TireTest() {
