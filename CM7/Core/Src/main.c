@@ -226,23 +226,11 @@ int main(void)
   STATE_calibrate_imu_gyr();
   while (1) {
 
-    STATE_log_states();
     /*STATE_log_states();*/
-    /*NAV_log_speed();*/
-
-    /*TEST_angle_control(0);*/
-    /*NAV_TireTest();*/
-    /*STATE_log_states();*/
-    /*continue;*/
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();
     }
-
-    /*if (main_tasks & TASK_NAV_COMMAND) {*/
-    /*  main_tasks &= ~TASK_NAV_COMMAND;*/
-    /*  NAV_HandleCommands();*/
-    /*}*/
 
     if (main_tasks & TASK_DATA) {
       main_tasks &= ~TASK_DATA;
@@ -250,10 +238,7 @@ int main(void)
 
     // Failsafe for when communication fails.
     if (!COM_Update() && NRF_AVAILABLE) {
-      /*NAV_SetRobotPanic();*/
-      /*NAV_StopMovement();*/
-      /*NAV_Stop();*/
-      /*HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);*/
+      // TODO: Maybe should add stop motors
 
       COM_RF_Reset();
     }

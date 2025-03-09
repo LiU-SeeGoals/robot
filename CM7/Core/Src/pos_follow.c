@@ -90,54 +90,22 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   float rel_x = dest_x - cur_x;
   float rel_y = dest_y - cur_y;
   float euclidian_distance = rel_x * rel_x + rel_y*rel_y;
-  /*float err_y = rel_y;*/
-  /*float err_x = rel_x;*/
 
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
-  /*float x_ctrl = PID_p(err_x, 0.0, standard_error, &params_dist);*/
-  /*float y_ctrl = PID_p(err_y, 0.0, standard_error, &params_dist);*/
   float control_w = PID_p(STATE_get_robot_angle(), wantw, angle_error, &params_angle);
 
-  // Rotate from football field to robot coordinates
-  /*[cos(theta), -sin(theta)]*/
-  /*[sin(theta), cos(theta)]*/
-  /*float x = (distance_control_signal * arm_cos_f32(angle));*/
-  /*float y = (distance_control_signal * arm_sin_f32(angle));*/
   float x = distance_control_signal * ((rel_x * arm_cos_f32(angle)) - (rel_y * arm_sin_f32(angle)));
   float y = distance_control_signal * ((rel_x * arm_sin_f32(angle)) + (rel_y * arm_cos_f32(angle)));
 
-  // Threshhold to make it less "shaky"
-  /*cur_w += (1 + cur_w % 100);*/
-  /*if (cur_w == 0)*/
-  /*{*/
-  /*  STATE_log_states();*/
-  /*}*/
-  /*if (fabs(control_w) < 0.5f)*/
-  /*{*/
-    /*steer(100.f * x, 100.f * y, 0.0f);*/
-  /*  steer(0.0f, 0.0f, control_w);*/
-  /*}*/
-  /*else */
-  /*{*/
-    /*steer(0.0f, 0.0f, control_w);*/
+  // Steer robot with robot to world coordinates
   steer(-y, -x, control_w);
-    /*steer(0.0f, 0.0f, 0.0f);*/
-  /*}*/
-  // Robot coordinates to world coordinates are reverse
-  // so minus on the control signal
-  /*steer(100.f * x, 100.f * y, -control_w);*/
-
 }
-
-float prev_error = 0;
 
 float PID_p(float current, float desired, float (*error_func)(float,float), control_params *param){
 
   set_params();
 
   float error = error_func(current, desired);
-  // d not used
-  /*float d = param->Td*(error - prev_error)/DELTA_T;*/
 
   float v = param->K * (error);
   float u = 0;
@@ -154,10 +122,7 @@ float PID_p(float current, float desired, float (*error_func)(float,float), cont
     u = v;
   }
 
-  prev_error = error;
-
   return u;
-  // for some time
 }
 
 float PID_pi(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params *param){
@@ -166,8 +131,6 @@ float PID_pi(float current, float desired, float* I_prev, float (*error_func)(fl
 
   float error = error_func(current, desired);
   float I = *I_prev + (param->Ts / param->Ti) * error;
-  // d not used
-  /*float d = param->Td*(error - prev_error)/DELTA_T;*/
 
   float feed_forward = 0.0;
   float v = param->K * (error + I);
@@ -189,9 +152,7 @@ float PID_pi(float current, float desired, float* I_prev, float (*error_func)(fl
     u = v;
   }
 
-  prev_error = error;
   *I_prev = I;
 
   return u;
-  // for some time
 }

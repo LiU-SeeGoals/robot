@@ -157,15 +157,6 @@ void NAV_set_motor_ticks(){
   }
 
   // Dont move this into the other for loop !!
-  /*if (robot_cmd.panic == 1)*/
-  /*{*/
-  /*  for (int i = 0; i < 4; i++){ // do for all motor*/
-  /*    MOTOR_SetSpeed(&motors[i], 0.0, &I_prevs[i]);*/
-  /*  }*/
-  /*  return;*/
-  /*}*/
-
-  // If robot is in bad state, turn off motors
   for (int i = 0; i < 4; i++){ // do for all motor
     MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
   }
