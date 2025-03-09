@@ -363,6 +363,43 @@ static void ekfStateFunc(arm_matrix_instance_f32* pX, const arm_matrix_instance_
 	MAT_ELEMENT(*pX, 4, 0) = vy1;
 }
 
+static FusionEKFConfig configFusionEKF = {
+	.posNoiseXY = 0.001f,
+	.posNoiseW = 0.001f,
+	.velNoiseXY = 0.005f,
+	.visNoiseXY = 0.05f,
+	.visNoiseW = 0.1f,
+	.outlierMaxVelXY = 3.0f,
+	.outlierMaxVelW = 3.0f,
+	.trackingCoeff = 1.0f,
+	.visCaptureDelay = 20,
+	.fusionHorizon = 35,
+	.visionTimeoutMs = 1000,
+	.emaAccelT = 0.005f,
+	.ballCenteringFactor = 0.1f,
+	.ballCenteringVelLimit = 0.02f,
+	.dribblerStrongOn = 70,
+	.dribblerStrongOff = 40,
+    .ballTimeoutMs = 2000,
+	.activeDribblingForce_mN = 500,
+};
+
+static void loadNoiseCovariancesFromConfig()
+{
+	if(fusionEKF.ekf.Ex.pData) // pData is null when fusionEKF has not been initialized yet
+	{
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 0, 0) = fusionEKF.pConfig->posNoiseXY*fusionEKF.pConfig->posNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 1, 1) = fusionEKF.pConfig->posNoiseXY*fusionEKF.pConfig->posNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 2, 2) = fusionEKF.pConfig->posNoiseW *fusionEKF.pConfig->posNoiseW;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 3, 3) = fusionEKF.pConfig->velNoiseXY*fusionEKF.pConfig->velNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 4, 4) = fusionEKF.pConfig->velNoiseXY*fusionEKF.pConfig->velNoiseXY;
+
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 0, 0) = fusionEKF.pConfig->visNoiseXY*fusionEKF.pConfig->visNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 1, 1) = fusionEKF.pConfig->visNoiseXY*fusionEKF.pConfig->visNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 2, 2) = fusionEKF.pConfig->visNoiseW *fusionEKF.pConfig->visNoiseW;
+	}
+}
+
 static void initEKF()
 {
 	EKFInit(&fusionEKF.ekf, 5, 3, 3, fusionEKF.ekfData);
@@ -374,10 +411,14 @@ static void initEKF()
 
 	arm_mat_identity_f32(&fusionEKF.ekf.Ex);
 	arm_mat_identity_f32(&fusionEKF.ekf.Ez);
-  // Trust vision to cm accuracy
-  fusionEKF.ekf.Ez.pData[0] = 0.01;
-  fusionEKF.ekf.Ez.pData[4] = 0.01;
-  fusionEKF.ekf.Ez.pData[8] = 0.05;
+  // Trust vision to cm accuracy for x,y
+  // and to 0.05 in radians
+  /*fusionEKF.ekf.Ez.pData[0] = 1000;*/
+  /*fusionEKF.ekf.Ez.pData[4] = 1000;*/
+  /*fusionEKF.ekf.Ez.pData[8] = 0.01 * 0.01;*/
+  /*fusionEKF.ekf.Ex.pData[0] = 1000;*/
+  /*fusionEKF.ekf.Ex.pData[4] = 1000;*/
+  /*fusionEKF.ekf.Ex.pData[8] = 0.01 * 0.01;*/
 
   // TODO: Load some covariance values for process and measurement noise
   // Instead of having idenity matrix
@@ -430,8 +471,10 @@ void STATE_FusionEKFIntertialUpdate(IMU_AccelVec3 acc, IMU_GyroVec3 gyr)
   float gyrAcc[3];
 	gyrAcc[0] = gyr.z - fusionEKF.bias.gyr_z;
   // Lowpass noisy accelerometer
-	gyrAcc[1] = LagElementPT1Process(&fusionEKF.lagAccel[0], linear_acc_x);
-	gyrAcc[2] = LagElementPT1Process(&fusionEKF.lagAccel[1], linear_acc_y);
+	/*gyrAcc[1] = LagElementPT1Process(&fusionEKF.lagAccel[0], linear_acc_x);*/
+	/*gyrAcc[2] = LagElementPT1Process(&fusionEKF.lagAccel[1], linear_acc_y);*/
+	gyrAcc[1] = 0.0f;
+	gyrAcc[2] = 0.0f;
 
 	// INERTIAL NAVIGATION SYSTEM (INS)
   if (get_ekf_lock() == LOCKED)

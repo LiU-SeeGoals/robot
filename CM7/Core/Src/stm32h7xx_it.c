@@ -256,9 +256,9 @@ void TIM8_BRK_TIM12_IRQHandler(void)
     IMU_GyroVec3 gyr = IMU_read_gyro_radps();
 
     STATE_FusionEKFIntertialUpdate(acc, gyr);
-    TEST_vx(0,100.f);
-    TEST_vy(0,100.f);
-    TEST_angle_control(0);
+    /*TEST_vx(0,100.f);*/
+    /*TEST_vy(0,100.f);*/
+    /*TEST_angle_control(0);*/
     float x = NAV_GetNavX();
     float y = NAV_GetNavY();
     float w = NAV_GetNavW();

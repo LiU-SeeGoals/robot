@@ -344,12 +344,12 @@ void NAV_GoToAction(Command* cmd){
     robot_cmd.y = f_nav_y;
     robot_cmd.w = f_nav_w;
 
-    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 1.0)
-    {
+    /*if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 1.0)*/
+    /*{*/
       // If software send us same position then ignore it.
       // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez
-      return;
-    }
+      /*return;*/
+    /*}*/
 
     STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
 

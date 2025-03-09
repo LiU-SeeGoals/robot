@@ -131,7 +131,7 @@ void COM_RF_Receive(uint8_t pipe) {
   if (len == 0 || pipe == 0) {
     return;
   }
-  /**/
+
   /*if (status != NRF_OK)*/
   /*{*/
   /*  return;*/
