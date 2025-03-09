@@ -313,25 +313,29 @@ int32_t prev_nav_y = 2147483647;
 int32_t prev_nav_w = 2147483647;
 
 void NAV_GoToAction(Command* cmd){
+    
     const int32_t nav_x = cmd->dest->x;
     const int32_t nav_y = cmd->dest->y;
-    const int32_t nav_w = cmd->dest->y;
+    const int32_t nav_w = cmd->dest->w;
 
     const int32_t cam_x = cmd->pos->x;
     const int32_t cam_y = cmd->pos->y;
     const int32_t cam_w = cmd->pos->w;
 
     // hax to cange to to float meter rep just for testing first time... hehe
+    // angle is scaled by 1000 before sent
     const float f_nav_x = ((float) nav_x) / 1000.f;
     const float f_nav_y = ((float) nav_y) / 1000.f;
     const float f_nav_w = ((float) nav_w) / 1000.f;
                              
     const float f_cam_x = ((float)cam_x) / 1000.f;
     const float f_cam_y = ((float)cam_y) / 1000.f;
-    const float f_cam_w = ((float)cam_w);
+    const float f_cam_w = ((float)cam_w) / 1000.f;
 
-    /*LOG_DEBUG("Got at %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);*/
-    /*LOG_DEBUG("Got move to %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);*/
+    LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);
+    LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);
+    LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
+    LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);
 
     /*STATE_log_states();*/
     /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
@@ -347,7 +351,7 @@ void NAV_GoToAction(Command* cmd){
       return;
     }
 
-    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
+    /*STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);*/
 
     prev_nav_x = f_cam_x;
     prev_nav_y = f_cam_y;

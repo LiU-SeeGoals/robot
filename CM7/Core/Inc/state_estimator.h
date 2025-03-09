@@ -84,6 +84,12 @@ typedef struct _EKF
 	arm_matrix_instance_f32 tmp3;
 } EKF;
 
+typedef enum 
+{
+  FREE,
+  LOCKED
+} EKF_LOCK;
+
 typedef struct _FusionEKF
 {
 	// EKF state vector: [ px py pw vx vy ]
@@ -91,6 +97,7 @@ typedef struct _FusionEKF
 	// measurement vector: [ px py pw ]
 	EKF ekf;
 	float ekfData[EKF_DATA_SIZE(5, 3, 3, 5)];
+  EKF_LOCK ekf_lock;
 	/*float imu_dt;*/
 
   struct

@@ -16,6 +16,20 @@ static LOG_Module internal_log_mod;
 
 FusionEKF fusionEKF;
 
+void release_ekf_lock()
+{
+  fusionEKF.ekf_lock = FREE;
+}
+
+void set_ekf_lock()
+{
+  fusionEKF.ekf_lock = LOCKED;
+}
+
+uint8_t get_ekf_lock()
+{
+  return fusionEKF.ekf_lock;
+}
 const float32_t A_f32[16] =
 {
   /* Const,   numTaps,   blockSize,   numTaps*blockSize */
@@ -241,6 +255,7 @@ void STATE_Init(){
 	LagElementPT1Init(&fusionEKF.lagAccel[0], 1.0f, 0.01, CTRL_DELTA_T);
 	LagElementPT1Init(&fusionEKF.lagAccel[1], 1.0f, 0.01, CTRL_DELTA_T);
 
+  fusionEKF.ekf_lock = 0;
   fusionEKF.bias.is_calibrated = -1;
 	/*LagElementPT1Init(&fusionEKF.dribbler.lagCurrent, 1.0f, 0.005f, CTRL_DELTA_T);*/
 }
@@ -387,8 +402,10 @@ void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
   {
     // Move vision data to ekf measurement vector and do the measurement update
     LOG_DEBUG("vision online\r\n");
+    set_ekf_lock();
     memcpy(fusionEKF.ekf.z.pData, pos, sizeof(float)*3);
     EKFUpdate(&fusionEKF.ekf);
+    release_ekf_lock();
   }
 }
 
@@ -413,6 +430,10 @@ void STATE_FusionEKFIntertialUpdate(IMU_AccelVec3 acc, IMU_GyroVec3 gyr)
 	gyrAcc[2] = LagElementPT1Process(&fusionEKF.lagAccel[1], linear_acc_y);
 
 	// INERTIAL NAVIGATION SYSTEM (INS)
+  if (get_ekf_lock() == LOCKED)
+  {
+    return;
+  }
 	memcpy(fusionEKF.ekf.u.pData, gyrAcc, sizeof(float)*3);
 	EKFPredict(&fusionEKF.ekf);
 }
@@ -513,7 +534,7 @@ void STATE_log_states()
 
 void STATE_calibrate_imu_gyr()
 {
-  const int calib_size = 1000;
+  const int calib_size = 5000;
 
   float acc_bias_x = 0;
   float acc_bias_y = 0;
@@ -527,12 +548,8 @@ void STATE_calibrate_imu_gyr()
   IMU_GyroVec3 gyr;
   for (int i = 0; i < calib_size; i++)
   {
-    // Assume imu can handle 333hz update
-    HAL_Delay(3);
-    /*while(blocks_read == 0)*/
-    /*{*/
-    /*blocks_read = IMU_read_fifo_raw(imu_buf, buf_size);*/
-    /*}*/
+    // Assume imu can handle 1khz update
+    HAL_Delay(1);
 
     gyr = IMU_read_gyro_radps();
     acc = IMU_read_accel_mps2();
