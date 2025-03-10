@@ -11,6 +11,27 @@
 
 static LOG_Module internal_log_mod;
 
+static FusionEKFConfig configFusionEKF = {
+	.posNoiseXY = 0.001f,
+	.posNoiseW = 0.001f,
+	.velNoiseXY = 0.005f,
+	.visNoiseXY = 0.05f,
+	.visNoiseW = 0.1f,
+	.outlierMaxVelXY = 3.0f,
+	.outlierMaxVelW = 3.0f,
+	.trackingCoeff = 1.0f,
+	.visCaptureDelay = 20,
+	.fusionHorizon = 35,
+	.visionTimeoutMs = 1000,
+	.emaAccelT = 0.005f,
+	.ballCenteringFactor = 0.1f,
+	.ballCenteringVelLimit = 0.02f,
+	.dribblerStrongOn = 70,
+	.dribblerStrongOff = 40,
+  .ballTimeoutMs = 2000,
+	.activeDribblingForce_mN = 500,
+};
+
 
 // NOTE: Assume 1000hz loop
 
@@ -256,6 +277,7 @@ void STATE_Init(){
 
   fusionEKF.ekf_lock = 0;
   fusionEKF.bias.is_calibrated = -1;
+  /*fusionEKF.pConfig = configFusionEKF;*/
   /*LagElementPT1Init(&fusionEKF.dribbler.lagCurrent, 1.0f, 0.005f, CTRL_DELTA_T);*/
 }
 
@@ -277,14 +299,14 @@ void STATE_logm44(const float32_t* m44){
 
 static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF)
 {
-  // [1 0 0 0 0]
-  // [0 1 0 0 0]
-  // [0 0 1 0 0]
-  // [0 0 0 1 0]
-  // [0 0 0 0 1]
+  // [1 0 0 t 0] px
+  // [0 1 0 0 t] py
+  // [0 0 1 0 0] pw
+  // [0 0 0 1 0] vx
+  // [0 0 0 0 1] vy
 
 
-  const float dt = CTRL_DELTA_T;
+  float dt = CTRL_DELTA_T;
 
 	float gyr_w = MAT_ELEMENT(*pU, 0, 0);
 	float acc_x = MAT_ELEMENT(*pU, 1, 0);
@@ -294,8 +316,9 @@ static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_ma
 	float v_x = MAT_ELEMENT(*pX, 3, 0);
 	float v_y = MAT_ELEMENT(*pX, 4, 0);
 
-  /*float SF1 = gyr_w/2000.0f + p_w - M_PI_2;*/
-  float SF1 = 3.14/2.0;
+  /*float SF1 = gyr_w*2*dt + p_w - M_PI_2;*/
+  float SF1 = gyr_w*2*dt + p_w;
+  /*float SF1 = 3.14/2.0;*/
 	float SF2 = arm_cos_f32(SF1)*dt + (gyr_w * arm_sin_f32(SF1))*( dt * dt * 0.5f);
 	float SF3 = (gyr_w * arm_cos_f32(SF1))* dt * dt * 0.5f;
 	float SF4 = arm_sin_f32(SF1);
@@ -305,7 +328,13 @@ static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_ma
 
 	arm_mat_identity_f32(pF);
 
+	/*MAT_ELEMENT(*pF, 0, 3) = SF2;*/
+	/*MAT_ELEMENT(*pF, 1, 4) = SF2;*/
+
   // TODO: Fix the actual jacobian.. just use identity for now.
+	/*MAT_ELEMENT(*pF, 0, 2) = - (SF5*SF6)*(dt*dt*0.5f) - (v_x*SF4)*dt - (v_y*SF6)*dt - (SF4*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);*/
+	/*MAT_ELEMENT(*pF, 0, 2) = - (SF5*SF6)*(dt*dt*0.5f) - (v_x*SF4)*dt - (v_y*SF6)*dt - (SF4*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);*/
+
 	/*MAT_ELEMENT(*pF, 0, 2) = - (SF5*SF6)*(dt*dt*0.5f) - (v_x*SF4)*dt - (v_y*SF6)*dt - (SF4*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);*/
 	/*MAT_ELEMENT(*pF, 0, 3) = SF2;*/
 	/*MAT_ELEMENT(*pF, 0, 4) = SF3 - SF4*dt;*/
@@ -337,7 +366,7 @@ void ekfMeasJacobianFunc(const arm_matrix_instance_f32* pX, arm_matrix_instance_
 static void ekfStateFunc(arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU)
 {
 	/*const float dt = 0.001f;*/
-  const float dt = CTRL_DELTA_T;
+  float dt = CTRL_DELTA_T;
 
 	float gyr_w = MAT_ELEMENT(*pU, 0, 0);
 	float acc_x = MAT_ELEMENT(*pU, 1, 0);
@@ -350,13 +379,15 @@ static void ekfStateFunc(arm_matrix_instance_f32* pX, const arm_matrix_instance_
 	float v_y = MAT_ELEMENT(*pX, 4, 0);
 
 	float v_w = gyr_w;
-	/*float a = -M_PI_2 + p_w + dt*v_w*0.5f;*/
-	float angle = 0;
-	float a_x = acc_x + v_y*v_w;
-	float a_y = acc_y - v_x*v_w;
+	float angle = p_w + dt*v_w*0.5f;
+	/*float angle = 0;*/
+	/*float a_x = acc_x + v_y*v_w;*/
+	/*float a_y = acc_y - v_x*v_w;*/
+  float a_x = 0;
+  float a_y = 0;
 
-	float px1 = p_x + (arm_cos_f32(angle)*v_x-arm_sin_f32(angle)*v_y)*dt + (arm_cos_f32(angle)*a_x-arm_sin_f32(angle)*a_y)*0.5f*dt*dt;
-	float py1 = p_y + (arm_sin_f32(angle)*v_x+arm_cos_f32(angle)*v_y)*dt + (arm_sin_f32(angle)*a_x+arm_cos_f32(angle)*a_y)*0.5f*dt*dt;
+	float px1 = p_x + (arm_cos_f32(angle)*v_x-arm_sin_f32(angle)*v_y)*dt;
+	float py1 = p_y + (arm_sin_f32(angle)*v_x+arm_cos_f32(angle)*v_y)*dt;
 	float vx1 = v_x + a_x*dt;
 	float vy1 = v_y + a_y*dt;
 	float pw1 = p_w + v_w*dt;
@@ -368,40 +399,20 @@ static void ekfStateFunc(arm_matrix_instance_f32* pX, const arm_matrix_instance_
 	MAT_ELEMENT(*pX, 4, 0) = vy1;
 }
 
-static FusionEKFConfig configFusionEKF = {
-	.posNoiseXY = 0.001f,
-	.posNoiseW = 0.001f,
-	.velNoiseXY = 0.005f,
-	.visNoiseXY = 0.05f,
-	.visNoiseW = 0.1f,
-	.outlierMaxVelXY = 3.0f,
-	.outlierMaxVelW = 3.0f,
-	.trackingCoeff = 1.0f,
-	.visCaptureDelay = 20,
-	.fusionHorizon = 35,
-	.visionTimeoutMs = 1000,
-	.emaAccelT = 0.005f,
-	.ballCenteringFactor = 0.1f,
-	.ballCenteringVelLimit = 0.02f,
-	.dribblerStrongOn = 70,
-	.dribblerStrongOff = 40,
-    .ballTimeoutMs = 2000,
-	.activeDribblingForce_mN = 500,
-};
 
 static void loadNoiseCovariancesFromConfig()
 {
 	if(fusionEKF.ekf.Ex.pData) // pData is null when fusionEKF has not been initialized yet
 	{
-		MAT_ELEMENT(fusionEKF.ekf.Ex, 0, 0) = fusionEKF.pConfig->posNoiseXY*fusionEKF.pConfig->posNoiseXY;
-		MAT_ELEMENT(fusionEKF.ekf.Ex, 1, 1) = fusionEKF.pConfig->posNoiseXY*fusionEKF.pConfig->posNoiseXY;
-		MAT_ELEMENT(fusionEKF.ekf.Ex, 2, 2) = fusionEKF.pConfig->posNoiseW *fusionEKF.pConfig->posNoiseW;
-		MAT_ELEMENT(fusionEKF.ekf.Ex, 3, 3) = fusionEKF.pConfig->velNoiseXY*fusionEKF.pConfig->velNoiseXY;
-		MAT_ELEMENT(fusionEKF.ekf.Ex, 4, 4) = fusionEKF.pConfig->velNoiseXY*fusionEKF.pConfig->velNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 0, 0) = fusionEKF.pConfig.posNoiseXY*fusionEKF.pConfig.posNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 1, 1) = fusionEKF.pConfig.posNoiseXY*fusionEKF.pConfig.posNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 2, 2) = fusionEKF.pConfig.posNoiseW *fusionEKF.pConfig.posNoiseW;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 3, 3) = fusionEKF.pConfig.velNoiseXY*fusionEKF.pConfig.velNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 4, 4) = fusionEKF.pConfig.velNoiseXY*fusionEKF.pConfig.velNoiseXY;
 
-		MAT_ELEMENT(fusionEKF.ekf.Ez, 0, 0) = fusionEKF.pConfig->visNoiseXY*fusionEKF.pConfig->visNoiseXY;
-		MAT_ELEMENT(fusionEKF.ekf.Ez, 1, 1) = fusionEKF.pConfig->visNoiseXY*fusionEKF.pConfig->visNoiseXY;
-		MAT_ELEMENT(fusionEKF.ekf.Ez, 2, 2) = fusionEKF.pConfig->visNoiseW *fusionEKF.pConfig->visNoiseW;
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 0, 0) = fusionEKF.pConfig.visNoiseXY*fusionEKF.pConfig.visNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 1, 1) = fusionEKF.pConfig.visNoiseXY*fusionEKF.pConfig.visNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 2, 2) = fusionEKF.pConfig.visNoiseW *fusionEKF.pConfig.visNoiseW;
 	}
 }
 
@@ -420,14 +431,22 @@ static void initEKF()
   // TODO: Load some covariance values for process and measurement noise
 	/*loadNoiseCovariancesFromConfig();*/
 }
+int STATE_vision_initialized()
+{
+  return fusionEKF.vision.online;
+}
 
 void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
 {
 	// VISION
+  if (STATE_is_calibrated() == 0)
+  {
+    return;
+  }
 
   float pos[3] = {posx, posy, posw};
 
-  if(!fusionEKF.vision.online)
+  if(fusionEKF.vision.online == 0)
   {
     fusionEKF.vision.online = 1;
 

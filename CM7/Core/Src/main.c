@@ -224,7 +224,7 @@ int main(void)
   STATE_calibrate_imu_gyr();
   while (1) {
 
-    /*STATE_log_states();*/
+    STATE_log_states();
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();

@@ -153,7 +153,7 @@ typedef struct _FusionEKF
 		/*uint32_t numLateMeasurements;*/
 	} vision;
 
-	FusionEKFConfig* pConfig;
+	FusionEKFConfig pConfig;
 
 	/*FusionEKFTimeSlot timeSlots[FUSION_EKF_MAX_DELAY];*/
 	/*uint32_t timeSlotNow;*/
@@ -191,6 +191,7 @@ float STATE_get_posx();
 float STATE_get_posy();
 float STATE_get_vx();
 float STATE_get_vy();
+int STATE_vision_initialized();
 void STATE_log_states();
 
 // Private functions
