@@ -110,6 +110,7 @@ static void I2C4_Init(void);
 /* USER CODE BEGIN 0 */
 // Handle callbacks
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  __disable_irq();
   switch (GPIO_Pin) {
   case BTN_USER_Pin:
     COM_RF_PrintInfo();
@@ -121,6 +122,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     LOG_WARNING("Unhandled interrupt on pin %d...\r\n", GPIO_Pin);
     break;
   }
+  __enable_irq();
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { UI_RxCallback(); }
@@ -196,7 +198,6 @@ int main(void)
   LOG_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
   POS_Init();
-  STATE_Init();
 #ifdef PCB_MOTOR
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
 #else
@@ -219,33 +220,17 @@ int main(void)
   uint32_t now = HAL_GetTick();
   bool on = false;
 
-  STATE_calibrate_imu_gyr();
+  //STATE_calibrate_imu_gyr();
   while (1) {
-
-    /*STATE_log_states();*/
-    /*STATE_log_states();*/
-    /*NAV_log_speed();*/
-
-    /*TEST_angle_control(0);*/
-    /*NAV_TireTest();*/
-    /*continue;*/
+    //STATE_log_states();
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();
     }
 
-    if (main_tasks & TASK_NAV_COMMAND) {
-      main_tasks &= ~TASK_NAV_COMMAND;
-      NAV_HandleCommands();
-    }
-
-    if (main_tasks & TASK_DATA) {
-      main_tasks &= ~TASK_DATA;
-    }
-
-    // Failsafe for when communication fails.
+    // If communication dies, we want to stop moving and
+    // reset the RF to start up comms again.
     if (!COM_Update() && NRF_AVAILABLE) {
-      NAV_StopMovement();
       COM_RF_Reset();
     }
 
@@ -786,7 +771,7 @@ static void MX_TIM12_Init(void)
 
   /* USER CODE END TIM12_Init 1 */
   htim12.Instance = TIM12;
-  htim12.Init.Prescaler = 39;
+  htim12.Init.Prescaler = 19;
   htim12.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim12.Init.Period = 9999;
   htim12.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
