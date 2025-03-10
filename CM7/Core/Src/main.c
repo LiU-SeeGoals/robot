@@ -206,6 +206,7 @@ int main(void)
   MOTOR_Init(&htim1);
   KICKER_Init();
   IMU_Init(&hi2c4);
+  STATE_Init();
   LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO, 0);
   UI_Init(&huart3);
 
