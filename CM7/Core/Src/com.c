@@ -20,6 +20,7 @@
 
 /* Private functions declarations */
 static void parse_controller_packet(uint8_t* payload, uint8_t len);
+static char* ping_ack_to_string(uint8_t ack);
 
 /* Private variables */
 static LOG_Module internal_log_mod;
@@ -33,7 +34,7 @@ volatile uint32_t last_rec_time = 0;
  */
 
 void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available) {
-  LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO, 0);
 
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
@@ -58,8 +59,11 @@ void COM_RF_Init() {
   uint8_t controllerAddress[5]  = CONTROLLER_ADDR;
   uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
 
-  // Set the RF channel frequency, it's defined as: 2400 + NRF_REG_RF_CH [MHz]
-  NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x0F);
+  // See nRF24L01+ chapter 6.3 for more...
+  // Set the RF channel frequency to 2500, i.e. outside of wifi range
+  // It's defined as: 2400 + NRF_REG_RF_CH [MHz]
+  // NRF_REG_RF_CH can 0-127, but not all values seem to work
+  NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x64);
 
   // Setup the TX address.
   // We also have to set pipe 0 to receive on the same address.
@@ -81,7 +85,7 @@ void COM_RF_Init() {
   main_tasks |= TASK_PING;
 
   NRF_EnterMode(NRF_MODE_RX);
-  LOG_INFO("Entered RX mode...\r\n");
+  LOG_DEBUG("Initialized RF...\r\n");
 }
 
 void COM_RF_HandleIRQ() {
@@ -231,9 +235,9 @@ void COM_Ping() {
     ping_ack = 0;
     uint8_t data[] = {CONNECT_MAGIC, id};
     if (NRF_Transmit(data, 5) != NRF_OK) {
-      LOG_INFO("Failed sending ID...\r\n");
+      LOG_INFO("Ping: Failed sending ID...\r\n");
     } else {
-      LOG_INFO("Sent ID %d...\r\n", id);
+      LOG_INFO("Ping: Sent ID %d to basestation...\r\n", id);
     }
     uint32_t stamp = HAL_GetTick();
     while (!ping_ack && HAL_GetTick() - stamp < 1000) {
@@ -244,9 +248,10 @@ void COM_Ping() {
     } else {
       last_rec_time = HAL_GetTick();
     }
-    LOG_INFO("Ack ping %d\r\n", ping_ack);
+
+    LOG_INFO("Ping: Got ack {%s}\r\n", ping_ack_to_string(ping_ack));
   } else {
-    LOG_INFO("Bad ID: (%u, %u, %u)\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
+    LOG_INFO("Ping: Bad ID: (%u, %u, %u)\r\n", HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
   }
 
   NRF_EnterMode(NRF_MODE_RX);
@@ -318,4 +323,13 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   }
   NAV_HandleCommand(cmd);
   protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
+}
+
+static char* ping_ack_to_string(uint8_t ack) {
+    switch (ack) {
+        case 0: return "Unknown transmission error";
+        case 1: return "ACK received";
+        case 2: return "Max retries reached while sending";
+        default: return "Invalid ACK code";
+    }
 }

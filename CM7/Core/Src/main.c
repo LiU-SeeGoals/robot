@@ -110,7 +110,6 @@ static void I2C4_Init(void);
 /* USER CODE BEGIN 0 */
 // Handle callbacks
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  /*HAL_NVIC_DisableIRQ(TIM8_BRK_TIM12_IRQn); */
   __disable_irq();
   switch (GPIO_Pin) {
   case BTN_USER_Pin:
@@ -124,7 +123,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     break;
   }
   __enable_irq();
-  /*HAL_NVIC_EnableIRQ(TIM8_BRK_TIM12_IRQn);*/
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { UI_RxCallback(); }
@@ -196,6 +194,7 @@ int main(void)
   MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 
+  // Initialise modules
   LOG_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
   POS_Init();
@@ -207,12 +206,12 @@ int main(void)
   MOTOR_Init(&htim1);
   KICKER_Init();
   IMU_Init(&hi2c4);
-  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO, 0);
+  UI_Init(&huart3);
+
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
-  LOG_INFO("Startup finished...\r\n");
-  UI_Init(&huart3);
-  STATE_Init();
+  LOG_INFO("Startup done, my ID is %i...\r\n", COM_Get_ID());
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -221,9 +220,9 @@ int main(void)
   uint32_t now = HAL_GetTick();
   bool on = false;
 
-  STATE_calibrate_imu_gyr();
+  //STATE_calibrate_imu_gyr();
   while (1) {
-    STATE_log_states();
+    //STATE_log_states();
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();
