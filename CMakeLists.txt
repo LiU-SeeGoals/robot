@@ -90,6 +90,19 @@ set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
        ${DSP_ROOT}/FastMathFunctions/FastMathFunctions.c
 )
 
+find_program(STMPROGRAMMER STM32_Programmer_CLI)
+find_program(STFLASH st-flash)
+if (NOT STMPROGRAMMER AND NOT STFLASH)
+    message(SEND_ERROR "No supported programmer was found, please install st-flash or STM32_Programmer_CLI")
+endif()
+
+find_program(GDB gdb)
+find_program(GDBMA gdb-multiarch)
+find_program(LLDB lldb)
+if (NOT GDB AND NOT GDBMA AND NOT LLDB)
+    message(WARNING "gdb, gdb-multiarch and lldb were not found - please install one of them to use the debug targets")
+endif()
+
 file(GLOB_RECURSE COMMON_SOURCES "Common/*.*" "Libraries/proto-messages/proto_c/*.*" "Libraries/protobuf/*.*")
 file(GLOB NRF_SOURCE "Libraries/nRF24L01P-lib/*.*")
 
@@ -164,10 +177,8 @@ add_custom_command(TARGET robot_CM4.elf POST_BUILD
 add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND STM32_Programmer_CLI -c port=SWD -w ${CM7_BIN_FILE} 0x08000000 -rst)
 add_custom_target(flash_cm7_st DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)
 
-add_custom_target(gdb_cm7 COMMAND st-util & gdb-multiarch -q -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf")
-add_custom_target(gdb_cm7_st COMMAND st-util & gdb-multiarch -q -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf")
-add_custom_target(lldb_cm7_st COMMAND st-util & lldb robot_CM7.elf -o "gdb-remote localhost:4242")
-
-add_dependencies(gdb_cm7 flash_cm7)
-add_dependencies(gdb_cm7_st flash_cm7_st)
-add_dependencies(lldb_cm7_st flash_cm7_st)
+add_custom_target(gdb_cm7 COMMAND st-util & gdb -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7)
+add_custom_target(gdb_cm7_st COMMAND st-util & gdb -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7_st)
+add_custom_target(gdbma_cm7 COMMAND trap 'echo got SIGINT' 2 && st-util & exec gdb-multiarch -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7)
+add_custom_target(gdbma_cm7_st COMMAND trap 'echo got SIGINT' 2 && st-util & exec gdb-multiarch -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7_st)
+add_custom_target(lldb_cm7_st COMMAND st-util & lldb robot_CM7.elf -o "gdb-remote localhost:4242" DEPENDS flash_cm7_st)
