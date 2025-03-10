@@ -149,15 +149,6 @@ void NAV_set_motor_ticks(){
   }
 
   // Dont move this into the other for loop !!
-  /*if (robot_cmd.panic == 1)*/
-  /*{*/
-  /*  for (int i = 0; i < 4; i++){ // do for all motor*/
-  /*    MOTOR_SetSpeed(&motors[i], 0.0, &I_prevs[i]);*/
-  /*  }*/
-  /*  return;*/
-  /*}*/
-
-  // If robot is in bad state, turn off motors
   for (int i = 0; i < 4; i++){ // do for all motor
     MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
   }
@@ -181,8 +172,8 @@ void steer(float vx,float vy, float w){
   // w angle from LF to LB to RB to RF
 
   /*float theta = 31.f * PI / 180.f;*/
-  float psi = 31.f;
-  float theta = 45.f;
+  float psi = PI * 31.f / 180.0f;
+  float theta = PI * 45.f / 180.0f;
   // r is wheel radius, R is chasis radius, currently 1 because idc and 
   // our speeds are currently not a real unit i.e. ticks/second and not meter/second
   float r = 1.f;
@@ -338,10 +329,10 @@ void NAV_GoToAction(Command* cmd){
     const float f_cam_y = ((float)cam_y) / 1000.f;
     const float f_cam_w = ((float)cam_w) / 1000.f;
 
-    LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);
-    LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);
-    LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
-    LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);
+    /*LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
+    /*LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
+    /*LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);*/
+    /*LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);*/
 
     /*STATE_log_states();*/
     /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
@@ -350,7 +341,7 @@ void NAV_GoToAction(Command* cmd){
     robot_cmd.y = f_nav_y;
     robot_cmd.w = f_nav_w;
 
-    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) < 1.0)
+    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) == 0)
     {
       // If software send us same position then ignore it.
       // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez

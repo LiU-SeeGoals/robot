@@ -47,6 +47,36 @@ typedef void(*EKFStateJacobianFunc)(const arm_matrix_instance_f32* pX, const arm
 typedef void(*EKFMeasFunc)(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pY);
 typedef void(*EKFMeasJacobianFunc)(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pH);
 
+typedef struct __attribute__ ((packed)) _FusionEKFConfig
+{
+	float posNoiseXY;
+	float posNoiseW;
+	float velNoiseXY;
+
+	float visNoiseXY;
+	float visNoiseW;
+
+	float outlierMaxVelXY;
+	float outlierMaxVelW;
+
+	float trackingCoeff;
+
+	uint8_t visCaptureDelay;
+	uint8_t fusionHorizon;
+
+	uint16_t visionTimeoutMs;
+
+	float emaAccelT;
+
+	float ballCenteringFactor;
+	float ballCenteringVelLimit;
+
+	uint8_t dribblerStrongOn; // 0-100
+	uint8_t dribblerStrongOff; // 0-100
+
+	uint16_t ballTimeoutMs;
+	uint16_t activeDribblingForce_mN;
+} FusionEKFConfig;
 // This EKF struct is stolen so dont change it
 typedef struct _EKF
 
@@ -123,7 +153,7 @@ typedef struct _FusionEKF
 		/*uint32_t numLateMeasurements;*/
 	} vision;
 
-	/*FusionEKFConfig* pConfig;*/
+	FusionEKFConfig* pConfig;
 
 	/*FusionEKFTimeSlot timeSlots[FUSION_EKF_MAX_DELAY];*/
 	/*uint32_t timeSlotNow;*/

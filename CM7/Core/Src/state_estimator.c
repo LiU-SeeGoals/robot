@@ -277,6 +277,11 @@ void STATE_logm44(const float32_t* m44){
 
 static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF)
 {
+  // [1 0 0 0 0]
+  // [0 1 0 0 0]
+  // [0 0 1 0 0]
+  // [0 0 0 1 0]
+  // [0 0 0 0 1]
 
 
   const float dt = CTRL_DELTA_T;
@@ -300,17 +305,18 @@ static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_ma
 
 	arm_mat_identity_f32(pF);
 
-	MAT_ELEMENT(*pF, 0, 2) = - (SF5*SF6)*(dt*dt*0.5f) - (v_x*SF4)*dt - (v_y*SF6)*dt - (SF4*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);
-	MAT_ELEMENT(*pF, 0, 3) = SF2;
-	MAT_ELEMENT(*pF, 0, 4) = SF3 - SF4*dt;
-
-	MAT_ELEMENT(*pF, 1, 2) = (v_x*SF6)*(dt*dt*0.5f) - (SF4*SF5)*(dt*dt*0.5f) - (v_y*SF4)*dt + (SF6*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);
-	MAT_ELEMENT(*pF, 1, 3) = SF4*dt - SF3;
-	MAT_ELEMENT(*pF, 1, 4) = SF2;
-
-	MAT_ELEMENT(*pF, 3, 4) = SF7;
-
-	MAT_ELEMENT(*pF, 4, 3) = -SF7;
+  // TODO: Fix the actual jacobian.. just use identity for now.
+	/*MAT_ELEMENT(*pF, 0, 2) = - (SF5*SF6)*(dt*dt*0.5f) - (v_x*SF4)*dt - (v_y*SF6)*dt - (SF4*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);*/
+	/*MAT_ELEMENT(*pF, 0, 3) = SF2;*/
+	/*MAT_ELEMENT(*pF, 0, 4) = SF3 - SF4*dt;*/
+	/**/
+	/*MAT_ELEMENT(*pF, 1, 2) = (v_x*SF6)*(dt*dt*0.5f) - (SF4*SF5)*(dt*dt*0.5f) - (v_y*SF4)*dt + (SF6*(acc_x + gyr_w*v_y))*(dt * dt * 0.5f);*/
+	/*MAT_ELEMENT(*pF, 1, 3) = SF4*dt - SF3;*/
+	/*MAT_ELEMENT(*pF, 1, 4) = SF2;*/
+	/**/
+	/*MAT_ELEMENT(*pF, 3, 4) = SF7;*/
+	/**/
+	/*MAT_ELEMENT(*pF, 4, 3) = -SF7;*/
 }
 
 static void ekfMeasFunc(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pY)
@@ -362,6 +368,43 @@ static void ekfStateFunc(arm_matrix_instance_f32* pX, const arm_matrix_instance_
 	MAT_ELEMENT(*pX, 4, 0) = vy1;
 }
 
+static FusionEKFConfig configFusionEKF = {
+	.posNoiseXY = 0.001f,
+	.posNoiseW = 0.001f,
+	.velNoiseXY = 0.005f,
+	.visNoiseXY = 0.05f,
+	.visNoiseW = 0.1f,
+	.outlierMaxVelXY = 3.0f,
+	.outlierMaxVelW = 3.0f,
+	.trackingCoeff = 1.0f,
+	.visCaptureDelay = 20,
+	.fusionHorizon = 35,
+	.visionTimeoutMs = 1000,
+	.emaAccelT = 0.005f,
+	.ballCenteringFactor = 0.1f,
+	.ballCenteringVelLimit = 0.02f,
+	.dribblerStrongOn = 70,
+	.dribblerStrongOff = 40,
+    .ballTimeoutMs = 2000,
+	.activeDribblingForce_mN = 500,
+};
+
+static void loadNoiseCovariancesFromConfig()
+{
+	if(fusionEKF.ekf.Ex.pData) // pData is null when fusionEKF has not been initialized yet
+	{
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 0, 0) = fusionEKF.pConfig->posNoiseXY*fusionEKF.pConfig->posNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 1, 1) = fusionEKF.pConfig->posNoiseXY*fusionEKF.pConfig->posNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 2, 2) = fusionEKF.pConfig->posNoiseW *fusionEKF.pConfig->posNoiseW;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 3, 3) = fusionEKF.pConfig->velNoiseXY*fusionEKF.pConfig->velNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ex, 4, 4) = fusionEKF.pConfig->velNoiseXY*fusionEKF.pConfig->velNoiseXY;
+
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 0, 0) = fusionEKF.pConfig->visNoiseXY*fusionEKF.pConfig->visNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 1, 1) = fusionEKF.pConfig->visNoiseXY*fusionEKF.pConfig->visNoiseXY;
+		MAT_ELEMENT(fusionEKF.ekf.Ez, 2, 2) = fusionEKF.pConfig->visNoiseW *fusionEKF.pConfig->visNoiseW;
+	}
+}
+
 static void initEKF()
 {
 	EKFInit(&fusionEKF.ekf, 5, 3, 3, fusionEKF.ekfData);
@@ -373,13 +416,8 @@ static void initEKF()
 
 	arm_mat_identity_f32(&fusionEKF.ekf.Ex);
 	arm_mat_identity_f32(&fusionEKF.ekf.Ez);
-  // Trust vision to cm accuracy
-  fusionEKF.ekf.Ez.pData[0] = 0.01;
-  fusionEKF.ekf.Ez.pData[4] = 0.01;
-  fusionEKF.ekf.Ez.pData[8] = 0.05;
 
   // TODO: Load some covariance values for process and measurement noise
-  // Instead of having idenity matrix
 	/*loadNoiseCovariancesFromConfig();*/
 }
 
@@ -389,10 +427,8 @@ void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
 
   float pos[3] = {posx, posy, posw};
 
-  LOG_DEBUG("vision update\r\n");
   if(!fusionEKF.vision.online)
   {
-    LOG_DEBUG("vision not online\r\n");
     fusionEKF.vision.online = 1;
 
     // Make sure EKF jumps immediately to new position in first measurement.
@@ -404,7 +440,6 @@ void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)
   else
   {
     // Move vision data to ekf measurement vector and do the measurement update
-    LOG_DEBUG("vision online\r\n");
     set_ekf_lock();
     memcpy(fusionEKF.ekf.z.pData, pos, sizeof(float)*3);
     EKFUpdate(&fusionEKF.ekf);
@@ -428,9 +463,13 @@ void STATE_FusionEKFIntertialUpdate(IMU_AccelVec3 acc, IMU_GyroVec3 gyr)
 
   float gyrAcc[3];
 	gyrAcc[0] = gyr.z - fusionEKF.bias.gyr_z;
-  // Lowpass noisy accelerometer
-	gyrAcc[1] = LagElementPT1Process(&fusionEKF.lagAccel[0], linear_acc_x);
-	gyrAcc[2] = LagElementPT1Process(&fusionEKF.lagAccel[1], linear_acc_y);
+  // TODO: if using accelerometer we can lowpass noisy accelerometer
+	/*gyrAcc[1] = LagElementPT1Process(&fusionEKF.lagAccel[0], linear_acc_x);*/
+	/*gyrAcc[2] = LagElementPT1Process(&fusionEKF.lagAccel[1], linear_acc_y);*/
+	gyrAcc[1] = 0.0f;
+	gyrAcc[2] = 0.0f;
+
+  // TODO: Add odometry
 
 	// INERTIAL NAVIGATION SYSTEM (INS)
   if (get_ekf_lock() == LOCKED)
@@ -442,8 +481,6 @@ void STATE_FusionEKFIntertialUpdate(IMU_AccelVec3 acc, IMU_GyroVec3 gyr)
 }
 
 void STATE_Test(){
-
-
   arm_matrix_instance_f32 A;      /* Matrix A Instance */
   arm_matrix_instance_f32 B;      /* Matrix B Instance */
   arm_matrix_instance_f32 AmB;    /* Matrix A mutliplied with B */
@@ -506,13 +543,6 @@ float STATE_get_posy(){
 float STATE_get_robot_angle() {
 
   float angle = MAT_ELEMENT(fusionEKF.ekf.x, 2, 0);
-  /*// Might not need ?*/
-  /*if (angle < 0){*/
-  /*  angle += 2 * PI;*/
-  /*}*/
-  /*if (angle > 2 * PI){*/
-  /*  angle -= 2 * PI;*/
-  /*}*/
   return angle;
 }
 
@@ -578,7 +608,6 @@ void STATE_calibrate_imu_gyr()
 
   fusionEKF.bias.is_calibrated = 1;
   LOG_INFO("Done calibrating\r\n");
-
 }
 
 
