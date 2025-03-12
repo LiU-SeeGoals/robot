@@ -62,7 +62,7 @@ void NAV_log_speed();
 
 void NAV_TireTest();
 
-robot_nav_command NAV_GetNavCommand();
+void NAV_wheelToBody(float* res);
 
 void NAV_GoToAction(Command* command);
 
@@ -70,6 +70,7 @@ uint8_t NAV_IsPanic();
 void NAV_SetRobotPanic();
 void NAV_ClearRobotPanic();
 
+void NAV_TEST_Set_robot_cmd(float x, float y, float w);
 float NAV_GetNavX();
 float NAV_GetNavY();
 float NAV_GetNavW();

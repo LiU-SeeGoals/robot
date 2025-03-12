@@ -1,4 +1,5 @@
 #include "pos_follow.h"
+#include "math.h"
 #include "log.h"
 #include "state_estimator.h"
 #include "nav.h"
@@ -80,8 +81,21 @@ void TEST_angle_control(float ref_angle)
   steer(0, 0, control_w);
 }
 
-int cur_w = 0;
+int log_num = 0;
 void POS_go_to_position(float dest_x, float dest_y, float wantw) {
+
+
+  // Robot to world transformation given by
+  // [cos(-a) -sin(-a)]
+  // [sin(-a) cos(-a)]
+
+  // world to robot transformation given by
+  // [cos(a) -sin(a)]
+  // [sin(a) cos(a)]
+
+  // Robot to wheel transformation given by
+  // [0 1]
+  // [1 0]
 
   float cur_x = STATE_get_posx();
   float cur_y = STATE_get_posy();
@@ -89,15 +103,24 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
   float rel_x = dest_x - cur_x;
   float rel_y = dest_y - cur_y;
-  float euclidian_distance = rel_x * rel_x + rel_y*rel_y;
+  float euclidian_distance = sqrt(rel_x * rel_x + rel_y*rel_y);
 
+  // Control on global frame coordinates
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
   float control_w = PID_p(STATE_get_robot_angle(), wantw, angle_error, &params_angle);
 
-  float x = distance_control_signal * ((rel_x * arm_cos_f32(angle)) - (rel_y * arm_sin_f32(angle)));
-  float y = distance_control_signal * ((rel_x * arm_sin_f32(angle)) + (rel_y * arm_cos_f32(angle)));
+  // Rotate from world to robot frame
+  float x = distance_control_signal * ((rel_x * arm_cos_f32(-angle)) - (rel_y * arm_sin_f32(-angle)));
+  float y = distance_control_signal * ((rel_x * arm_sin_f32(-angle)) + (rel_y * arm_cos_f32(-angle)));
 
-  // Steer robot with robot to world coordinates
+  // u is y in robot frame
+  // v is x in robot frame
+  log_num = (1 + log_num) % 100;
+  if (log_num == 0)
+  {
+    LOG_DEBUG("x,y dest %f %f %f \r\n", dest_x, dest_y, control_w);
+    LOG_DEBUG("x,y sig %f %f %f \r\n", x,y, control_w);
+  }
   steer(-y, -x, control_w);
 }
 
