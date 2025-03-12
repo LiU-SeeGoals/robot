@@ -225,7 +225,7 @@ int main(void)
 
   while (1) {
 
-    NAV_TEST_Set_robot_cmd(0,1,0);
+    /*NAV_TEST_Set_robot_cmd(0,1,0);*/
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();

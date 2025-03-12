@@ -18,7 +18,7 @@ const float DELTA_T = 0.001;
 static LOG_Module internal_log_mod;
 
 void POS_Init(){
-  LOG_InitModule(&internal_log_mod, "POS", LOG_LEVEL_TRACE, 0);
+  LOG_InitModule(&internal_log_mod, "POS", LOG_LEVEL_ERROR, 0);
 }
 
 float angle_error(float angle, float desired){
@@ -103,7 +103,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
   float rel_x = dest_x - cur_x;
   float rel_y = dest_y - cur_y;
-  float euclidian_distance = sqrt(rel_x * rel_x + rel_y*rel_y);
+  float euclidian_distance = rel_x * rel_x + rel_y*rel_y;
 
   // Control on global frame coordinates
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
@@ -115,11 +115,12 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
   // u is y in robot frame
   // v is x in robot frame
-  log_num = (1 + log_num) % 100;
+  log_num = (1 + log_num) % 1000;
   if (log_num == 0)
   {
-    LOG_DEBUG("x,y dest %f %f %f \r\n", dest_x, dest_y, control_w);
-    LOG_DEBUG("x,y sig %f %f %f \r\n", x,y, control_w);
+    LOG_DEBUG("x,y dest %f %f %f \r\n", dest_x, dest_y, wantw);
+    LOG_DEBUG("x,y state %f %f %f \r\n", cur_x, cur_y, control_w);
+    LOG_DEBUG("x,y control signal %f %f %f \r\n", x,y, control_w);
   }
   steer(-y, -x, control_w);
 }

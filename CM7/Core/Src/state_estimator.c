@@ -391,7 +391,10 @@ static FusionEKFConfig configFusionEKF = {
     .ballTimeoutMs = 2000,
 	.activeDribblingForce_mN = 500,
 };
-
+int STATE_vision_initialized()
+{
+  return fusionEKF.vision.online;
+}
 static void loadNoiseCovariancesFromConfig()
 {
 	if(fusionEKF.ekf.Ex.pData) // pData is null when fusionEKF has not been initialized yet
@@ -421,7 +424,7 @@ static void initEKF()
 	arm_mat_identity_f32(&fusionEKF.ekf.Ez);
 
   // TODO: Load some covariance values for process and measurement noise
-	loadNoiseCovariancesFromConfig();
+	/*loadNoiseCovariancesFromConfig();*/
 }
 
 void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)

@@ -192,7 +192,7 @@ float STATE_get_posy();
 float STATE_get_vx();
 float STATE_get_vy();
 void STATE_log_states();
-
+int STATE_vision_initialized();
 // Private functions
 static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF);
 static void ekfMeasFunc(const arm_matrix_instance_f32* pX, arm_matrix_instance_f32* pY);

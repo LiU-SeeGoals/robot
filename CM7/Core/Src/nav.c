@@ -37,7 +37,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* encoder3_htim,
               TIM_HandleTypeDef* encoder4_htim) {
 
-  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE, 0);
+  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_ERROR, 0);
   HAL_TIM_Base_Start(pwm_htim);
   HAL_TIM_Base_Start(pwm15_htim);
   HAL_TIM_Base_Start(encoder1_htim);
@@ -357,10 +357,10 @@ void NAV_GoToAction(Command* cmd){
     const float f_cam_y = ((float)cam_y) / 1000.f;
     const float f_cam_w = ((float)cam_w) / 1000.f;
 
-    /*LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
-    /*LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
-    /*LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);*/
-    /*LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);*/
+    LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);
+    LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);
+    LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
+    LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);
 
     /*STATE_log_states();*/
     /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
