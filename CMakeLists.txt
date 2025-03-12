@@ -177,8 +177,8 @@ add_custom_command(TARGET robot_CM4.elf POST_BUILD
 add_custom_target(flash_cm7 DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND STM32_Programmer_CLI -c port=SWD -w ${CM7_BIN_FILE} 0x08000000 -rst)
 add_custom_target(flash_cm7_st DEPENDS ${CM7_BIN_FILE} robot_CM7.elf COMMAND st-flash --reset write robot_CM7.bin 0x08000000)
 
-add_custom_target(gdb_cm7 COMMAND st-util & gdb -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7)
-add_custom_target(gdb_cm7_st COMMAND st-util & gdb -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7_st)
-add_custom_target(gdbma_cm7 COMMAND trap 'echo got SIGINT' 2 && st-util & exec gdb-multiarch -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7)
-add_custom_target(gdbma_cm7_st COMMAND trap 'echo got SIGINT' 2 && st-util & exec gdb-multiarch -ex "target extended-remote localhost:4242" -ex "file robot_CM7.elf" DEPENDS flash_cm7_st)
+add_custom_target(gdb_cm7 COMMAND bash -c "setsid st-util & gdb -ex \"target extended-remote localhost:4242\" -ex \"file robot_CM7.elf\"; pkill st-util" VERBATIM DEPENDS flash_cm7)
+add_custom_target(gdb_cm7_st COMMAND bash -c "setsid st-util & gdb -ex \"target extended-remote localhost:4242\" -ex \"file robot_CM7.elf\"; pkill st-util" VERBATIM DEPENDS flash_cm7_st)
+add_custom_target(gdbma_cm7 COMMAND bash -c "setsid st-util & gdb-multiarch -ex \"target extended-remote localhost:4242\" -ex \"file robot_CM7.elf\"; pkill st-util" VERBATIM DEPENDS flash_cm7)
+add_custom_target(gdbma_cm7_st COMMAND bash -c "setsid st-util & gdb-multiarch -ex \"target extended-remote localhost:4242\" -ex \"file robot_CM7.elf\"; pkill st-util" VERBATIM DEPENDS flash_cm7_st)
 add_custom_target(lldb_cm7_st COMMAND st-util & lldb robot_CM7.elf -o "gdb-remote localhost:4242" DEPENDS flash_cm7_st)
