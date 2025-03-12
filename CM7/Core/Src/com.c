@@ -129,9 +129,9 @@ void COM_RF_Receive(uint8_t pipe) {
     LOG_ERROR("Couldn't read length of RF packet...\r\n");
   }
 
-  if (len == 0 || pipe == RF_CONTROLLER_PIPE) {
-    return;
-  }
+  //if (len == 0 || pipe == RF_CONTROLLER_PIPE) {
+  //  return;
+  //}
 
   uint8_t payload[len];
   status = NRF_ReadPayload(payload, len);
@@ -283,28 +283,33 @@ uint8_t COM_Get_ID() {
   uint32_t w1 = HAL_GetUIDw1();
   uint32_t w2 = HAL_GetUIDw2();
 
-  if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605) {
+  if (w0 == 3211302 && w1 == 892490001 && w2 == 842217265)
+  {
     return 0;
   }
-  if (w0 == 3080253 && w1 == 892490001 && w2 == 842217265) {
+  if (w0 == 3080253 && w1 == 892490001 && w2 == 842217265)
+  {
     return 1;
   }
   if (w0 == 3932237 && w1 == 892490001 && w2 == 842217265)
   {
     return 2;
   }
-  if (w0 == 2490418 && w1 == 858935561 && w2 == 808727605) {
+  if (w0 == 2490418 && w1 == 858935561 && w2 == 808727605)
+  {
     return 3;
   }
-  if (w0 == 4259883  && w1 == 892490001 && w2 == 842217265) {
+  if (w0 == 4259883  && w1 == 892490001 && w2 == 842217265)
+  {
     return 4;
   }
-  if (w0 == 4522020 && w1 == 892490001 && w2 == 842217265) {
+  if (w0 == 4522020 && w1 == 892490001 && w2 == 842217265)
+  {
     return 5;
   }
-  if (w0 == 3211302 && w1 == 892490001 && w2 == 842217265)
+  if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605)
   {
-    return 2;
+    return 0;
   }
   LOG_ERROR("Failed ID lookup for robot ID: %d %d %d\r\n", w0, w1, w2);
   return 255;

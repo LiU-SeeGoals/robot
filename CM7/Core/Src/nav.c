@@ -270,10 +270,10 @@ void NAV_HandleCommand(Command* cmd) {
   switch (cmd->command_id) {
     case ACTION_TYPE__STOP_ACTION:
       NAV_StopMovement();
-      LOG_DEBUG("Stop\r\n");
+      LOG_DEBUG("Got stop (id %d)\r\n", cmd->robot_id);
       break;
     case ACTION_TYPE__MOVE_TO_ACTION: {
-      LOG_DEBUG("Got move to for robot ID: %d\r\n", cmd->command_id);
+      LOG_DEBUG("Got move (id %d)\r\n", cmd->robot_id);
       NAV_GoToAction(cmd);
       } break;
 
