@@ -71,6 +71,8 @@ void NAV_TireTest();
 
 robot_nav_command NAV_GetNavCommand();
 
+void NAV_wheelToBody(float* res);
+
 void NAV_GoToAction(Command* command);
 
 uint8_t NAV_IsPanic();

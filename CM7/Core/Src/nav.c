@@ -191,17 +191,18 @@ void NAV_wheelToBody(float* res){
   float cos_theta = arm_cos_f32(theta);
   float sin_psi = arm_sin_f32(psi);
   float sin_theta = arm_sin_f32(theta);
-  float m11 = r * (cos_psi / ( 2 * (cos_psi * cos_psi + cos_theta * cos_theta)));
+
+  float m11 = r * (cos_psi / ( 2.0f * (cos_psi * cos_psi + cos_theta * cos_theta)));
   float m12 = m11;
   float m13 = -m11;
   float m14 = -m11;
 
-  float m21 = r * (1.0 / (2 * (sin_psi + sin_theta)));
+  float m21 = r * (1.0 / (2.0f * (sin_psi + sin_theta)));
   float m22 = -m21;
   float m23 = -m21;
   float m24 = m21;
 
-  float m31 = sin_theta / (2 * R * (sin_psi + sin_theta));
+  float m31 = r * (sin_theta / (2.0f * R * (sin_psi + sin_theta)));
   float m32 = m31;
   float m33 = m31;
   float m34 = m31;
@@ -225,7 +226,6 @@ void steer(float u,float v, float w){
   // u is y in robot frame
   // v is x in robot frame
 
-  /*float theta = 31.f * PI / 180.f;*/
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
   // r is wheel radius, R is chasis radius, currently 1 because idc and 
@@ -240,28 +240,10 @@ void steer(float u,float v, float w){
   float wlf = 1.0 / r * ( -v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
 
 
-
-  /*float theta = 31.f;*/
-  /*float psi = 45.f;*/
-  /*float r = 1.f;*/
-  /*float th_sin, th_cos;*/
-  /*float psi_sin, psi_cos;*/
-  /**/
-  /*arm_sin_cos_f32(theta, &th_sin, &th_cos);*/
-  /*arm_sin_cos_f32(psi, &psi_sin, &psi_cos);*/
-  /**/
-  /*float v1 = th_sin * vx +  th_cos * vy + -r * w;*/
-  /*float v2 = th_sin * vx + -th_cos * vy + -r * w;*/
-  /*float v3 = -psi_sin  * vx +  -psi_cos *  vy+  -r * w;*/
-  /*float v4 = -psi_sin  * vx +  psi_cos *  vy + -r * w;*/
-  /**/
-  /*// float v4 = -th_cos;*/
-  /*// v1 = sin(vx * theta * PI / 180.f);*/
   motors[0].speed = wrf;
   motors[1].speed = wrb;
   motors[2].speed = wlb;
   motors[3].speed = wlf;
-
 }
 
 void NAV_Direction(DIRECTION dir) {
