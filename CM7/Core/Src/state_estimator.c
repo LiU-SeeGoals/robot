@@ -352,9 +352,12 @@ static void ekfStateFunc(arm_matrix_instance_f32* pX, const arm_matrix_instance_
 
 	float v_w = gyr_w;
 	/*float a = -M_PI_2 + p_w + dt*v_w*0.5f;*/
-	float angle = 0;
+	float angle = p_w;
 	float a_x = acc_x + v_y*v_w;
 	float a_y = acc_y - v_x*v_w;
+
+  // Robot to global from robot frame
+  // Velocities are estimated in the inverse 
 
 	float px1 = p_x + (arm_cos_f32(angle)*v_x-arm_sin_f32(angle)*v_y)*dt + (arm_cos_f32(angle)*a_x-arm_sin_f32(angle)*a_y)*0.5f*dt*dt;
 	float py1 = p_y + (arm_sin_f32(angle)*v_x+arm_cos_f32(angle)*v_y)*dt + (arm_sin_f32(angle)*a_x+arm_cos_f32(angle)*a_y)*0.5f*dt*dt;
@@ -419,7 +422,7 @@ static void initEKF()
 	arm_mat_identity_f32(&fusionEKF.ekf.Ez);
 
   // TODO: Load some covariance values for process and measurement noise
-	/*loadNoiseCovariancesFromConfig();*/
+	loadNoiseCovariancesFromConfig();
 }
 
 void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw)

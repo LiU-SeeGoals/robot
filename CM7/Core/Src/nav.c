@@ -171,13 +171,59 @@ void NAV_log_speed()
       MOTOR_ReadSpeed(&motors[3]));
 }
 
-void steer(float vx,float vy, float w){
+// res is a 3x1 vector
+void NAV_wheelToBody(float* res){
+
+  // wheel to body psudeo inverse https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
+  // TODO: measure real wheel radius and chasis radius
+  float r = 1.f;
+  float R = 1.f;
+
+  float psi = PI * 31.f / 180.0f;
+  float theta = PI * 45.f / 180.0f;
+
+  float wrf = MOTOR_get_motor_tick_per_second(&motors[0]);
+  float wrb = MOTOR_get_motor_tick_per_second(&motors[1]);
+  float wlb = MOTOR_get_motor_tick_per_second(&motors[2]);
+  float wlf = MOTOR_get_motor_tick_per_second(&motors[3]);
+
+  float cos_psi = arm_cos_f32(psi);
+  float cos_theta = arm_cos_f32(theta);
+  float sin_psi = arm_sin_f32(psi);
+  float sin_theta = arm_sin_f32(theta);
+  float m11 = r * (cos_psi / ( 2 * (cos_psi * cos_psi + cos_theta * cos_theta)));
+  float m12 = m11;
+  float m13 = -m11;
+  float m14 = -m11;
+
+  float m21 = r * (1.0 / (2 * (sin_psi + sin_theta)));
+  float m22 = -m21;
+  float m23 = -m21;
+  float m24 = m21;
+
+  float m31 = sin_theta / (2 * R * (sin_psi + sin_theta));
+  float m32 = m31;
+  float m33 = m31;
+  float m34 = m31;
+
+  float u = wrf * m11 + wrb * m12 + wlb * m13 + wlf * m14;
+  float v = wrf * m21 + wrb * m22 + wlb * m23 + wlf * m24;
+  float w = wrf * m31 + wrb * m32 + wlb * m33 + wlf * m34;
+  res[0] = u;
+  res[1] = v;
+  res[2] = w;
+}
+
+void steer(float u,float v, float w){
   // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
   // wheels RF, RB, LB, LF
   // wheel direction is RF forward vector toward dribbler
-  // y forward toward dribbler
-  // x to the sides
+  // v forward toward dribbler
+  // u to the sides
   // w angle from LF to LB to RB to RF
+
+  // u is y in robot frame
+  // v is x in robot frame
 
   /*float theta = 31.f * PI / 180.f;*/
   float psi = PI * 31.f / 180.0f;
@@ -188,10 +234,10 @@ void steer(float vx,float vy, float w){
   float R = 1.f;
 
 
-  float wrf = 1 / r * ( vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
-  float wrb = 1 / r * ( vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
-  float wlb = 1 / r * ( -vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
-  float wlf = 1 / r * ( -vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
+  float wrf = 1.0 / r * ( v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
+  float wrb = 1.0 / r * ( v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
+  float wlb = 1.0 / r * ( -v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
+  float wlf = 1.0 / r * ( -v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
 
 
 
@@ -466,15 +512,24 @@ void NAV_TestDribbler(){
 
 }
 
+void NAV_TEST_Set_robot_cmd(float x, float y, float w){
+  robot_cmd.x = x;
+  robot_cmd.y = y;
+  robot_cmd.w = w;
+}
+
 float NAV_GetNavX(){
   return robot_cmd.x;
 }
+
 float NAV_GetNavY(){
   return robot_cmd.y;
 }
+
 float NAV_GetNavW(){
   return robot_cmd.w;
 }
+
 robot_nav_command NAV_GetNavCommand(){
   return robot_cmd;
 }

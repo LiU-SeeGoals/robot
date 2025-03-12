@@ -199,7 +199,6 @@ int main(void)
   /*MX_I2C4_Init(); // Initialize I2C used for IMU*/
 
   LOG_Init(&huart3);
-  COM_Init(&hspi1, &NRF_AVAILABLE);
   POS_Init();
 #ifdef PCB_MOTOR
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
@@ -215,6 +214,8 @@ int main(void)
   LOG_INFO("Startup finished...\r\n");
   UI_Init(&huart3);
   STATE_Init();
+  STATE_calibrate_imu_gyr();
+  COM_Init(&hspi1, &NRF_AVAILABLE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -223,10 +224,10 @@ int main(void)
   uint32_t now = HAL_GetTick();
   bool on = false;
 
-  STATE_calibrate_imu_gyr();
   while (1) {
 
-    /*STATE_log_states();*/
+    /*NAV_TEST_Set_robot_cmd(0.0, 0.0, 3.14/2.0);*/
+    STATE_log_states();
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();

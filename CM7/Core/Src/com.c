@@ -31,7 +31,7 @@ static volatile uint8_t ping_ack;
  */
 
 void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available) {
-  LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_INFO);
+  LOG_InitModule(&internal_log_mod, "COM", LOG_LEVEL_ERROR);
 
   // Initialize and enter standby-I mode
   NRF_Init(hspi, NRF_CSN_GPIO_Port, NRF_CSN_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin);
