@@ -1,6 +1,7 @@
 #include "nav.h"
 #include "state_estimator.h"
 #include "pos_follow.h"
+#include "kicker.h"
 
 /*
  * Private includes
@@ -149,8 +150,17 @@ void NAV_set_motor_ticks(){
   }
 
   // Dont move this into the other for loop !!
-  for (int i = 0; i < 4; i++){ // do for all motor
-    MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
+
+  for (int i = 0; i < 4; i++)
+  { // do for all motor
+    if (robot_cmd.is_driving == 1)
+    {
+      MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
+    }
+    else
+    {
+      MOTOR_SetSpeed(&motors[i], 0, &I_prevs[i]);
+    }
   }
 
 }
@@ -291,7 +301,11 @@ void NAV_TestMovement() {
 }
 
 void NAV_StopMovement() {
-  steer(0, 0, 0);
+  robot_cmd.is_driving = 0;
+}
+
+void NAV_StartMovement() {
+  robot_cmd.is_driving = 1;
 }
 
 void NAV_HandleCommand(Command* cmd) {
@@ -301,6 +315,7 @@ void NAV_HandleCommand(Command* cmd) {
       LOG_DEBUG("Got stop (id %d)\r\n", cmd->robot_id);
       break;
     case ACTION_TYPE__MOVE_TO_ACTION: {
+      NAV_StartMovement();
       LOG_DEBUG("Got move (id %d)\r\n", cmd->robot_id);
       NAV_GoToAction(cmd);
       } break;
@@ -322,6 +337,11 @@ void NAV_HandleCommand(Command* cmd) {
     case ACTION_TYPE__ROTATE_ACTION:
       break;
     case ACTION_TYPE__KICK_ACTION:
+      
+      KICKER_Charge();
+      KICKER_Charge();
+      KICKER_Charge();
+      KICKER_Kick();
       break;
     default:
       LOG_WARNING("Not known command: %i\r\n", cmd->command_id);
