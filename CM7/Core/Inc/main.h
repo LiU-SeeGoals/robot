@@ -56,8 +56,6 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 #define TASK_PING 1
-#define TASK_NAV_COMMAND 2
-#define TASK_DATA 4
 extern volatile atomic_uint main_tasks;
 /* USER CODE END EFP */
 
@@ -99,10 +97,12 @@ extern volatile atomic_uint main_tasks;
 #define MOTOR4_PWM_GPIO_Port GPIOE
 #define MOTOR4_REVERSE_Pin GPIO_PIN_15
 #define MOTOR4_REVERSE_GPIO_Port GPIOE
-#define KICKER_DISCHARGE1_Pin GPIO_PIN_10
-#define KICKER_DISCHARGE1_GPIO_Port GPIOB
+#define KICKER_DISCHARGE2_Pin GPIO_PIN_10
+#define KICKER_DISCHARGE2_GPIO_Port GPIOB
 #define KICKER_CHARGE_Pin GPIO_PIN_11
 #define KICKER_CHARGE_GPIO_Port GPIOB
+#define KICKER_DISCHARGE1_Pin GPIO_PIN_12
+#define KICKER_DISCHARGE1_GPIO_Port GPIOB
 #define LED_RED_Pin GPIO_PIN_14
 #define LED_RED_GPIO_Port GPIOB
 #define NRF_IRQ_Pin GPIO_PIN_15
@@ -112,6 +112,8 @@ extern volatile atomic_uint main_tasks;
 #define MOTOR3_BREAK_GPIO_Port GPIOD
 #define OLD_MOTOR2_BREAK_Pin GPIO_PIN_13
 #define OLD_MOTOR2_BREAK_GPIO_Port GPIOD
+#define DRIBBLER_Pin GPIO_PIN_7
+#define DRIBBLER_GPIO_Port GPIOG
 #define NRF_CE_Pin GPIO_PIN_6
 #define NRF_CE_GPIO_Port GPIOC
 #define MOTOR2_ENCODER_Pin GPIO_PIN_15
@@ -124,8 +126,8 @@ extern volatile atomic_uint main_tasks;
 #define MOTOR1_REVERSE_GPIO_Port GPIOB
 #define NRF_CSN_Pin GPIO_PIN_8
 #define NRF_CSN_GPIO_Port GPIOB
-#define DRIBBLER_Pin GPIO_PIN_9
-#define DRIBBLER_GPIO_Port GPIOB
+#define DRIBBLERB9_Pin GPIO_PIN_9
+#define DRIBBLERB9_GPIO_Port GPIOB
 #define OLD_MOTOR2_ENCODER_Pin GPIO_PIN_0
 #define OLD_MOTOR2_ENCODER_GPIO_Port GPIOE
 #define LED_YELLOW_Pin GPIO_PIN_1

@@ -70,9 +70,9 @@ void lsm6dsl_i2c_master_write_mem(Lsm6dsl_I2cPortHandle_t *port_handle,
  * Public functions implementations
  */
 void IMU_Init(I2C_HandleTypeDef* hi2c) {
-  LOG_InitModule(&internal_log_mod, "IMU", LOG_LEVEL_DEBUG);
+  LOG_InitModule(&internal_log_mod, "IMU", LOG_LEVEL_DEBUG, 0);
   
-  LOG_INFO("Initializing IMU...\n");
+  LOG_INFO("Initializing IMU...\r\n");
 
   lsm6dsl_open_i2c_slave_device(hi2c, IMU_I2C_DEV_ADDR, &imu_device_handle);
   

@@ -10,12 +10,6 @@
 #include "log.h"
 #include "arm_math.h"
 
-#include <ringbuffer.h>
-
-#define BUFFER_SIZE 64
-RINGBUFFER_DEF(Command*, BUFFER_SIZE, Command_buf);
-RINGBUFFER_IMPL(Command*, BUFFER_SIZE, Command_buf);
-
 /*
  * Private variables
  */
@@ -25,11 +19,9 @@ static robot_nav_command robot_cmd;
 static float I_prevs[4]; // PI control I-parts
 const float CLOCK_FREQ = 400000000;
 float CONTROL_FREQ; // set in init
-Command_buf queue;
 static int queued = 0;
 
 /* Private functions declarations */
-void handle_command(Command* cmd);
 void set_motors(float m1, float m2, float m3, float m4);
 
 
@@ -45,7 +37,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* encoder3_htim,
               TIM_HandleTypeDef* encoder4_htim) {
 
-  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE);
+  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE, 0);
   HAL_TIM_Base_Start(pwm_htim);
   HAL_TIM_Base_Start(pwm15_htim);
   HAL_TIM_Base_Start(encoder1_htim);
@@ -263,13 +255,6 @@ void NAV_Direction(DIRECTION dir) {
   }
 }
 
-void NAV_QueueCommandIRQ(Command* command) {
-  if (!Command_buf_write(&queue, command)) {
-    LOG_WARNING("Command buffer full\n\r");
-  }
-  ++queued;
-}
-
 void NAV_Stop() {
   MOTOR_PWMStop(&motors[0]);
   MOTOR_PWMStop(&motors[1]);
@@ -299,19 +284,6 @@ void command_move(Command *cmd){
     steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
   }
 
-}
-
-void NAV_HandleCommands() {
-  static int handled = 0;
-  while (1) {
-    Command *cmd;
-    if (!Command_buf_read(&queue, &cmd)) {
-      return;
-    }
-    ++handled;
-    handle_command(cmd);
-    protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
-  }
 }
 
 void NAV_TestMovement() {
@@ -382,14 +354,14 @@ void NAV_GoToAction(Command* cmd){
     /*POS_go_to_position(position, f_nav_w);*/
 }
 
-void handle_command(Command* cmd){
+void NAV_HandleCommand(Command* cmd) {
   switch (cmd->command_id) {
     case ACTION_TYPE__STOP_ACTION:
       NAV_StopMovement();
-      LOG_DEBUG("Stop\r\n");
+      LOG_DEBUG("Got stop (id %d)\r\n", cmd->robot_id);
       break;
     case ACTION_TYPE__MOVE_TO_ACTION: {
-      LOG_DEBUG("Got move to ID: %d\r\n", cmd->command_id);
+      LOG_DEBUG("Got move (id %d)\r\n", cmd->robot_id);
       NAV_GoToAction(cmd);
       } break;
 
@@ -415,6 +387,65 @@ void handle_command(Command* cmd){
       LOG_WARNING("Not known command: %i\r\n", cmd->command_id);
       break;
   }
+}
+
+
+/*
+ * Private function implementations
+ */
+
+int32_t prev_nav_x = 2147483647;
+int32_t prev_nav_y = 2147483647;
+int32_t prev_nav_w = 2147483647;
+
+void NAV_GoToAction(Command* cmd){
+    const int32_t nav_x = cmd->dest->x;
+    const int32_t nav_y = cmd->dest->y;
+    const int32_t nav_w = cmd->dest->w;
+
+    const int32_t cam_x = cmd->pos->x;
+    const int32_t cam_y = cmd->pos->y;
+    const int32_t cam_w = cmd->pos->w;
+
+    // hax to cange to to float meter rep just for testing first time... hehe
+    // angle is scaled by 1000 before sent
+    const float f_nav_x = ((float) nav_x) / 1000.f;
+    const float f_nav_y = ((float) nav_y) / 1000.f;
+    const float f_nav_w = ((float) nav_w) / 1000.f;
+                             
+    const float f_cam_x = ((float)cam_x) / 1000.f;
+    const float f_cam_y = ((float)cam_y) / 1000.f;
+    const float f_cam_w = ((float)cam_w) / 1000.f;
+
+    /*LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
+    /*LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
+    /*LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);*/
+    /*LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);*/
+
+    /*STATE_log_states();*/
+    /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
+    /*LOG_DEBUG("Got move to %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
+    robot_cmd.x = f_nav_x;
+    robot_cmd.y = f_nav_y;
+    robot_cmd.w = f_nav_w;
+
+    if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) == 0)
+    {
+      // If software send us same position then ignore it.
+      // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez
+      return;
+    }
+
+    STATE_FusionEKFVisionUpdate(f_cam_x, f_cam_y, f_cam_w);
+
+    prev_nav_x = f_cam_x;
+    prev_nav_y = f_cam_y;
+    prev_nav_w = f_cam_w;
+
+    /*Vec2 position = {f_nav_x,f_nav_y};*/
+    // Set desiered position, this position is followed in interrupts
+
+    /*POS_go_to_position(position, f_nav_w);*/
 }
 
 void NAV_TireTest() {
@@ -503,15 +534,9 @@ void NAV_TEST_Set_robot_cmd(float x, float y, float w){
 float NAV_GetNavX(){
   return robot_cmd.x;
 }
-
 float NAV_GetNavY(){
   return robot_cmd.y;
 }
-
 float NAV_GetNavW(){
   return robot_cmd.w;
-}
-
-robot_nav_command NAV_GetNavCommand(){
-  return robot_cmd;
 }

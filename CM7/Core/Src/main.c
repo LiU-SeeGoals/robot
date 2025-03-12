@@ -110,7 +110,6 @@ static void I2C4_Init(void);
 /* USER CODE BEGIN 0 */
 // Handle callbacks
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  /*HAL_NVIC_DisableIRQ(TIM8_BRK_TIM12_IRQn); */
   __disable_irq();
   switch (GPIO_Pin) {
   case BTN_USER_Pin:
@@ -124,7 +123,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     break;
   }
   __enable_irq();
-  /*HAL_NVIC_EnableIRQ(TIM8_BRK_TIM12_IRQn);*/
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { UI_RxCallback(); }
@@ -196,8 +194,7 @@ int main(void)
   MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 
-  /*MX_I2C4_Init(); // Initialize I2C used for IMU*/
-
+  // Initialise modules
   LOG_Init(&huart3);
   POS_Init();
 #ifdef PCB_MOTOR
@@ -208,39 +205,34 @@ int main(void)
   MOTOR_Init(&htim1);
   KICKER_Init();
   IMU_Init(&hi2c4);
-  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO);
-  HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
-  LOG_INFO("Startup finished...\r\n");
-  UI_Init(&huart3);
   STATE_Init();
   STATE_calibrate_imu_gyr();
+  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO, 0);
+  UI_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
+
+  HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
+  LOG_INFO("Startup done, my ID is %i...\r\n", COM_Get_ID());
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  NAV_RunDribbler();
   uint32_t now = HAL_GetTick();
   bool on = false;
 
   while (1) {
 
-    /*NAV_TEST_Set_robot_cmd(0.0, 0.0, 3.14/2.0);*/
-    STATE_log_states();
     if (main_tasks & TASK_PING) {
       main_tasks &= ~TASK_PING;
       COM_Ping();
     }
 
-    if (main_tasks & TASK_DATA) {
-      main_tasks &= ~TASK_DATA;
-    }
-
-    // Failsafe for when communication fails.
+    // If communication dies, we want to stop moving and
+    // reset the RF to start up comms again.
     if (!COM_Update() && NRF_AVAILABLE) {
-      // TODO: Maybe should add stop motors
-
       COM_RF_Reset();
     }
 
@@ -945,6 +937,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, MOTOR4_BREAK_Pin|MOTOR2_REVERSE_Pin|MOTOR2_BREAK_Pin|MOTOR3_REVERSE_Pin
@@ -952,13 +945,16 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_CHARGE_Pin|LED_RED_Pin
-                          |MOTOR1_REVERSE_Pin|NRF_CSN_Pin|DRIBBLER_Pin, GPIO_PIN_RESET);
+                          |MOTOR1_REVERSE_Pin|NRF_CSN_Pin|DRIBBLERB9_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(KICKER_DISCHARGE1_GPIO_Port, KICKER_DISCHARGE1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, KICKER_DISCHARGE2_Pin|KICKER_DISCHARGE1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, MOTOR3_BREAK_Pin|OLD_MOTOR2_BREAK_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(DRIBBLER_GPIO_Port, DRIBBLER_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(NRF_CE_GPIO_Port, NRF_CE_Pin, GPIO_PIN_RESET);
@@ -981,10 +977,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BTN_USER_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_GREEN_Pin MOTOR1_BREAK_Pin KICKER_DISCHARGE1_Pin KICKER_CHARGE_Pin
-                           LED_RED_Pin MOTOR1_REVERSE_Pin NRF_CSN_Pin DRIBBLER_Pin */
-  GPIO_InitStruct.Pin = LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_DISCHARGE1_Pin|KICKER_CHARGE_Pin
-                          |LED_RED_Pin|MOTOR1_REVERSE_Pin|NRF_CSN_Pin|DRIBBLER_Pin;
+  /*Configure GPIO pins : LED_GREEN_Pin MOTOR1_BREAK_Pin KICKER_DISCHARGE2_Pin KICKER_CHARGE_Pin
+                           KICKER_DISCHARGE1_Pin LED_RED_Pin MOTOR1_REVERSE_Pin NRF_CSN_Pin
+                           DRIBBLERB9_Pin */
+  GPIO_InitStruct.Pin = LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_DISCHARGE2_Pin|KICKER_CHARGE_Pin
+                          |KICKER_DISCHARGE1_Pin|LED_RED_Pin|MOTOR1_REVERSE_Pin|NRF_CSN_Pin
+                          |DRIBBLERB9_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1002,6 +1000,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DRIBBLER_Pin */
+  GPIO_InitStruct.Pin = DRIBBLER_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(DRIBBLER_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : NRF_CE_Pin */
   GPIO_InitStruct.Pin = NRF_CE_Pin;
