@@ -14,6 +14,7 @@ typedef struct
   float x;
   float y;
   float w;
+  uint8_t is_driving;
   uint8_t panic;
 } robot_nav_command;
 
