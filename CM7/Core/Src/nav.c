@@ -494,9 +494,11 @@ void NAV_TEST_Set_robot_cmd(float x, float y, float w){
 float NAV_GetNavX(){
   return robot_cmd.x;
 }
+
 float NAV_GetNavY(){
   return robot_cmd.y;
 }
+
 float NAV_GetNavW(){
   return robot_cmd.w;
 }
