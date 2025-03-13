@@ -103,7 +103,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
   float rel_x = dest_x - cur_x;
   float rel_y = dest_y - cur_y;
-  float euclidian_distance = rel_x * rel_x + rel_y*rel_y;
+  float euclidian_distance = sqrt(rel_x * rel_x + rel_y*rel_y);
 
   // Control on global frame coordinates
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
