@@ -62,11 +62,9 @@ void COM_RF_Init() {
   // See nRF24L01+ chapter 6.3 for more...
   // Set the RF channel frequency to 2500, i.e. outside of wifi range
   // It's defined as: 2400 + NRF_REG_RF_CH [MHz]
-  // NRF_REG_RF_CH can 0-127, but not all values seem to work
-  //NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x64); // 2500 works
-  //NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x70); // 2512 works
+  // NRF_REG_RF_CH can 0-127, but not all values seem to work.
+  // 2525 and below works, 2527 had issues...
   NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x7d); // 2525
-  //NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x7f); // 2527 works
 
   // Setup the TX address.
   // We also have to set pipe 0 to receive on the same address.
