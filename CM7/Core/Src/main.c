@@ -224,23 +224,6 @@ int main(void)
   bool on = false;
 
   while (1) {
-
-    /*NAV_TEST_Set_robot_cmd(0,1,0);*/
-    /*NAV_RunDribbler();*/
-    /*HAL_Delay(2000);*/
-    /*NAV_StopDribbler();*/
-    /*HAL_Delay(2000);*/
-    if (main_tasks & TASK_PING) {
-      main_tasks &= ~TASK_PING;
-      COM_Ping();
-    }
-
-    // If communication dies, we want to stop moving and
-    // reset the RF to start up comms again.
-    if (!COM_Update() && NRF_AVAILABLE) {
-      COM_RF_Reset();
-    }
-
     if (HAL_GetTick() - now > 1000) {
       if (on) {
         HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);

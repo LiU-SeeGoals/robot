@@ -18,11 +18,6 @@
 void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available);
 
 /**
- * Ping the basestation.
- */
-void COM_Ping();
-
-/**
  * Checks if a message was received within COM_BASESTATION_TIMEOUT_MS.
  * Call often.
  */
