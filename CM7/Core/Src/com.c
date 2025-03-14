@@ -284,9 +284,9 @@ uint8_t COM_Get_ID() {
   uint32_t w1 = HAL_GetUIDw1();
   uint32_t w2 = HAL_GetUIDw2();
 
-  if (w0 == 3211302 && w1 == 892490001 && w2 == 842217265)
+  if (w0 == 1572912 && w1 == 892490001 && w2 == 842217265)
   {
-    return 0;
+    return 3;
   }
   if (w0 == 3080253 && w1 == 892490001 && w2 == 842217265)
   {
@@ -315,6 +315,10 @@ uint8_t COM_Get_ID() {
   if (w0 == 2293800 && w1 == 858935561 && w2 == 808727605)
   {
     return 0;
+  }
+  if (w0 == 4522048 && w1 == 892490001 && w2 == 842217265)
+  {
+    return 10;
   }
   LOG_ERROR("Failed ID lookup for robot ID: %d %d %d\r\n", w0, w1, w2);
   return 255;

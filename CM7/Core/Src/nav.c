@@ -132,6 +132,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   robot_cmd.y = 0;
   robot_cmd.w = 0;
 
+  NAV_EnableMovement();
   float control_clock_prescaler = motor_tick_itr->Init.Prescaler + 1; 
   float control_clock_period = motor_tick_itr->Init.Period + 1;
   CONTROL_FREQ = CLOCK_FREQ / (control_clock_prescaler * control_clock_period);
@@ -149,16 +150,16 @@ void NAV_set_motor_ticks(){
     motors[i].prev_tick = new_ticks;
   }
 
-  // Dont move this into the other for loop !!
-
+  // Dont move this into the other for loop, we want motors to run simultanious!!
   for (int i = 0; i < 4; i++)
   { // do for all motor
-    if (robot_cmd.is_driving == 1)
+    if (robot_cmd.movement_enabled == 1)
     {
       MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
     }
     else
     {
+      LOG_DEBUG("Movement disabled!");
       MOTOR_SetSpeed(&motors[i], 0, &I_prevs[i]);
     }
   }
@@ -300,22 +301,22 @@ void NAV_TestMovement() {
   steer(0, 1, 0);
 }
 
-void NAV_StopMovement() {
-  robot_cmd.is_driving = 0;
+void NAV_DisableMovement() {
+  robot_cmd.movement_enabled = 0;
 }
 
-void NAV_StartMovement() {
-  robot_cmd.is_driving = 1;
+void NAV_EnableMovement() {
+  robot_cmd.movement_enabled = 1;
 }
 
 void NAV_HandleCommand(Command* cmd) {
   switch (cmd->command_id) {
     case ACTION_TYPE__STOP_ACTION:
-      NAV_StopMovement();
+      NAV_DisableMovement();
       LOG_DEBUG("Got stop (id %d)\r\n", cmd->robot_id);
       break;
     case ACTION_TYPE__MOVE_TO_ACTION: {
-      NAV_StartMovement();
+      NAV_EnableMovement();
       LOG_DEBUG("Got move (id %d)\r\n", cmd->robot_id);
       NAV_GoToAction(cmd);
       } break;

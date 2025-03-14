@@ -14,7 +14,7 @@ typedef struct
   float x;
   float y;
   float w;
-  uint8_t is_driving;
+  uint8_t movement_enabled;
   uint8_t panic;
 } robot_nav_command;
 
@@ -62,6 +62,8 @@ void NAV_TestDribbler();
 void NAV_log_speed();
 
 void NAV_TireTest();
+void NAV_DisableMovement();
+void NAV_EnableMovement();
 
 void NAV_wheelToBody(float* res);
 

@@ -249,7 +249,7 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   __disable_irq();
   // This interrupt runs 1000HZ
 
-  if (STATE_is_calibrated() == 1 && STATE_vision_initialized() == 1) 
+  if (STATE_is_calibrated() == 1) 
   {
     IMU_AccelVec3 acc = IMU_read_accel_mps2();
     IMU_GyroVec3 gyr = IMU_read_gyro_radps();
@@ -259,8 +259,9 @@ void TIM8_BRK_TIM12_IRQHandler(void)
     float y = NAV_GetNavY();
     float w = NAV_GetNavW();
     POS_go_to_position(x, y, w);
-    NAV_set_motor_ticks();
   }
+
+  NAV_set_motor_ticks();
   __enable_irq();
 
   
