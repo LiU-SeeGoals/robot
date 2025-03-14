@@ -196,6 +196,8 @@ int main(void)
 
   // Initialise modules
   LOG_Init(&huart3);
+  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO, 0);
+  LOG_INFO("My ID is %i (%li %li %li)\r\n", COM_Get_ID(), HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
   POS_Init();
 #ifdef PCB_MOTOR
   NAV_Init(&htim12, &htim1, &htim15, &htim3, &htim2, &htim5, &htim8);
@@ -207,13 +209,12 @@ int main(void)
   IMU_Init(&hi2c4);
   STATE_Init();
   STATE_calibrate_imu_gyr();
-  LOG_InitModule(&internal_log_mod, "MAIN", LOG_LEVEL_INFO, 0);
   UI_Init(&huart3);
   COM_Init(&hspi1, &NRF_AVAILABLE);
 
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
-  LOG_INFO("Startup done, my ID is %i...\r\n", COM_Get_ID());
+  LOG_INFO("Startup done\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */

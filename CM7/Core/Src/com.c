@@ -65,6 +65,7 @@ void COM_RF_Init() {
   // NRF_REG_RF_CH can 0-127, but not all values seem to work.
   // 2525 and below works, 2527 had issues...
   NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x7d); // 2525
+  //NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x64); // 2500
 
   // Setup the TX address.
   // We also have to set pipe 0 to receive on the same address.
@@ -310,7 +311,7 @@ uint8_t COM_Get_ID() {
   }
   if (w0 == 2687023 && w1 == 858935561 && w2 == 808727605)
   {
-    return 0;
+    return 6;
   }
   if (w0 == 2293800 && w1 == 858935561 && w2 == 808727605)
   {
