@@ -338,14 +338,13 @@ void NAV_HandleCommand(Command* cmd) {
     case ACTION_TYPE__ROTATE_ACTION:
       break;
     case ACTION_TYPE__KICK_ACTION:
-      
       KICKER_Charge();
       KICKER_Charge();
       KICKER_Charge();
       KICKER_Kick();
       break;
     default:
-      LOG_WARNING("Not known command: %i\r\n", cmd->command_id);
+      LOG_ERROR("Not known command: %i\r\n", cmd->command_id);
       break;
   }
 }

@@ -15,7 +15,7 @@
 #define MSG_ACTION     1
 #define CONNECT_MAGIC   0x4d, 0xf8, 0x42, 0x79
 #define CONTROLLER_ADDR {2, 255, 255, 255, 255}
-#define ROBOT_ACTION_ADDR(id) {1, 255, 255, id, 255}
+#define ROBOT_ADDR(id) {1, 255, 255, id, 255}
 #define RF_CONTROLLER_PIPE 0
 
 /* Private functions declarations */
@@ -50,40 +50,26 @@ void COM_Init(SPI_HandleTypeDef* hspi, uint8_t* nrf_available) {
   // Resets all registers but keeps the device in standby-I mode
   NRF_Reset();
 
-  // Setup the nRF registers
+  // Setup the nRF registers for rx purpose
   COM_RF_Init();
 }
 
 void COM_RF_Init() {
-  int id = COM_Get_ID();
-  uint8_t controllerAddress[5]  = CONTROLLER_ADDR;
-  uint8_t actionAdress[5] = ROBOT_ACTION_ADDR(id);
+  NRF_Reset();
 
-  // See nRF24L01+ chapter 6.3 for more...
-  // Set the RF channel frequency to 2500, i.e. outside of wifi range
-  // It's defined as: 2400 + NRF_REG_RF_CH [MHz]
-  // NRF_REG_RF_CH can 0-127, but not all values seem to work.
-  // 2525 and below works, 2527 had issues...
-  NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x7d); // 2525
-  //NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x64); // 2500
+  uint8_t address[5] = ROBOT_ADDR(COM_Get_ID());
+  NRF_WriteRegister(NRF_REG_RX_ADDR_P0, address, 5);
 
-  // Setup the TX address.
-  // We also have to set pipe 0 to receive on the same address.
-  NRF_WriteRegister(NRF_REG_TX_ADDR, controllerAddress, 5);
-  NRF_WriteRegister(NRF_REG_RX_ADDR_P0, controllerAddress, 5);
-  NRF_WriteRegister(NRF_REG_RX_ADDR_P1, actionAdress, 5);
-  NRF_WriteRegisterByte(NRF_REG_RX_ADDR_P2, 1);
-  NRF_SetRegisterBit(NRF_REG_EN_RXADDR, 0x07);
+  // No auto-acknowledgement
+  NRF_WriteRegisterByte(NRF_REG_EN_AA, 0x00);
 
-  // We enable ACK payloads which needs dynamic payload to function.
-  NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_ACK_PAY);
-  NRF_SetRegisterBit(NRF_REG_FEATURE, FEATURE_EN_DPL);
-  NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x07);
+  // Dynamic data length
+  NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x01);
+  NRF_WriteRegisterByte(NRF_REG_FEATURE, 0x04);
 
-  // Disable retry transmissions
-  NRF_WriteRegisterByte(NRF_REG_SETUP_RETR, 0x00);
-
+  // Enter RX mode
   NRF_EnterMode(NRF_MODE_RX);
+
   LOG_DEBUG("Initialized RF...\r\n");
 }
 
@@ -91,14 +77,9 @@ void COM_RF_HandleIRQ() {
   uint8_t status = NRF_ReadStatus();
 
   if (status & STATUS_MASK_RX_DR) {
-    // Received packet
-    for (;;) {
-      uint8_t pipe = (NRF_ReadStatus() & STATUS_MASK_RX_P_NO) >> 1;
-      if (pipe >= 6) {
-        break;
-      }
-      COM_RF_Receive(pipe);
-    }
+    // Received message
+    const uint8_t pipe = (NRF_ReadStatus() & STATUS_MASK_RX_P_NO) >> 1;
+    COM_RF_Receive(pipe);
   }
 
   if (status & STATUS_MASK_TX_DS) {
@@ -126,8 +107,6 @@ void COM_RF_Receive(uint8_t pipe) {
     LOG_ERROR("Couldn't read length of RF packet...\r\n");
   }
 
-  LOG_INFO("Got package\r\n");
-
   uint8_t payload[len];
   status = NRF_ReadPayload(payload, len);
   if (status != NRF_OK) {
@@ -136,22 +115,10 @@ void COM_RF_Receive(uint8_t pipe) {
 
   NRF_SetRegisterBit(NRF_REG_STATUS, STATUS_RX_DR);
 
-  uint8_t msg_type = payload[0] & 0x0f;
-  uint8_t order = payload[0] & 0xf0;
-  last_rec_time = HAL_GetTick(); // Timestamp of last received message
-  if (order == last_rec_id) {
-    return;
-  }
+  // Timestamp of last received message
+  last_rec_time = HAL_GetTick();
 
-  switch (msg_type) {
-    case MSG_ACTION:
-      parse_controller_packet(payload + 1, len - 1);
-      break;
-    default:
-      LOG_WARNING("Unkown message type %d\r\n", msg_type);
-      HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
-      break;
-  }
+  parse_controller_packet(payload + 1, len - 1);
 
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
   NRF_SendCommand(NRF_CMD_FLUSH_RX);
@@ -284,11 +251,13 @@ uint8_t COM_Get_ID() {
 static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   Command* cmd = NULL;
   cmd = command__unpack(NULL, len, payload);
+
   if (!cmd) {
     LOG_WARNING("Decoding PB failed\r\n");
-    return;
+  } else {
+    NAV_HandleCommand(cmd);
   }
-  NAV_HandleCommand(cmd);
+
   protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
 }
 
