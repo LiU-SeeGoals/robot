@@ -206,7 +206,7 @@ void UI_RxCallback() {
     print_help();
 
     if (moving) {
-      NAV_StopMovement();
+      NAV_DisableMovement();
       moving = 0;
     }
   } else {
