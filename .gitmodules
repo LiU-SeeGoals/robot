@@ -1,6 +1,3 @@
-[submodule "Libraries/nRF24L01P-lib"]
-	path = Libraries/nRF24L01P-lib
-	url = https://github.com/LiU-SeeGoals/nRF24L01P-lib
 [submodule "Libraries/proto-messages"]
 	path = Libraries/proto-messages
 	url = git@github.com:LiU-SeeGoals/proto-messages.git
