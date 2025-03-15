@@ -7,3 +7,6 @@
 [submodule "Libraries/hlindgren_lsm6dsl"]
 	path = Libraries/hlindgren_lsm6dsl
 	url = https://git.lysator.liu.se/hlg/hlindgren_lsm6dsl
+[submodule "Libraries/nRF24L01P-lib"]
+	path = Libraries/nRF24L01P-lib
+	url = git@github.com:LiU-SeeGoals/nRF24L01P-lib.git
