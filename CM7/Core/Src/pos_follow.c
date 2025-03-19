@@ -51,14 +51,14 @@ void set_params() {
   params_angle.umax = 100.0;
   params_angle.Ts = DELTA_T;
   params_angle.Ti = 1000000000000;
-  params_angle.Td = 0;
-  params_angle.K = 30;
+  params_angle.Td = 0.1;
+  params_angle.K = 30 * 1.1;
 
   params_dist.umin = -100.0;
   params_dist.umax = 100.0;
   params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.0015;
-  params_dist.K = 50.0f;
+  params_dist.K = 50.0f * 1000.50;
   params_dist.Td = 0.1;
 }
 
@@ -109,7 +109,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
   float control_w = PID_p(STATE_get_robot_angle(), wantw, angle_error, &params_angle);
 
-  // Rotate from world to robot frame
+  // Rotate from world to robot frame (inverse the robot angle)
   float x = distance_control_signal * ((rel_x * arm_cos_f32(-angle)) - (rel_y * arm_sin_f32(-angle)));
   float y = distance_control_signal * ((rel_x * arm_sin_f32(-angle)) + (rel_y * arm_cos_f32(-angle)));
 

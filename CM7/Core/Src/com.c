@@ -69,6 +69,9 @@ void COM_RF_Init() {
   // No auto-acknowledgement
   NRF_WriteRegisterByte(NRF_REG_EN_AA, 0x00);
 
+  // Channel rf 2525
+  NRF_WriteRegisterByte(NRF_REG_RF_CH, 0x7d);
+
   // Dynamic data length
   NRF_WriteRegisterByte(NRF_REG_DYNPD, 0x01);
   NRF_WriteRegisterByte(NRF_REG_FEATURE, 0x04);
@@ -209,6 +212,11 @@ uint8_t COM_Get_ID() {
   uint32_t w0 = HAL_GetUIDw0();
   uint32_t w1 = HAL_GetUIDw1();
   uint32_t w2 = HAL_GetUIDw2();
+
+  if (w0 == 2424903 && w1 == 892490001 && w2 == 842217265)
+  {
+    return 0;
+  }
 
   if (w0 == 1572912 && w1 == 892490001 && w2 == 842217265)
   {
