@@ -1,6 +1,7 @@
 #include "nav.h"
 #include "state_estimator.h"
 #include "pos_follow.h"
+#include "kicker.h"
 
 /*
  * Private includes
@@ -37,7 +38,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* encoder3_htim,
               TIM_HandleTypeDef* encoder4_htim) {
 
-  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_TRACE, 0);
+  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_ERROR, 0);
   HAL_TIM_Base_Start(pwm_htim);
   HAL_TIM_Base_Start(pwm15_htim);
   HAL_TIM_Base_Start(encoder1_htim);
@@ -131,6 +132,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   robot_cmd.y = 0;
   robot_cmd.w = 0;
 
+  NAV_EnableMovement();
   float control_clock_prescaler = motor_tick_itr->Init.Prescaler + 1; 
   float control_clock_period = motor_tick_itr->Init.Period + 1;
   CONTROL_FREQ = CLOCK_FREQ / (control_clock_prescaler * control_clock_period);
@@ -148,9 +150,18 @@ void NAV_set_motor_ticks(){
     motors[i].prev_tick = new_ticks;
   }
 
-  // Dont move this into the other for loop !!
-  for (int i = 0; i < 4; i++){ // do for all motor
-    MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
+  // Dont move this into the other for loop, we want motors to run simultanious!!
+  for (int i = 0; i < 4; i++)
+  { // do for all motor
+    if (robot_cmd.movement_enabled == 1)
+    {
+      MOTOR_SetSpeed(&motors[i], motors[i].speed, &I_prevs[i]);
+    }
+    else
+    {
+      LOG_DEBUG("Movement disabled!");
+      MOTOR_SetSpeed(&motors[i], 0, &I_prevs[i]);
+    }
   }
 
 }
@@ -163,15 +174,61 @@ void NAV_log_speed()
       MOTOR_ReadSpeed(&motors[3]));
 }
 
-void steer(float vx,float vy, float w){
+// res is a 3x1 vector
+void NAV_wheelToBody(float* res){
+
+  // wheel to body psudeo inverse https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
+  // TODO: measure real wheel radius and chasis radius
+  float r = 1.f;
+  float R = 1.f;
+
+  float psi = PI * 31.f / 180.0f;
+  float theta = PI * 45.f / 180.0f;
+
+  float wrf = MOTOR_get_motor_tick_per_second(&motors[0]);
+  float wrb = MOTOR_get_motor_tick_per_second(&motors[1]);
+  float wlb = MOTOR_get_motor_tick_per_second(&motors[2]);
+  float wlf = MOTOR_get_motor_tick_per_second(&motors[3]);
+
+  float cos_psi = arm_cos_f32(psi);
+  float cos_theta = arm_cos_f32(theta);
+  float sin_psi = arm_sin_f32(psi);
+  float sin_theta = arm_sin_f32(theta);
+
+  float m11 = r * (cos_psi / ( 2.0f * (cos_psi * cos_psi + cos_theta * cos_theta)));
+  float m12 = m11;
+  float m13 = -m11;
+  float m14 = -m11;
+
+  float m21 = r * (1.0 / (2.0f * (sin_psi + sin_theta)));
+  float m22 = -m21;
+  float m23 = -m21;
+  float m24 = m21;
+
+  float m31 = r * (sin_theta / (2.0f * R * (sin_psi + sin_theta)));
+  float m32 = m31;
+  float m33 = m31;
+  float m34 = m31;
+
+  float u = wrf * m11 + wrb * m12 + wlb * m13 + wlf * m14;
+  float v = wrf * m21 + wrb * m22 + wlb * m23 + wlf * m24;
+  float w = wrf * m31 + wrb * m32 + wlb * m33 + wlf * m34;
+  res[0] = u;
+  res[1] = v;
+  res[2] = w;
+}
+
+void steer(float u,float v, float w){
   // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
   // wheels RF, RB, LB, LF
   // wheel direction is RF forward vector toward dribbler
-  // y forward toward dribbler
-  // x to the sides
+  // v forward toward dribbler
+  // u to the sides
   // w angle from LF to LB to RB to RF
 
-  /*float theta = 31.f * PI / 180.f;*/
+  // u is y in robot frame
+  // v is x in robot frame
+
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
   // r is wheel radius, R is chasis radius, currently 1 because idc and 
@@ -180,34 +237,16 @@ void steer(float vx,float vy, float w){
   float R = 1.f;
 
 
-  float wrf = 1 / r * ( vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
-  float wrb = 1 / r * ( vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
-  float wlb = 1 / r * ( -vy * arm_cos_f32(theta) - vx * arm_sin_f32(theta) + w * R);
-  float wlf = 1 / r * ( -vy * arm_cos_f32(psi) + vx * arm_sin_f32(psi) + w * R);
+  float wrf = 1.0 / r * ( v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
+  float wrb = 1.0 / r * ( v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
+  float wlb = 1.0 / r * ( -v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
+  float wlf = 1.0 / r * ( -v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
 
 
-
-  /*float theta = 31.f;*/
-  /*float psi = 45.f;*/
-  /*float r = 1.f;*/
-  /*float th_sin, th_cos;*/
-  /*float psi_sin, psi_cos;*/
-  /**/
-  /*arm_sin_cos_f32(theta, &th_sin, &th_cos);*/
-  /*arm_sin_cos_f32(psi, &psi_sin, &psi_cos);*/
-  /**/
-  /*float v1 = th_sin * vx +  th_cos * vy + -r * w;*/
-  /*float v2 = th_sin * vx + -th_cos * vy + -r * w;*/
-  /*float v3 = -psi_sin  * vx +  -psi_cos *  vy+  -r * w;*/
-  /*float v4 = -psi_sin  * vx +  psi_cos *  vy + -r * w;*/
-  /**/
-  /*// float v4 = -th_cos;*/
-  /*// v1 = sin(vx * theta * PI / 180.f);*/
   motors[0].speed = wrf;
   motors[1].speed = wrb;
   motors[2].speed = wlb;
   motors[3].speed = wlf;
-
 }
 
 void NAV_Direction(DIRECTION dir) {
@@ -262,18 +301,23 @@ void NAV_TestMovement() {
   steer(0, 1, 0);
 }
 
-void NAV_StopMovement() {
-  steer(0, 0, 0);
+void NAV_DisableMovement() {
+  robot_cmd.movement_enabled = 0;
+}
+
+void NAV_EnableMovement() {
+  robot_cmd.movement_enabled = 1;
 }
 
 void NAV_HandleCommand(Command* cmd) {
   switch (cmd->command_id) {
     case ACTION_TYPE__STOP_ACTION:
-      NAV_StopMovement();
-      LOG_DEBUG("Stop\r\n");
+      NAV_DisableMovement();
+      LOG_DEBUG("Got stop (id %d)\r\n", cmd->robot_id);
       break;
     case ACTION_TYPE__MOVE_TO_ACTION: {
-      LOG_DEBUG("Got move to for robot ID: %d\r\n", cmd->command_id);
+      NAV_EnableMovement();
+      LOG_DEBUG("Got move (id %d)\r\n", cmd->robot_id);
       NAV_GoToAction(cmd);
       } break;
 
@@ -294,9 +338,13 @@ void NAV_HandleCommand(Command* cmd) {
     case ACTION_TYPE__ROTATE_ACTION:
       break;
     case ACTION_TYPE__KICK_ACTION:
+      KICKER_Charge();
+      KICKER_Charge();
+      KICKER_Charge();
+      KICKER_Kick();
       break;
     default:
-      LOG_WARNING("Not known command: %i\r\n", cmd->command_id);
+      LOG_ERROR("Not known command: %i\r\n", cmd->command_id);
       break;
   }
 }
@@ -329,10 +377,10 @@ void NAV_GoToAction(Command* cmd){
     const float f_cam_y = ((float)cam_y) / 1000.f;
     const float f_cam_w = ((float)cam_w) / 1000.f;
 
-    /*LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
-    /*LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
-    /*LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);*/
-    /*LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);*/
+    LOG_DEBUG("move to int: %d %d %d:\r\n", nav_x, nav_y, nav_w);
+    LOG_DEBUG("Vision int: %d %d %d:\r\n", cam_x, cam_y, cam_w);
+    LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
+    LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);
 
     /*STATE_log_states();*/
     /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
@@ -437,15 +485,20 @@ void NAV_TestDribbler(){
 
 }
 
+void NAV_TEST_Set_robot_cmd(float x, float y, float w){
+  robot_cmd.x = x;
+  robot_cmd.y = y;
+  robot_cmd.w = w;
+}
+
 float NAV_GetNavX(){
   return robot_cmd.x;
 }
+
 float NAV_GetNavY(){
   return robot_cmd.y;
 }
+
 float NAV_GetNavW(){
   return robot_cmd.w;
-}
-robot_nav_command NAV_GetNavCommand(){
-  return robot_cmd;
 }

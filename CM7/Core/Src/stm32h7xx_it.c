@@ -238,7 +238,6 @@ void EXTI15_10_IRQHandler(void)
 /**
   * @brief This function handles TIM8 break interrupt and TIM12 global interrupt.
   */
-
 void TIM8_BRK_TIM12_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 0 */
@@ -260,8 +259,9 @@ void TIM8_BRK_TIM12_IRQHandler(void)
     float y = NAV_GetNavY();
     float w = NAV_GetNavW();
     POS_go_to_position(x, y, w);
-    NAV_set_motor_ticks();
   }
+
+  NAV_set_motor_ticks();
   __enable_irq();
 
   
