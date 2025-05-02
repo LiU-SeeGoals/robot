@@ -404,7 +404,7 @@ void NAV_GoToAction(Command* cmd){
 
 
 /* 
-   Set position for robot to move to
+   Set position for robot to move to in (meter)
 
    Can be used in demos when there is no vision / software updates
 */
