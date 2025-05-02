@@ -233,6 +233,14 @@ int main(void)
       on = !on;
       now = HAL_GetTick();
     }
+    // DEMO:
+    // Move robot in x direction back and forth
+    // Since there is no vision for x,y, 
+    // all movements are relative origin (0,0)
+    NAV_SetCommandPosition(0.2, 0.0, 0.0);
+    HAL_Delay(2000);
+    NAV_SetCommandPosition(-0.2, 0.0, 0.0);
+    HAL_Delay(2000);
 
     /* USER CODE END WHILE */
 

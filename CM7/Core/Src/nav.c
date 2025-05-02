@@ -367,8 +367,8 @@ void NAV_GoToAction(Command* cmd){
     const int32_t cam_y = cmd->pos->y;
     const int32_t cam_w = cmd->pos->w;
 
-    // hax to cange to to float meter rep just for testing first time... hehe
-    // angle is scaled by 1000 before sent
+    // Hax to cange to to float meter rep just for testing first time... hehe
+    // Angle is scaled by 1000 before sent to robot.
     const float f_nav_x = ((float) nav_x) / 1000.f;
     const float f_nav_y = ((float) nav_y) / 1000.f;
     const float f_nav_w = ((float) nav_w) / 1000.f;
@@ -382,17 +382,16 @@ void NAV_GoToAction(Command* cmd){
     LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
     LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);
 
-    /*STATE_log_states();*/
-    /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
-    /*LOG_DEBUG("Got move to %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
     robot_cmd.x = f_nav_x;
     robot_cmd.y = f_nav_y;
     robot_cmd.w = f_nav_w;
 
+    // -- Vision update --
+
     if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) == 0)
     {
-      // If software send us same position then ignore it.
-      // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez
+      // If the vision position is exactly the same as last time it is likely not updated information.
+      // Ignore old information
       return;
     }
 
@@ -401,11 +400,18 @@ void NAV_GoToAction(Command* cmd){
     prev_nav_x = f_cam_x;
     prev_nav_y = f_cam_y;
     prev_nav_w = f_cam_w;
+}
 
-    /*Vec2 position = {f_nav_x,f_nav_y};*/
-    // Set desiered position, this position is followed in interrupts
 
-    /*POS_go_to_position(position, f_nav_w);*/
+/* 
+   Set position for robot to move to
+
+   Can be used in demos when there is no vision / software updates
+*/
+void NAV_SetCommandPosition(float nav_x, float nav_y, float nav_z){
+    robot_cmd.x = nav_x;
+    robot_cmd.y = nav_y;
+    robot_cmd.w = nav_z;
 }
 
 void NAV_TireTest() {
