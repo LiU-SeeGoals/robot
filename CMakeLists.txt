@@ -55,7 +55,7 @@ include_directories(Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_HAL_Drive
     Drivers/CMSIS/Device/ST/STM32H7xx/Include Drivers/CMSIS/Include
     Drivers/CMSIS/DSP/DSP_Lib_TestSuite/RefLibs/inc Libraries/fw-shared-modules/Inc
     Libraries/nRF24L01P-lib Libraries/proto-messages/proto_c Libraries/protobuf
-    Drivers/CMSIS/DSP/Include Libraries/hlindgren_lsm6dsl/include)
+    Drivers/CMSIS/DSP/Include Libraries/lsm6dsl-lib/include)
 
 add_compile_definitions(DEBUG USE_HAL_DRIVER STM32H755xx)
 
@@ -93,7 +93,7 @@ set(DRIVERS_SOURCE ${DRIVERS_ROOT}/stm32h7xx_hal_cortex.c
 file(GLOB_RECURSE COMMON_SOURCES "Common/*.*" "Libraries/proto-messages/proto_c/*.*" "Libraries/protobuf/*.*")
 file(GLOB NRF_SOURCE "Libraries/nRF24L01P-lib/*.*")
 
-file(GLOB LSM6DSL_SOURCE "Libraries/hlindgren_lsm6dsl/src/HLindgren_LSM6DSL.c")
+file(GLOB LSM6DSL_SOURCE "Libraries/lsm6dsl-lib/src/HLindgren_LSM6DSL.c")
 add_compile_definitions(LSM6DSL_USE_I2C_MEM_READ_AND_WRITE)
 
 file(GLOB_RECURSE CM7_SOURCES "Libraries/fw-shared-modules/Src/*.*")
