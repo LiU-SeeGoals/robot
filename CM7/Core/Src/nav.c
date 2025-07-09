@@ -484,11 +484,9 @@ void NAV_RunDribbler(){
 }
 
 void NAV_TestDribbler(){
-
   NAV_RunDribbler();
   HAL_Delay(2000);
   NAV_StopDribbler();
-
 }
 
 void NAV_TEST_Set_robot_cmd(float x, float y, float w){

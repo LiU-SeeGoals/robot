@@ -20,7 +20,7 @@ Then build with:
 # Linux
 cmake -B build && make -C build
 
-# Windows
+# Windows (requires MinGW!)
 cmake -B build -G "MinGW Makefiles" && make -C build
 ```
 

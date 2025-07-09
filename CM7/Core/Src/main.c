@@ -227,8 +227,13 @@ int main(void)
     if (HAL_GetTick() - now > 1000) {
       if (on) {
         HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+        NAV_StopDribbler();
+
       } else {
         HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
+        NAV_RunDribbler();
       }
       on = !on;
       now = HAL_GetTick();
@@ -927,17 +932,22 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, MOTOR4_BREAK_Pin|MOTOR2_REVERSE_Pin|MOTOR2_BREAK_Pin|MOTOR3_REVERSE_Pin
-                          |OLD_MOTOR2_REVERSE_Pin|MOTOR4_REVERSE_Pin, GPIO_PIN_RESET);
+                          |OLD_MOTOR2_REVERSE_Pin|KICKER_CS_Pin|MOTOR4_REVERSE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_CHARGE_Pin|LED_RED_Pin
-                          |MOTOR1_REVERSE_Pin|NRF_CSN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, IMU_CS_Pin|IMU_INT1_Pin|IMU_INT2_Pin|IR_IN_Pin
+                          |IR_OUT_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_CHARGE_Pin|KICKER_ERR_Pin
+                          |LED_RED_Pin|MOTOR1_REVERSE_Pin|NRF_CSN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, KICKER_DISCHARGE2_Pin|KICKER_DISCHARGE1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, MOTOR3_BREAK_Pin|OLD_MOTOR2_BREAK_Pin|DRIBBLER_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, MOTOR3_BREAK_Pin|OLD_MOTOR2_BREAK_Pin|EXT_LED1_RED_Pin|EXT_LED4_BLUE_Pin
+                          |EXT_LED2_BLUE_Pin|DRIBBLER_Pin|EXT_LED3_WHITE_Pin|BUZZER_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(NRF_CE_GPIO_Port, NRF_CE_Pin, GPIO_PIN_RESET);
@@ -946,9 +956,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : MOTOR4_BREAK_Pin MOTOR2_REVERSE_Pin MOTOR2_BREAK_Pin MOTOR3_REVERSE_Pin
-                           OLD_MOTOR2_REVERSE_Pin MOTOR4_REVERSE_Pin LED_YELLOW_Pin */
+                           OLD_MOTOR2_REVERSE_Pin KICKER_CS_Pin MOTOR4_REVERSE_Pin LED_YELLOW_Pin */
   GPIO_InitStruct.Pin = MOTOR4_BREAK_Pin|MOTOR2_REVERSE_Pin|MOTOR2_BREAK_Pin|MOTOR3_REVERSE_Pin
-                          |OLD_MOTOR2_REVERSE_Pin|MOTOR4_REVERSE_Pin|LED_YELLOW_Pin;
+                          |OLD_MOTOR2_REVERSE_Pin|KICKER_CS_Pin|MOTOR4_REVERSE_Pin|LED_YELLOW_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -960,10 +970,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BTN_USER_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : IMU_CS_Pin IMU_INT1_Pin IMU_INT2_Pin IR_IN_Pin
+                           IR_OUT_Pin */
+  GPIO_InitStruct.Pin = IMU_CS_Pin|IMU_INT1_Pin|IMU_INT2_Pin|IR_IN_Pin
+                          |IR_OUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : LED_GREEN_Pin MOTOR1_BREAK_Pin KICKER_DISCHARGE2_Pin KICKER_CHARGE_Pin
-                           KICKER_DISCHARGE1_Pin LED_RED_Pin MOTOR1_REVERSE_Pin NRF_CSN_Pin */
+                           KICKER_DISCHARGE1_Pin KICKER_ERR_Pin LED_RED_Pin MOTOR1_REVERSE_Pin
+                           NRF_CSN_Pin */
   GPIO_InitStruct.Pin = LED_GREEN_Pin|MOTOR1_BREAK_Pin|KICKER_DISCHARGE2_Pin|KICKER_CHARGE_Pin
-                          |KICKER_DISCHARGE1_Pin|LED_RED_Pin|MOTOR1_REVERSE_Pin|NRF_CSN_Pin;
+                          |KICKER_DISCHARGE1_Pin|KICKER_ERR_Pin|LED_RED_Pin|MOTOR1_REVERSE_Pin
+                          |NRF_CSN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -975,8 +996,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(NRF_IRQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOTOR3_BREAK_Pin OLD_MOTOR2_BREAK_Pin DRIBBLER_Pin */
-  GPIO_InitStruct.Pin = MOTOR3_BREAK_Pin|OLD_MOTOR2_BREAK_Pin|DRIBBLER_Pin;
+  /*Configure GPIO pins : MOTOR3_BREAK_Pin OLD_MOTOR2_BREAK_Pin EXT_LED1_RED_Pin EXT_LED4_BLUE_Pin
+                           EXT_LED2_BLUE_Pin DRIBBLER_Pin EXT_LED3_WHITE_Pin BUZZER_Pin */
+  GPIO_InitStruct.Pin = MOTOR3_BREAK_Pin|OLD_MOTOR2_BREAK_Pin|EXT_LED1_RED_Pin|EXT_LED4_BLUE_Pin
+                          |EXT_LED2_BLUE_Pin|DRIBBLER_Pin|EXT_LED3_WHITE_Pin|BUZZER_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
