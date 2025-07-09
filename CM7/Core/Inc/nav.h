@@ -77,5 +77,6 @@ void NAV_TEST_Set_robot_cmd(float x, float y, float w);
 float NAV_GetNavX();
 float NAV_GetNavY();
 float NAV_GetNavW();
+void NAV_SetCommandPosition(float nav_x, float nav_y, float nav_z);
 #endif /* NAV_H */
 

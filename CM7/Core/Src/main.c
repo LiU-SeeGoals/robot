@@ -233,7 +233,6 @@ int main(void)
       on = !on;
       now = HAL_GetTick();
     }
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
