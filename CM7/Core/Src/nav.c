@@ -145,7 +145,7 @@ void NAV_set_motor_ticks(){
   {
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;
-    MOTOR_set_motor_tick_per_second(&motors[i], new_ticks - ticks_before);
+    MOTOR_update_motor_ticks(&motors[i], new_ticks - ticks_before);
     motors[i].ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
@@ -185,10 +185,10 @@ void NAV_wheelToBody(float* res){
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
 
-  float wrf = MOTOR_get_motor_tick_per_second(&motors[0]);
-  float wrb = MOTOR_get_motor_tick_per_second(&motors[1]);
-  float wlb = MOTOR_get_motor_tick_per_second(&motors[2]);
-  float wlf = MOTOR_get_motor_tick_per_second(&motors[3]);
+  float wrf = MOTOR_get_motor_ticks_per_iteration(&motors[0]);
+  float wrb = MOTOR_get_motor_ticks_per_iteration(&motors[1]);
+  float wlb = MOTOR_get_motor_ticks_per_iteration(&motors[2]);
+  float wlf = MOTOR_get_motor_ticks_per_iteration(&motors[3]);
 
   float cos_psi = arm_cos_f32(psi);
   float cos_theta = arm_cos_f32(theta);

@@ -10,7 +10,7 @@ extern float CONTROL_FREQ;
 /*
  Averages motor speed ticks
 */
-void MOTOR_set_motor_tick_per_second(MotorPWM *motor, float val)
+void MOTOR_update_motor_ticks(MotorPWM *motor, float val)
 {
   motor->cur_tick_idx = (1 + motor->cur_tick_idx) % (motor_tick_buf_size);
   motor->motor_ticks[motor->cur_tick_idx] = val;
@@ -19,7 +19,7 @@ void MOTOR_set_motor_tick_per_second(MotorPWM *motor, float val)
 /*
  Get motor speed
 */
-float MOTOR_get_motor_tick_per_second(MotorPWM *motor)
+float MOTOR_get_motor_ticks_per_iteration(MotorPWM *motor)
 {
   // Can be made faster keeping a moving average and removing the last adding the new?
   float cur = 0;
@@ -47,14 +47,14 @@ void MOTOR_PWMStart(MotorPWM *motor)
   HAL_TIM_PWM_Start(motor->pwm_htim, motor->channel);
 }
 
-void MOTOR_StopBreak(MotorPWM *motor)
-{
-  HAL_GPIO_WritePin(motor->breakPinPort, motor->breakPin, GPIO_PIN_RESET);
-}
-
 void MOTOR_Break(MotorPWM *motor)
 {
   HAL_GPIO_WritePin(motor->breakPinPort, motor->breakPin, GPIO_PIN_SET);
+}
+
+void MOTOR_StopBreak(MotorPWM *motor)
+{
+  HAL_GPIO_WritePin(motor->breakPinPort, motor->breakPin, GPIO_PIN_RESET);
 }
 
 /*
@@ -155,8 +155,9 @@ void MOTOR_SendPWM(MotorPWM *motor, float pulse_width)
 
 float MOTOR_ReadSpeed(MotorPWM *motor)
 {
-
-  float speed_s = MOTOR_get_motor_tick_per_second(motor) * CONTROL_FREQ;
+  // When I write this control freq should be 2000, each iteration is a
+  // time-step of 1/2000 so this gives the speed in ticks per second.
+  float speed_s = MOTOR_get_motor_ticks_per_iteration(motor) * CONTROL_FREQ;
 
   return speed_s;
 }
