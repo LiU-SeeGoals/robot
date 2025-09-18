@@ -139,7 +139,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   HAL_TIM_Base_Start_IT(motor_tick_itr);
 }
 
-void NAV_set_motor_ticks(){
+void NAV_update_motor_state(){
 
   for (int i = 0; i < 4; i++)
   {
@@ -218,7 +218,7 @@ void NAV_wheelToBody(float* res){
   res[2] = w;
 }
 
-void steer(float u,float v, float w){
+void NAV_steer(float u,float v, float w){
   // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
   // wheels RF, RB, LB, LF
   // wheel direction is RF forward vector toward dribbler
@@ -279,7 +279,7 @@ void command_move(Command *cmd){
 
   LOG_INFO("got nav command %d %d %d \r\n",cmd->kick_speed, cmd->command_id, cmd->direction->x, cmd->direction->y);
   if (cmd->command_id == ACTION_TYPE__STOP_ACTION){
-    steer(0.f, 0.f, 0.f);
+    NAV_steer(0.f, 0.f, 0.f);
     return;
   }
 
@@ -292,13 +292,13 @@ void command_move(Command *cmd){
   }
 
   if (cmd->command_id == ACTION_TYPE__MOVE_ACTION){
-    steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
+    NAV_steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
   }
 
 }
 
 void NAV_TestMovement() {
-  steer(0, 1, 0);
+  NAV_steer(0, 1, 0);
 }
 
 void NAV_DisableMovement() {
@@ -330,7 +330,7 @@ void NAV_HandleCommand(Command* cmd) {
       LOG_DEBUG("keyboard control (x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
       // TODO: Should somehow know that we're in remote control mode
       if (0 <= speed && speed <= 10) {
-        steer(100.f * speed * x, 100.f * speed * y, 0.f);
+        NAV_steer(100.f * speed * x, 100.f * speed * y, 0.f);
       }
       } break;
     case ACTION_TYPE__PING:
@@ -460,6 +460,8 @@ uint8_t NAV_IsPanic(){
 /*
    Someone thinks something has gone terribly wrong...
    Disable motors and everyhting going forward
+   TODO: Actualy implement the behaviour that triggers when the program is set
+   to panic.
  */
 void NAV_SetRobotPanic()
 {
@@ -468,6 +470,8 @@ void NAV_SetRobotPanic()
 
 /*
   Someone solved the panic
+  TODO: Implement reset behaviour. I am leaving this as 1 untill the method
+  actualy does something.
 */
 void NAV_ClearRobotPanic(){
   robot_cmd.panic = 1;

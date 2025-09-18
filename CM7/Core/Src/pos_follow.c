@@ -66,19 +66,19 @@ void set_params() {
 void TEST_vy(float ref_angle, float speed) 
 {
   float control_w = PID_p(STATE_get_robot_angle(), ref_angle, angle_error, &params_angle);
-  steer(0, speed, control_w);
+  NAV_steer(0, speed, control_w);
 }
 
 void TEST_vx(float ref_angle, float speed) 
 {
   float control_w = PID_p(STATE_get_robot_angle(), ref_angle, angle_error, &params_angle);
-  steer(speed, 0.0f, control_w);
+  NAV_steer(speed, 0.0f, control_w);
 }
 
 void TEST_angle_control(float ref_angle)
 {
   float control_w = PID_p(STATE_get_robot_angle(), ref_angle, angle_error, &params_angle);
-  steer(0, 0, control_w);
+  NAV_steer(0, 0, control_w);
 }
 
 int log_num = 0;
@@ -122,7 +122,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
     LOG_DEBUG("x,y state %f %f %f \r\n", cur_x, cur_y, control_w);
     LOG_DEBUG("x,y control signal %f %f %f \r\n", x,y, control_w);
   }
-  steer(-y, -x, control_w);
+  NAV_steer(-y, -x, control_w);
 }
 
 float PID_p(float current, float desired, float (*error_func)(float,float), control_params *param){

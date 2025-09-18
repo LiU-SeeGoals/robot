@@ -454,19 +454,19 @@ void parse_key() {
   } else if (current_state == state_motors_steer) {
     switch (key) {
       case 'W':
-        steer(0, 100.f, 0.f);
+        NAV_steer(0, 100.f, 0.f);
         moving = 1;
         break;
       case 'A':
-        steer(100.f, 0, 0.f);
+        NAV_steer(100.f, 0, 0.f);
         moving = 1;
         break;
       case 'S':
-        steer(0, -100.f, 0.f);
+        NAV_steer(0, -100.f, 0.f);
         moving = 1;
         break;
       case 'D':
-        steer(-100.f, 0, 0.f);
+        NAV_steer(-100.f, 0, 0.f);
         moving = 1;
         break;
     }
