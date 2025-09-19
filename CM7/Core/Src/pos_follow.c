@@ -127,7 +127,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
 float PID_p(float current, float desired, float (*error_func)(float,float), control_params *param){
 
-  set_params();
+  set_params(); // TODO: Do we need to set this every time?
 
   float error = error_func(current, desired);
 
@@ -151,7 +151,7 @@ float PID_p(float current, float desired, float (*error_func)(float,float), cont
 
 float PID_pi(float current, float desired, float* I_prev, float (*error_func)(float,float), control_params *param){
 
-  set_params();
+  set_params(); //TODO: Do we need to set this every time
 
   float error = error_func(current, desired);
   float I = *I_prev + (param->Ts / param->Ti) * error;
