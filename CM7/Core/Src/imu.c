@@ -83,7 +83,7 @@ void IMU_Init(I2C_HandleTypeDef* hi2c) {
     LOG_DEBUG("Polling WHO_AM_I register...\r\n");
     lsm6dsl_read_register(&imu_device_handle, LSM6DSL_REG_WHO_AM_I, &who_am_i, 1);
 
-    LOG_DEBUG("WHO_AM_I: 0x%X\r\n", who_am_i);
+    LOG_DEBUG("WHO_AM_I: 0x%X\r\n", who_am_i);curently
 
     if (who_am_i == 0x6A) {
       LOG_INFO("IMU is responding\r\n");
