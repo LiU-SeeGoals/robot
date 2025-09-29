@@ -223,27 +223,23 @@ uint16_t STATE_is_calibrated();
  */
 float STATE_get_robot_angle();
 
-// TODO: Unit?????
 /**
- * Gets the estimated x position in ??field coordiantes??
+ * Gets the estimated x position in field coordiantes
  */
 float STATE_get_posx();
 
-// TODO: Unit?????
 /**
- * Gets the estimated y position in ??field coordiantes??
+ * Gets the estimated y position in field coordiantes
  */
 float STATE_get_posy();
 
-// TODO: Unit?????
 /**
- * Gets the estimated velocity in the x ??field?? direction
+ * Gets the estimated velocity in the x field direction
  */
 float STATE_get_vx();
 
-// TODO: Unit?????
 /**
- * Gets the estimated velocity in the y ??field?? direction
+ * Gets the estimated velocity in the y field direction
  */
 float STATE_get_vy();
 
