@@ -17,7 +17,11 @@ To be able to build, make sure you've the `gcc-arm-none-eabi` compiler installed
 
 Then build with:  
 ```
+# Linux
 cmake -B build && make -C build
+
+# Windows (requires MinGW!)
+cmake -B build -G "MinGW Makefiles" && make -C build
 ```
 
 To flash, you can use the `STM32_Programmer_CLI` program downloadable from [here](https://www.st.com/en/development-tools/stm32cubeprog.html).
@@ -29,6 +33,8 @@ There's also a build rule in make:
 ```
 make flash_cm7 -C build
 ```
+
+On Windows, maybe [this GUI](https://www.st.com/en/development-tools/stm32cubeprog.html) is more appropriate.
 
 # Documentation
 

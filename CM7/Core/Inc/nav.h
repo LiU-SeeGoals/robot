@@ -158,5 +158,6 @@ float NAV_GetNavY();
  * Get the goal w rotation
  */
 float NAV_GetNavW();
+void NAV_SetCommandPosition(float nav_x, float nav_y, float nav_z);
 #endif /* NAV_H */
 
