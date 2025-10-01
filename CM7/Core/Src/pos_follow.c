@@ -113,8 +113,8 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   float x = distance_control_signal * ((rel_x * arm_cos_f32(-angle)) - (rel_y * arm_sin_f32(-angle)));
   float y = distance_control_signal * ((rel_x * arm_sin_f32(-angle)) + (rel_y * arm_cos_f32(-angle)));
 
-  // u is y in robot frame
-  // v is x in robot frame
+  // u is x in robot frame
+  // v is y in robot frame
   log_num = (1 + log_num) % 1000;
   if (log_num == 0)
   {
@@ -122,7 +122,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
     LOG_DEBUG("x,y state %f %f %f \r\n", cur_x, cur_y, control_w);
     LOG_DEBUG("x,y control signal %f %f %f \r\n", x,y, control_w);
   }
-  NAV_steer(-y, -x, control_w);
+  NAV_steer(-x, -y, control_w);
 }
 
 float PID_p(float current, float desired, float (*error_func)(float,float), control_params *param){

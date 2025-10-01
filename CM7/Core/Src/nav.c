@@ -218,16 +218,16 @@ void NAV_wheelToBody(float* res){
   res[2] = w;
 }
 
-void NAV_steer(float u,float v, float w){
+void NAV_steer(float v,float u, float w){
   // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
   // wheels RF, RB, LB, LF
   // wheel direction is RF forward vector toward dribbler
-  // v forward toward dribbler
-  // u to the sides
+  // u forward toward dribbler
+  // v to the sides
   // w angle from LF to LB to RB to RF
 
-  // u is y in robot frame
-  // v is x in robot frame
+  // u is x in robot frame
+  // v is y in robot frame
 
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
@@ -237,10 +237,10 @@ void NAV_steer(float u,float v, float w){
   float R = 1.f;
 
 
-  float wrf = 1.0 / r * ( v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
-  float wrb = 1.0 / r * ( v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
-  float wlb = 1.0 / r * ( -v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
-  float wlf = 1.0 / r * ( -v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
+  float wrf = 1.0 / r * ( u * arm_cos_f32(psi) + v * arm_sin_f32(psi) + w * R);
+  float wrb = 1.0 / r * ( u * arm_cos_f32(theta) - v * arm_sin_f32(theta) + w * R);
+  float wlb = 1.0 / r * ( -u * arm_cos_f32(theta) - v * arm_sin_f32(theta) + w * R);
+  float wlf = 1.0 / r * ( -u * arm_cos_f32(psi) + v * arm_sin_f32(psi) + w * R);
 
 
   motors[0].speed = wrf;
@@ -298,7 +298,7 @@ void command_move(Command *cmd){
 }
 
 void NAV_TestMovement() {
-  NAV_steer(0, 1, 0);
+  NAV_steer(1, 0, 0);
 }
 
 void NAV_DisableMovement() {

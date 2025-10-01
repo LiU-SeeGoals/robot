@@ -45,7 +45,9 @@ void NAV_update_motor_state();
 
 /**
  * Set robot wheel speed from velocity vector in robot coordinate space.
- * @param vx, vy, w = x velocity, y velocity, rotational velocity.
+ * @param vx, Velocity in the x direction towards the dribbler
+ * @param vy, Velocity in the y direction positive left of x-axis
+ * @param w,  rotational velocity
  */
 void NAV_steer(float vx,float vy, float w);
 
@@ -67,7 +69,7 @@ void NAV_HandleCommand(Command* cmd);
 void NAV_StopMovement();
 
 /**
- * Move robot one unit forward
+ * Set robot speed to one unit forward
  */
 void NAV_TestMovement();
 
