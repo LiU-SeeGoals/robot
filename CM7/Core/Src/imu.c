@@ -35,7 +35,7 @@ void lsm6dsl_i2c_master_read_mem(Lsm6dsl_I2cPortHandle_t *port_handle,
   HAL_StatusTypeDef status = HAL_I2C_Mem_Read(port_handle, device_address << 1, mem_address, I2C_MEMADD_SIZE_8BIT, inbuf, size, 500);
   
   if (status != HAL_OK) {
-    LOG_ERROR("Failed to read %u byte(s) from IMU register address 0x%X\r\n", size, mem_address);
+    LOG_DEBUG("Failed to read %u byte(s) from IMU register address 0x%X\r\n", size, mem_address);
 
   } else {
     LOG_TRACE("Read %u byte(s) from IMU register address 0x%X\r\n", size, mem_address);
@@ -70,7 +70,7 @@ void lsm6dsl_i2c_master_write_mem(Lsm6dsl_I2cPortHandle_t *port_handle,
  * Public functions implementations
  */
 void IMU_Init(I2C_HandleTypeDef* hi2c) {
-  LOG_InitModule(&internal_log_mod, "IMU", LOG_LEVEL_DEBUG, 0);
+  LOG_InitModule(&internal_log_mod, "IMU", LOG_LEVEL_INFO, 0);
   
   LOG_INFO("Initializing IMU...\r\n");
 
