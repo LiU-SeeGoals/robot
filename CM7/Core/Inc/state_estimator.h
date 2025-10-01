@@ -180,18 +180,76 @@ typedef struct _FusionEKF
 
 
 // Public functions
+
+/**
+ * Initializes the state estimator module.
+ */
 void STATE_Init();
+
+/**
+ * Run tests for the state_estimator module. Outputs results to log.
+ */
 void STATE_Test();
+
+/**
+ * Update the state estimator with new data from ssl-vision.
+ * @param posx, x position
+ * @param posy, y position
+ * @param posw, robot rotation
+ */
 void STATE_FusionEKFVisionUpdate(float posx, float posy, float posw);
+
+/**
+ * Update the state estimator with new data from the IMU.
+ * @param acc, vector with accelerometer data
+ * @param gyr, vector with gyro data
+ */
 void STATE_FusionEKFIntertialUpdate(IMU_AccelVec3 acc, IMU_GyroVec3 gyr);
+
+/**
+ * Calibrates the bias for the IMU, this should be done while the robot is
+ * stationary.
+ */
 void STATE_calibrate_imu_gyr();
+
+/**
+ * Check if the state estimator is calibrated.
+ */
 uint16_t STATE_is_calibrated();
+
+/**
+ * Gets the estimated robot angle relative to the field
+ */
 float STATE_get_robot_angle();
+
+/**
+ * Gets the estimated x position in field coordiantes
+ */
 float STATE_get_posx();
+
+/**
+ * Gets the estimated y position in field coordiantes
+ */
 float STATE_get_posy();
+
+/**
+ * Gets the estimated velocity in the x field direction
+ */
 float STATE_get_vx();
+
+/**
+ * Gets the estimated velocity in the y field direction
+ */
 float STATE_get_vy();
+
+/**
+ * Output the current estimated state to the log
+ */
 void STATE_log_states();
+
+/**
+ * Check if the robot has recived vision data.
+ */
 int STATE_vision_initialized();
 // Private functions
 static void ekfStateJacobianFunc(const arm_matrix_instance_f32* pX, const arm_matrix_instance_f32* pU, arm_matrix_instance_f32* pF);

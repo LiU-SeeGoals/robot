@@ -139,13 +139,13 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   HAL_TIM_Base_Start_IT(motor_tick_itr);
 }
 
-void NAV_set_motor_ticks(){
+void NAV_update_motor_state(){
 
   for (int i = 0; i < 4; i++)
   {
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;
-    MOTOR_set_motor_tick_per_second(&motors[i], new_ticks - ticks_before);
+    MOTOR_update_motor_ticks(&motors[i], new_ticks - ticks_before);
     motors[i].ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
@@ -185,10 +185,10 @@ void NAV_wheelToBody(float* res){
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
 
-  float wrf = MOTOR_get_motor_tick_per_second(&motors[0]);
-  float wrb = MOTOR_get_motor_tick_per_second(&motors[1]);
-  float wlb = MOTOR_get_motor_tick_per_second(&motors[2]);
-  float wlf = MOTOR_get_motor_tick_per_second(&motors[3]);
+  float wrf = MOTOR_get_motor_ticks_per_iteration(&motors[0]);
+  float wrb = MOTOR_get_motor_ticks_per_iteration(&motors[1]);
+  float wlb = MOTOR_get_motor_ticks_per_iteration(&motors[2]);
+  float wlf = MOTOR_get_motor_ticks_per_iteration(&motors[3]);
 
   float cos_psi = arm_cos_f32(psi);
   float cos_theta = arm_cos_f32(theta);
@@ -218,16 +218,16 @@ void NAV_wheelToBody(float* res){
   res[2] = w;
 }
 
-void steer(float u,float v, float w){
+void NAV_steer(float v,float u, float w){
   // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
   // wheels RF, RB, LB, LF
   // wheel direction is RF forward vector toward dribbler
-  // v forward toward dribbler
-  // u to the sides
+  // u forward toward dribbler
+  // v to the sides
   // w angle from LF to LB to RB to RF
 
-  // u is y in robot frame
-  // v is x in robot frame
+  // u is x in robot frame
+  // v is y in robot frame
 
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
@@ -237,10 +237,10 @@ void steer(float u,float v, float w){
   float R = 1.f;
 
 
-  float wrf = 1.0 / r * ( v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
-  float wrb = 1.0 / r * ( v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
-  float wlb = 1.0 / r * ( -v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
-  float wlf = 1.0 / r * ( -v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
+  float wrf = 1.0 / r * ( u * arm_cos_f32(psi) + v * arm_sin_f32(psi) + w * R);
+  float wrb = 1.0 / r * ( u * arm_cos_f32(theta) - v * arm_sin_f32(theta) + w * R);
+  float wlb = 1.0 / r * ( -u * arm_cos_f32(theta) - v * arm_sin_f32(theta) + w * R);
+  float wlf = 1.0 / r * ( -u * arm_cos_f32(psi) + v * arm_sin_f32(psi) + w * R);
 
 
   motors[0].speed = wrf;
@@ -279,7 +279,7 @@ void command_move(Command *cmd){
 
   LOG_INFO("got nav command %d %d %d \r\n",cmd->kick_speed, cmd->command_id, cmd->direction->x, cmd->direction->y);
   if (cmd->command_id == ACTION_TYPE__STOP_ACTION){
-    steer(0.f, 0.f, 0.f);
+    NAV_steer(0.f, 0.f, 0.f);
     return;
   }
 
@@ -292,13 +292,13 @@ void command_move(Command *cmd){
   }
 
   if (cmd->command_id == ACTION_TYPE__MOVE_ACTION){
-    steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
+    NAV_steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
   }
 
 }
 
 void NAV_TestMovement() {
-  steer(0, 1, 0);
+  NAV_steer(1, 0, 0);
 }
 
 void NAV_DisableMovement() {
@@ -330,7 +330,7 @@ void NAV_HandleCommand(Command* cmd) {
       LOG_DEBUG("keyboard control (x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
       // TODO: Should somehow know that we're in remote control mode
       if (0 <= speed && speed <= 10) {
-        steer(100.f * speed * x, 100.f * speed * y, 0.f);
+        NAV_steer(100.f * speed * x, 100.f * speed * y, 0.f);
       }
       } break;
     case ACTION_TYPE__PING:
@@ -466,6 +466,8 @@ uint8_t NAV_IsPanic(){
 /*
    Someone thinks something has gone terribly wrong...
    Disable motors and everyhting going forward
+   TODO: Actualy implement the behaviour that triggers when the program is set
+   to panic.
  */
 void NAV_SetRobotPanic()
 {
@@ -474,6 +476,8 @@ void NAV_SetRobotPanic()
 
 /*
   Someone solved the panic
+  TODO: Implement reset behaviour. I am leaving this as 1 untill the method
+  actualy does something.
 */
 void NAV_ClearRobotPanic(){
   robot_cmd.panic = 1;
