@@ -217,9 +217,8 @@ void STATE_calibrate_imu_gyr();
  */
 uint16_t STATE_is_calibrated();
 
-// TODO: Unit?????
 /**
- * Gets the estimated robot angle relative to the ??field??
+ * Gets the estimated robot angle relative to the field
  */
 float STATE_get_robot_angle();
 

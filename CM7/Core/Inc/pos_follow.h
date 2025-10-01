@@ -40,14 +40,14 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw);
 void POS_Init();
 
 /**
- * Request robot to move ??sideways?? at `speed` facing `ref_angle`
+ * Request robot to move sideways at `speed` facing `ref_angle`
  * @param ref_angle, angle that the robot should face
  * @param speed, the speed to move in the y direction 
  */
 void TEST_vy(float ref_angle, float speed);
 
 /**
- * Request robot to move ??forward?? at `speed` facing `ref_angle`
+ * Request robot to move forward at `speed` facing `ref_angle`
  * @param ref_angle, angle that the robot should face
  * @param speed, the speed to move in the x direction 
  */
