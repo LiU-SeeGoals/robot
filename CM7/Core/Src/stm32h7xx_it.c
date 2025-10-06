@@ -261,7 +261,7 @@ void TIM8_BRK_TIM12_IRQHandler(void)
     POS_go_to_position(x, y, w);
   }
 
-  NAV_set_motor_ticks();
+  NAV_update_motor_state();
   __enable_irq();
 
   

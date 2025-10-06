@@ -37,16 +37,42 @@ typedef IMU_AccelVec3 IMU_GyroVec3;
 
 /* Public function declarations */
 
+/**
+ * Initalize the IMU at the passed I2C handle
+ * 
+ */
 void IMU_Init(I2C_HandleTypeDef* hi2c);
 int32_t IMU_read_fifo_raw(Lsm6dsl_Data_t *buf, uint16_t n_blocks_to_read);
 Lsm6dsl_AccelData_t IMU_read_accel_raw();
 Lsm6dsl_GyroData_t IMU_read_gyro_raw();
 
+/**
+ * Retruns a vector IMU acceleration scaled to g-force
+ * @return A vector of accelerations [ax, ay, az]
+ */
 IMU_AccelVec3 IMU_read_accel_g();    // Scaled to g-force units
+
+/**
+ * Retruns a vector IMU acceleration scaled in m/s^2
+ * @return A vector of accelerations [ax, ay, az]
+ */
 IMU_AccelVec3 IMU_read_accel_mps2(); // Scaled to m/s^2
+
+/**
+ * Returns a vector of angular velocity in radians per second for each axis
+ * @return Vector of anglular velocities [vx, vy, vz]
+ */
 IMU_GyroVec3  IMU_read_gyro_radps();
+
+/**
+ * Returns a vector of angular velocity in degrees per second for each axis
+ * @return Vector of anglular velocities [vx, vy, vz]
+ */
 IMU_GyroVec3 IMU_read_gyro_dps();
 
+/**
+ * Output pretty complete IMU data to the log.
+ */
 void IMU_test();
 
 #endif /* INC_H */

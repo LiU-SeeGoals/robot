@@ -139,13 +139,13 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
   HAL_TIM_Base_Start_IT(motor_tick_itr);
 }
 
-void NAV_set_motor_ticks(){
+void NAV_update_motor_state(){
 
   for (int i = 0; i < 4; i++)
   {
     int ticks_before = motors[i].prev_tick;
     int new_ticks = motors[i].encoder_htim->Instance->CNT;
-    MOTOR_set_motor_tick_per_second(&motors[i], new_ticks - ticks_before);
+    MOTOR_update_motor_ticks(&motors[i], new_ticks - ticks_before);
     motors[i].ticks = new_ticks - ticks_before;
     motors[i].prev_tick = new_ticks;
   }
@@ -184,10 +184,10 @@ void NAV_wheelToBody(float* res){
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
 
-  float wrf = MOTOR_get_motor_tick_per_second(&motors[0]);
-  float wrb = MOTOR_get_motor_tick_per_second(&motors[1]);
-  float wlb = MOTOR_get_motor_tick_per_second(&motors[2]);
-  float wlf = MOTOR_get_motor_tick_per_second(&motors[3]);
+  float wrf = MOTOR_get_motor_ticks_per_iteration(&motors[0]);
+  float wrb = MOTOR_get_motor_ticks_per_iteration(&motors[1]);
+  float wlb = MOTOR_get_motor_ticks_per_iteration(&motors[2]);
+  float wlf = MOTOR_get_motor_ticks_per_iteration(&motors[3]);
 
   float cos_psi = arm_cos_f32(psi);
   float cos_theta = arm_cos_f32(theta);
@@ -217,16 +217,16 @@ void NAV_wheelToBody(float* res){
   res[2] = w;
 }
 
-void steer(float u,float v, float w){
+void NAV_steer(float v,float u, float w){
   // Ref: https://tdpsearch.com/#/tdp/soccer_smallsize__2020__RoboTeam_Twente__0?ref=list
   // wheels RF, RB, LB, LF
   // wheel direction is RF forward vector toward dribbler
-  // v forward toward dribbler
-  // u to the sides
+  // u forward toward dribbler
+  // v to the sides
   // w angle from LF to LB to RB to RF
 
-  // u is y in robot frame
-  // v is x in robot frame
+  // u is x in robot frame
+  // v is y in robot frame
 
   float psi = PI * 31.f / 180.0f;
   float theta = PI * 45.f / 180.0f;
@@ -236,10 +236,10 @@ void steer(float u,float v, float w){
   float R = 1.f;
 
 
-  float wrf = 1.0 / r * ( v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
-  float wrb = 1.0 / r * ( v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
-  float wlb = 1.0 / r * ( -v * arm_cos_f32(theta) - u * arm_sin_f32(theta) + w * R);
-  float wlf = 1.0 / r * ( -v * arm_cos_f32(psi) + u * arm_sin_f32(psi) + w * R);
+  float wrf = 1.0 / r * ( u * arm_cos_f32(psi) + v * arm_sin_f32(psi) + w * R);
+  float wrb = 1.0 / r * ( u * arm_cos_f32(theta) - v * arm_sin_f32(theta) + w * R);
+  float wlb = 1.0 / r * ( -u * arm_cos_f32(theta) - v * arm_sin_f32(theta) + w * R);
+  float wlf = 1.0 / r * ( -u * arm_cos_f32(psi) + v * arm_sin_f32(psi) + w * R);
 
 
   motors[0].speed = wrf;
@@ -278,7 +278,7 @@ void command_move(Command *cmd){
 
   LOG_INFO("got nav command %d %d %d \r\n",cmd->kick_speed, cmd->command_id, cmd->direction->x, cmd->direction->y);
   if (cmd->command_id == ACTION_TYPE__STOP_ACTION){
-    steer(0.f, 0.f, 0.f);
+    NAV_steer(0.f, 0.f, 0.f);
     return;
   }
 
@@ -291,13 +291,13 @@ void command_move(Command *cmd){
   }
 
   if (cmd->command_id == ACTION_TYPE__MOVE_ACTION){
-    steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
+    NAV_steer(100.f * speed * cmd->direction->x, 100.f * speed * cmd->direction->y, 0.f);
   }
 
 }
 
 void NAV_TestMovement() {
-  steer(0, 1, 0);
+  NAV_steer(1, 0, 0);
 }
 
 void NAV_DisableMovement() {
@@ -368,8 +368,8 @@ void NAV_GoToAction(Command* cmd){
     const int32_t cam_y = cmd->pos->y;
     const int32_t cam_w = cmd->pos->w;
 
-    // hax to cange to to float meter rep just for testing first time... hehe
-    // angle is scaled by 1000 before sent
+    // Hax to cange to to float meter rep just for testing first time... hehe
+    // Angle is scaled by 1000 before sent to robot.
     const float f_nav_x = ((float) nav_x) / 1000.f;
     const float f_nav_y = ((float) nav_y) / 1000.f;
     const float f_nav_w = ((float) nav_w) / 1000.f;
@@ -383,17 +383,16 @@ void NAV_GoToAction(Command* cmd){
     LOG_DEBUG("Vision data: %f %f %f:\r\n", f_cam_x, f_cam_y, f_cam_w);
     LOG_DEBUG("Move to: %f %f %f:\r\n", f_nav_x, f_nav_y, f_nav_w);
 
-    /*STATE_log_states();*/
-    /*LOG_DEBUG("Got at %d %d %d:\r\n", cam_x, cam_y, cam_w);*/
-    /*LOG_DEBUG("Got move to %d %d %d:\r\n", nav_x, nav_y, nav_w);*/
     robot_cmd.x = f_nav_x;
     robot_cmd.y = f_nav_y;
     robot_cmd.w = f_nav_w;
 
+    // -- Vision update --
+
     if (abs(prev_nav_x - nav_x + prev_nav_y - nav_y + prev_nav_w - nav_w) == 0)
     {
-      // If software send us same position then ignore it.
-      // NOTE: stupidz zoftware pe0ples alw4ys c4using s0 much tr0ublez
+      // If the vision position is exactly the same as last time it is likely not updated information.
+      // Ignore old information
       return;
     }
 
@@ -402,11 +401,18 @@ void NAV_GoToAction(Command* cmd){
     prev_nav_x = f_cam_x;
     prev_nav_y = f_cam_y;
     prev_nav_w = f_cam_w;
+}
 
-    /*Vec2 position = {f_nav_x,f_nav_y};*/
-    // Set desiered position, this position is followed in interrupts
 
-    /*POS_go_to_position(position, f_nav_w);*/
+/* 
+   Set position for robot to move to in (meter)
+
+   Can be used in demos when there is no vision / software updates
+*/
+void NAV_SetCommandPosition(float nav_x, float nav_y, float nav_z){
+    robot_cmd.x = nav_x;
+    robot_cmd.y = nav_y;
+    robot_cmd.w = nav_z;
 }
 
 void NAV_TireTest() {
@@ -461,6 +467,8 @@ uint8_t NAV_IsPanic(){
 /*
    Someone thinks something has gone terribly wrong...
    Disable motors and everyhting going forward
+   TODO: Actualy implement the behaviour that triggers when the program is set
+   to panic.
  */
 void NAV_SetRobotPanic()
 {
@@ -469,6 +477,8 @@ void NAV_SetRobotPanic()
 
 /*
   Someone solved the panic
+  TODO: Implement reset behaviour. I am leaving this as 1 untill the method
+  actualy does something.
 */
 void NAV_ClearRobotPanic(){
   robot_cmd.panic = 1;
@@ -479,11 +489,9 @@ void NAV_RunDribbler(){
 }
 
 void NAV_TestDribbler(){
-
   NAV_RunDribbler();
   HAL_Delay(2000);
   NAV_StopDribbler();
-
 }
 
 void NAV_TEST_Set_robot_cmd(float x, float y, float w){

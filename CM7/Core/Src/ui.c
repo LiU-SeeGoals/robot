@@ -92,8 +92,8 @@ CommandInfo rf_commands[2] = {
 };
 
 CommandInfo motors_commands[2] = {
-  {'T', "est"},
   {'S', "teer"},
+  {'T', "oggle movement"}
 };
 
 CommandInfo motors_steer_commands[4] = {
@@ -443,30 +443,41 @@ void parse_key() {
     }
   } else if (current_state == state_motors) {
     switch (key) {
-      case 'T': // Test
-        NAV_TireTest();
-        break;
-      case 'S': // Test
+      case 'S': // Steer
         current_state = state_motors_steer;
         print_help();
+        break;
+      case 'T': // Toggle movement
+        LOG_INFO("Movement toggled\r\n");
+        if (moving) {
+          NAV_DisableMovement();
+          moving = 0;
+        } else {
+          NAV_EnableMovement();
+          moving = 1;
+        }
         break;
     }
   } else if (current_state == state_motors_steer) {
     switch (key) {
       case 'W':
-        steer(0, 100.f, 0.f);
+        NAV_SetCommandPosition(0, 1, 0);
+        if (!moving) NAV_EnableMovement();
         moving = 1;
         break;
       case 'A':
-        steer(100.f, 0, 0.f);
+        NAV_SetCommandPosition(1, 0, 0);
+        if (!moving) NAV_EnableMovement();
         moving = 1;
         break;
       case 'S':
-        steer(0, -100.f, 0.f);
+        NAV_SetCommandPosition(0, -1, 0);
+        if (!moving) NAV_EnableMovement();
         moving = 1;
         break;
       case 'D':
-        steer(-100.f, 0, 0.f);
+        NAV_SetCommandPosition(-1, 0, 0);
+        if (!moving) NAV_EnableMovement();
         moving = 1;
         break;
     }
