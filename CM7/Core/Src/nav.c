@@ -38,7 +38,7 @@ void NAV_Init(TIM_HandleTypeDef* motor_tick_itr,
               TIM_HandleTypeDef* encoder3_htim,
               TIM_HandleTypeDef* encoder4_htim) {
 
-  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_ERROR, 0);
+  LOG_InitModule(&internal_log_mod, "NAV", LOG_LEVEL_DEBUG, 0);
   HAL_TIM_Base_Start(pwm_htim);
   HAL_TIM_Base_Start(pwm15_htim);
   HAL_TIM_Base_Start(encoder1_htim);
@@ -159,7 +159,6 @@ void NAV_set_motor_ticks(){
     }
     else
     {
-      LOG_DEBUG("Movement disabled!");
       MOTOR_SetSpeed(&motors[i], 0, &I_prevs[i]);
     }
   }
@@ -326,11 +325,13 @@ void NAV_HandleCommand(Command* cmd) {
       const int32_t x = cmd->direction->x;
       const int32_t y = cmd->direction->y;
 
+      NAV_EnableMovement();
+
       LOG_DEBUG("keyboard control (x,y,speed): (%i,%i,%i)\r\n", x, y, speed);
       LOG_DEBUG("keyboard control (x,y): (%f,%f)\r\n", 100.f*speed*x, 100.f*speed*y);
       // TODO: Should somehow know that we're in remote control mode
       if (0 <= speed && speed <= 10) {
-        steer(100.f * speed * x, 100.f * speed * y, 0.f);
+        NAV_TEST_Set_robot_cmd(x,y,speed);
       }
       } break;
     case ACTION_TYPE__PING:
