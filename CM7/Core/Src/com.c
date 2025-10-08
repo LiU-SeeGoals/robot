@@ -108,7 +108,6 @@ void COM_RF_HandleIRQ() {
 
 void COM_RF_Receive(uint8_t pipe) {
   HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_SET);
-
   uint8_t len = 0;
   NRF_Status status;
   status = NRF_SendReadCommand(NRF_CMD_R_RX_PL_WID, &len, 1);
@@ -256,6 +255,9 @@ uint8_t COM_Get_ID() {
   if (w0 == 2293800 && w1 == 858935561 && w2 == 808727605)
   {
     return 8;
+  }
+  if (w0 == 2162755 && w1 == 875712788 && w2 == 926168633){
+    return 0;
   }
   LOG_ERROR("Failed ID lookup for robot ID: %d %d %d\r\n", w0, w1, w2);
   return 255;
