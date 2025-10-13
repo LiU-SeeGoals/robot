@@ -211,10 +211,10 @@ uint8_t COM_Get_ID() {
   uint32_t w0 = HAL_GetUIDw0();
   uint32_t w1 = HAL_GetUIDw1();
   uint32_t w2 = HAL_GetUIDw2();
-
-  if (w0 == 2424903 && w1 == 892490001 && w2 == 842217265)
+ 
+  if (w0 == 2162755 && w1 == 875712788 && w2 == 926168633)
   {
-    return 0;
+    return 3;
   }
   if (w0 == 3932237 && w1 == 892490001 && w2 == 842217265)
   {

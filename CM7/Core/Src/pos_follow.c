@@ -58,8 +58,8 @@ void set_params() {
   params_dist.umax = 100.0;
   params_dist.Ts = DELTA_T;
   params_dist.Ti = 0.0015;
-  params_dist.K = 50.0f * 1000.50;
   params_dist.Td = 0.1;
+  params_dist.K = 500.0f * 1000.50;
 }
 
 
@@ -106,7 +106,7 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   float euclidian_distance = sqrt(rel_x * rel_x + rel_y*rel_y);
 
   // Control on global frame coordinates
-  float distance_control_signal = PID_pi(euclidian_distance, 0.0, &dist_I, standard_error, &params_dist);
+  float distance_control_signal = 300.f;
   float control_w = PID_p(STATE_get_robot_angle(), wantw, angle_error, &params_angle);
 
   // Rotate from world to robot frame (inverse the robot angle)
@@ -115,14 +115,14 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
 
   // u is x in robot frame
   // v is y in robot frame
-  log_num = (1 + log_num) % 1000;
-  if (log_num == 0)
-  {
-    LOG_DEBUG("x,y dest %f %f %f \r\n", dest_x, dest_y, wantw);
-    LOG_DEBUG("x,y state %f %f %f \r\n", cur_x, cur_y, control_w);
-    LOG_DEBUG("x,y control signal %f %f %f \r\n", x,y, control_w);
-  }
-  NAV_steer(-x, -y, control_w);
+  // log_num = (1 + log_num) % 1000;
+  // if (log_num == 0)
+  // {
+  //   LOG_DEBUG("x,y dest %f %f %f \r\n", dest_x, dest_y, wantw);
+  //   LOG_DEBUG("x,y state %f %f %f \r\n", cur_x, cur_y, control_w);
+  //   LOG_DEBUG("x,y control signal %f %f %f \r\n", x,y, control_w);
+  // }
+  NAV_steer(x, y, control_w);
 }
 
 float PID_p(float current, float desired, float (*error_func)(float,float), control_params *param){
