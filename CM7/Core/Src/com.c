@@ -275,6 +275,47 @@ static void parse_controller_packet(uint8_t* payload, uint8_t len) {
   protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
 }
 
+struct nrf_data
+{
+  int16_t curPos;
+  int8_t posDelay;
+  int16_t kickDuration;
+  int16_t kickFlags;
+  uint16_t dribblerSpeed;
+  uint8_t skillId;
+  uint8_t flags;
+  uint8_t feedbackFreq;
+  uint8_t skillData;
+};
+
+static void parse_controller_packet_manual(uint8_t* payload, uint8_t len) {
+
+  if (len > 0)
+  {
+    nrf_data datum; // datum is the correct plural of data btw
+    datum.curPos = (int16_t)(payload[0] | payload[1] << 8);
+    datum.posDelay = (int8_t)(payload[3]);
+    datum.kickDuration = (int16_t)(payload[4] | payload[5] << 8);
+    datum.kickFlags = (int16_t)(payload[6] | payload[7] << 8);
+    datum.dribblerSpeed = (int16_t)(payload[8] | payload[9] << 8);
+    datum.skillId = (uint8_t)(payload[10]);
+    datum.flags = (uint8_t)(payload[11]);
+    datum.feedbackFreq = (uint8_t)(payload[12]);
+    datum.skillData = (uint8_t)(payload[13]);
+  }
+
+  Command* cmd = NULL;
+  cmd = command__unpack(NULL, len, payload);
+
+  if (!cmd) {
+    LOG_WARNING("Decoding PB failed\r\n");
+  } else {
+    NAV_HandleCommand(cmd);
+  }
+
+  protobuf_c_message_free_unpacked((ProtobufCMessage*) cmd, NULL);
+}
+
 static char* ping_ack_to_string(uint8_t ack) {
     switch (ack) {
         case 0: return "Unknown transmission error";

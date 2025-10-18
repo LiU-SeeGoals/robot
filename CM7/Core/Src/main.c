@@ -224,6 +224,8 @@ int main(void)
   bool on = false;
 
   while (1) {
+    NAV_TEST_Set_robot_cmd(1.f, 0.f, 0.f);
+    continue;
     if (HAL_GetTick() - now > 1000) {
       if (on) {
         HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, GPIO_PIN_RESET);
