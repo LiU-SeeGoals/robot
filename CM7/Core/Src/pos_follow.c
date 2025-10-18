@@ -24,20 +24,7 @@ void POS_Init(){
 float angle_error(float angle, float desired){
 
   // TODO make sure returned sign is correct for the desired direction
-  /*float left_error = desired - angle;*/
-  /*float right_error = angle - desired;*/
-  /*if (right_error < 0){*/
-  /*  right_error += 2 * PI;*/
-  /*}*/
-  /*if (left_error < 0){*/
-  /*  left_error += 2 * PI;*/
-  /*}*/
-  /*if (right_error < left_error){*/
-  /*  return right_error;*/
-  /*}*/
-  /*else {*/
-  /*  return -left_error;*/
-  /*}*/
+
   return desired - angle;
 }
 
@@ -113,15 +100,6 @@ void POS_go_to_position(float dest_x, float dest_y, float wantw) {
   float x = distance_control_signal * ((rel_x * arm_cos_f32(-angle)) - (rel_y * arm_sin_f32(-angle)));
   float y = distance_control_signal * ((rel_x * arm_sin_f32(-angle)) + (rel_y * arm_cos_f32(-angle)));
 
-  // u is x in robot frame
-  // v is y in robot frame
-  // log_num = (1 + log_num) % 1000;
-  // if (log_num == 0)
-  // {
-  //   LOG_DEBUG("x,y dest %f %f %f \r\n", dest_x, dest_y, wantw);
-  //   LOG_DEBUG("x,y state %f %f %f \r\n", cur_x, cur_y, control_w);
-  //   LOG_DEBUG("x,y control signal %f %f %f \r\n", x,y, control_w);
-  // }
   NAV_steer(x, y, control_w);
 }
 
